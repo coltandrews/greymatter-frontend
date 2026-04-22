@@ -54,20 +54,20 @@
 
 .ctaRow {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: minmax(260px, 420px);
   gap: 14px;
 }
 
-.ctaPrimary,
-.ctaSecondary {
+.ctaPrimary {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
   padding: 18px 20px;
   border-radius: 12px;
-  border: 1px solid #e8ecf4;
-  background: #fff;
+  border: 1px solid #172033;
+  background: linear-gradient(145deg, #172033 0%, #243656 100%);
+  color: #fff;
   box-shadow: 0 1px 2px rgba(23, 32, 51, 0.05);
   cursor: pointer;
   transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
@@ -80,25 +80,9 @@
   transform: translateY(-1px);
 }
 
-.ctaSecondary:hover:not(:disabled) {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(23, 32, 51, 0.07);
-  transform: translateY(-1px);
-}
-
-.ctaPrimary:disabled,
-.ctaSecondary:disabled {
+.ctaPrimary:disabled {
   cursor: not-allowed;
   opacity: 0.85;
-}
-
-.ctaPrimary {
-  background: linear-gradient(145deg, #172033 0%, #243656 100%);
-  border-color: #172033;
-  color: #fff;
-}
-
-.ctaPrimary:disabled {
   background: #94a3b8;
   border-color: #94a3b8;
 }
@@ -114,10 +98,6 @@
   color: #fff;
 }
 
-.ctaSecondary .ctaLabel {
-  color: #172033;
-}
-
 .ctaHint {
   font-size: 13px;
   line-height: 1.45;
@@ -127,10 +107,6 @@
 
 .ctaPrimary .ctaHint {
   color: rgba(255, 255, 255, 0.85);
-}
-
-.ctaSecondary .ctaHint {
-  color: #64748b;
 }
 
 .listToolbar {

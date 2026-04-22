@@ -47,13 +47,7 @@ export default async function HubPage() {
             <button type="button" className={styles.ctaPrimary} disabled>
               <span className={styles.ctaLabel}>Schedule a visit</span>
               <span className={styles.ctaHint}>
-                Book a new telehealth appointment with an available provider.
-              </span>
-            </button>
-            <button type="button" className={styles.ctaSecondary} disabled>
-              <span className={styles.ctaLabel}>Request a refill</span>
-              <span className={styles.ctaHint}>
-                Send a refill request to your care team when messaging is enabled.
+                Uses provider availability from Ola when your integration is live.
               </span>
             </button>
           </div>
@@ -110,8 +104,8 @@ export default async function HubPage() {
             <div className={styles.rxMark} aria-hidden>
               Rx
             </div>
-            When we connect to your provider and pharmacy, your active medications will be listed
-            here.
+            Pharmacy search and visit scheduling run through Ola; medication-related details from
+            your orders and service records will show here once we sync those Ola responses.
           </div>
         </section>
       </div>
