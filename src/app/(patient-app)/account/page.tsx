@@ -16,7 +16,7 @@ export default async function AccountPage() {
   return (
     <main className={styles.page}>
       <Link href="/hub" className={styles.back}>
-        ← Back to dashboard
+        ← Back to Patient Hub
       </Link>
 
       <div className={styles.card}>

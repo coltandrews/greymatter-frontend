@@ -63,7 +63,7 @@ export default async function IntakePage() {
         </p>
         <p style={{ margin: "0 0 20px", fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
           We collect only what we need to verify eligibility and meet HIPAA requirements. This is
-          not scheduling an appointment—you will do that next from your dashboard.
+          not scheduling an appointment—you will do that next in the Patient Hub.
         </p>
         <IntakeWizard />
         <SignOutButton />

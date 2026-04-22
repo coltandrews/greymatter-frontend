@@ -10,31 +10,75 @@
   }
 }
 
-.welcome {
-  margin-bottom: 28px;
+.hero {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e8ecf4;
 }
 
-.welcome h1 {
-  margin: 0 0 8px;
-  font-size: clamp(1.5rem, 2.5vw, 1.85rem);
+.hero h1 {
+  margin: 0 0 10px;
+  font-size: clamp(1.55rem, 2.6vw, 1.95rem);
   font-weight: 700;
   color: #172033;
   letter-spacing: -0.02em;
 }
 
-.welcome p {
+.heroIntro {
   margin: 0;
   font-size: 15px;
   line-height: 1.55;
   color: #64748b;
-  max-width: 52ch;
+  max-width: 62ch;
+}
+
+.heroHint {
+  margin: 10px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #e8ecf4;
+  border-radius: 16px;
+  padding: 22px 26px 26px;
+  box-shadow: 0 1px 3px rgba(23, 32, 51, 0.06);
+}
+
+.panelHeader {
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.panelTitle {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #172033;
+  letter-spacing: -0.02em;
+}
+
+.panelLead {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #64748b;
+  max-width: 70ch;
 }
 
 .ctaRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-  margin-bottom: 28px;
+  gap: 14px;
 }
 
 .ctaPrimary,
@@ -43,8 +87,8 @@
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
-  padding: 20px 22px;
-  border-radius: 14px;
+  padding: 18px 20px;
+  border-radius: 12px;
   border: 1px solid #e8ecf4;
   background: #fff;
   box-shadow: 0 1px 2px rgba(23, 32, 51, 0.05);
@@ -83,7 +127,7 @@
 }
 
 .ctaLabel {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   margin: 0 0 6px;
   letter-spacing: -0.01em;
@@ -112,50 +156,21 @@
   color: #64748b;
 }
 
-.mainGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 900px) {
-  .mainGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.card {
-  background: #fff;
-  border: 1px solid #e8ecf4;
-  border-radius: 16px;
-  padding: 22px 24px;
-  box-shadow: 0 1px 3px rgba(23, 32, 51, 0.06);
-}
-
-.cardHeader {
+.listToolbar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 16px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 14px;
 }
 
-.cardTitle {
+.listHeading {
   margin: 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #172033;
-  letter-spacing: -0.01em;
-}
-
-.cardSubtitle {
-  margin: 4px 0 0;
   font-size: 13px;
-  color: #64748b;
-  line-height: 1.4;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
 }
 
 .badge {
@@ -223,18 +238,18 @@
 
 .emptyState {
   margin: 0;
-  padding: 20px 16px;
+  padding: 22px 18px;
   text-align: center;
   font-size: 14px;
   color: #64748b;
-  line-height: 1.5;
+  line-height: 1.55;
   background: #f8fafc;
   border-radius: 12px;
   border: 1px dashed #e2e8f0;
 }
 
 .error {
-  margin: 0;
+  margin: 0 0 14px;
   padding: 12px 14px;
   border-radius: 10px;
   background: #fef2f2;
@@ -244,7 +259,7 @@
 
 .prescriptionStub {
   margin: 0;
-  padding: 18px;
+  padding: 22px 18px;
   border-radius: 12px;
   border: 1px dashed #cbd5e1;
   background: linear-gradient(180deg, #fafbfc 0%, #f8fafc 100%);

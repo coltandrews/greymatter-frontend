@@ -32,53 +32,70 @@ export default async function HubPage() {
 
   return (
     <main className={styles.page}>
-      <div className={styles.welcome}>
-        <h1>Your dashboard</h1>
-        <p>
-          Schedule visits, track what&apos;s in progress, and view prescriptions. Open the menu next
-          to your name above for account settings.
+      <header className={styles.hero}>
+        <h1>Patient Hub</h1>
+        <p className={styles.heroIntro}>
+          One place to book visits, see what&apos;s on your calendar, and check medications.
         </p>
-      </div>
+        <p className={styles.heroHint}>
+          Account settings are in the menu next to your name at the top.
+        </p>
+      </header>
 
-      <div className={styles.ctaRow}>
-        <button type="button" className={styles.ctaPrimary} disabled>
-          <span className={styles.ctaLabel}>Schedule a visit</span>
-          <span className={styles.ctaHint}>
-            Book a telehealth appointment when your provider&apos;s calendar is connected.
-          </span>
-        </button>
-        <button type="button" className={styles.ctaSecondary} disabled>
-          <span className={styles.ctaLabel}>Request a refill</span>
-          <span className={styles.ctaHint}>
-            Ask your care team about a prescription refill (coming soon).
-          </span>
-        </button>
-      </div>
-
-      <div className={styles.mainGrid}>
-        <section className={styles.card} aria-labelledby="visits-heading">
-          <div className={styles.cardHeader}>
-            <div>
-              <h2 id="visits-heading" className={styles.cardTitle}>
-                Upcoming &amp; in progress
-              </h2>
-              <p className={styles.cardSubtitle}>
-                Visits and care requests you&apos;ve started or scheduled.
-              </p>
-            </div>
-            {visitCount > 0 ? (
-              <span className={styles.badge}>
-                {visitCount} {visitCount === 1 ? "item" : "items"}
+      <div className={styles.stack}>
+        <section className={styles.panel} aria-labelledby="quick-actions-title">
+          <div className={styles.panelHeader}>
+            <h2 id="quick-actions-title" className={styles.panelTitle}>
+              Quick actions
+            </h2>
+            <p className={styles.panelLead}>
+              Common tasks. These buttons will connect to scheduling and your care team as we finish
+              setup.
+            </p>
+          </div>
+          <div className={styles.ctaRow}>
+            <button type="button" className={styles.ctaPrimary} disabled>
+              <span className={styles.ctaLabel}>Schedule a visit</span>
+              <span className={styles.ctaHint}>
+                Book a new telehealth appointment with an available provider.
               </span>
-            ) : null}
+            </button>
+            <button type="button" className={styles.ctaSecondary} disabled>
+              <span className={styles.ctaLabel}>Request a refill</span>
+              <span className={styles.ctaHint}>
+                Send a refill request to your care team when messaging is enabled.
+              </span>
+            </button>
+          </div>
+        </section>
+
+        <section className={styles.panel} aria-labelledby="appointments-title">
+          <div className={styles.panelHeader}>
+            <h2 id="appointments-title" className={styles.panelTitle}>
+              Appointments
+            </h2>
+            <p className={styles.panelLead}>
+              Visits you&apos;ve booked and anything still being arranged (for example, finishing
+              scheduling after intake).
+            </p>
           </div>
 
           {error ? <p className={styles.error}>{error.message}</p> : null}
 
+          {!error && visitCount > 0 ? (
+            <div className={styles.listToolbar}>
+              <p className={styles.listHeading}>Your list</p>
+              <span className={styles.badge}>
+                {visitCount} {visitCount === 1 ? "entry" : "entries"}
+              </span>
+            </div>
+          ) : null}
+
           {!error && (!rows || rows.length === 0) ? (
             <p className={styles.emptyState}>
-              Nothing scheduled yet. Use <strong>Schedule a visit</strong> when it&apos;s available
-              to add your first appointment here.
+              You don&apos;t have any appointments here yet. When{" "}
+              <strong>Schedule a visit</strong> is turned on, new bookings will show up in this
+              section.
             </p>
           ) : null}
 
@@ -97,22 +114,22 @@ export default async function HubPage() {
           ) : null}
         </section>
 
-        <section className={styles.card} aria-labelledby="rx-heading">
-          <div className={styles.cardHeader}>
-            <div>
-              <h2 id="rx-heading" className={styles.cardTitle}>
-                Prescriptions
-              </h2>
-              <p className={styles.cardSubtitle}>
-                Active medications and the pharmacy on file for your care.
-              </p>
-            </div>
+        <section className={styles.panel} aria-labelledby="medications-title">
+          <div className={styles.panelHeader}>
+            <h2 id="medications-title" className={styles.panelTitle}>
+              Medications
+            </h2>
+            <p className={styles.panelLead}>
+              Current prescriptions and the pharmacy your care team has on file—not the same as
+              booking a visit.
+            </p>
           </div>
           <div className={styles.prescriptionStub}>
             <div className={styles.rxMark} aria-hidden>
               Rx
             </div>
-            Your prescription list will appear here once we sync with your provider and pharmacy.
+            When we connect to your provider and pharmacy, your active medications will be listed
+            here.
           </div>
         </section>
       </div>
