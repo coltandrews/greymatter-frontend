@@ -5,6 +5,7 @@ import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
 import { mockSlotsForDate } from "@/lib/scheduling/mockSlots";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./schedule.module.css";
 
@@ -103,6 +104,7 @@ export function ScheduleFlow({
   serviceState: string | null;
   serviceId: string;
 }) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("intake");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [monthCursor, setMonthCursor] = useState(() => new Date());
@@ -204,6 +206,20 @@ export function ScheduleFlow({
       cancelled = true;
     };
   }, [selectedDate, effectiveState, serviceId]);
+
+  const canConfirm =
+    Boolean(selectedDate && selectedSlot && !loadingSlots);
+
+  const onConfirmAppointment = useCallback(() => {
+    if (!selectedDate || !selectedSlot) {
+      return;
+    }
+    const q = new URLSearchParams({
+      date: selectedDate,
+      t: selectedSlot,
+    });
+    router.push(`/schedule/confirmed?${q.toString()}`);
+  }, [router, selectedDate, selectedSlot]);
 
   if (step === "intake") {
     return (
@@ -363,12 +379,12 @@ export function ScheduleFlow({
               </ul>
             ) : null}
             <p className={styles.olaNote}>
-              Booking confirmation will use Ola&apos;s flow next; for now this is scheduling UI only.
+              Final booking will sync with Ola when that integration is complete.
             </p>
           </div>
         ) : null}
       </div>
-      <div className={styles.actions} style={{ marginTop: 24 }}>
+      <div className={styles.confirmBar}>
         <button
           type="button"
           className={styles.btnGhost}
@@ -380,9 +396,14 @@ export function ScheduleFlow({
         >
           ← Back to questions
         </button>
-        <Link href="/hub" className={styles.btnGhost}>
-          Patient Hub
-        </Link>
+        <button
+          type="button"
+          className={styles.btnConfirm}
+          disabled={!canConfirm}
+          onClick={onConfirmAppointment}
+        >
+          Confirm appointment
+        </button>
       </div>
     </>
   );
