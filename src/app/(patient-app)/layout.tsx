@@ -44,7 +44,7 @@ export default async function PatientAppLayout({
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
-        background: "#f8fafc",
+        background: "transparent",
       }}
     >
       <PatientTopBar email={user.email ?? user.id} />
