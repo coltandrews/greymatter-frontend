@@ -4,13 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 
-const nav = [
-  { href: "/home", label: "Home" },
-  { href: "/hub", label: "My visits" },
-  { href: "/intake", label: "Intake" },
-] as const;
-
-export function PatientSidebar({ email }: { email: string }) {
+export function PatientSidebar({
+  email,
+  intakeComplete,
+}: {
+  email: string;
+  intakeComplete: boolean;
+}) {
+  const nav = [
+    { href: "/home", label: "Home" },
+    { href: "/hub", label: "My visits" },
+    ...(intakeComplete ? [] : [{ href: "/intake", label: "Intake" as const }]),
+  ];
   const pathname = usePathname();
 
   return (
@@ -45,7 +50,7 @@ export function PatientSidebar({ email }: { email: string }) {
       </div>
 
       <nav style={{ display: "grid", gap: 4 }}>
-        {nav.map(({ href, label }) => {
+        {nav.map(({ href, label }: { href: string; label: string }) => {
           const isActive =
             href === "/home"
               ? pathname === "/home"

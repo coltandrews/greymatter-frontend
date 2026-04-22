@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { isIntakeComplete } from "@/lib/intakeComplete";
 import Link from "next/link";
 
 export default async function PatientHomePage() {
@@ -10,6 +11,14 @@ export default async function PatientHomePage() {
   if (!user) {
     return null;
   }
+
+  const { data: draftRow } = await supabase
+    .from("intake_drafts")
+    .select("step")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const intakeComplete = isIntakeComplete(draftRow?.step);
 
   const { data: rows } = await supabase
     .from("submissions")
@@ -23,7 +32,9 @@ export default async function PatientHomePage() {
     <div style={{ maxWidth: 640 }}>
       <h1 style={{ margin: "0 0 8px", fontSize: 26, color: "#172033" }}>Welcome</h1>
       <p style={{ margin: "0 0 28px", fontSize: 15, color: "#475569", lineHeight: 1.5 }}>
-        Use the sidebar to continue intake, review your visits, or sign out.
+        {intakeComplete
+          ? "Review your visits from the sidebar, or sign out when you are done."
+          : "Complete the one-time intake to get started, then use My visits to track progress."}
       </p>
 
       <div
@@ -64,30 +75,32 @@ export default async function PatientHomePage() {
       </div>
 
       <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", gap: 16 }}>
-        <Link
-          href="/intake"
-          style={{
-            display: "inline-block",
-            padding: "12px 20px",
-            borderRadius: 8,
-            background: "#172033",
-            color: "#fff",
-            fontSize: 14,
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          {inProgress > 0 ? "Continue intake" : "Start intake"}
-        </Link>
+        {!intakeComplete ? (
+          <Link
+            href="/intake"
+            style={{
+              display: "inline-block",
+              padding: "12px 20px",
+              borderRadius: 8,
+              background: "#172033",
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            {inProgress > 0 ? "Continue intake" : "Start intake"}
+          </Link>
+        ) : null}
         <Link
           href="/hub"
           style={{
             display: "inline-block",
             padding: "12px 20px",
             borderRadius: 8,
-            border: "1px solid #cbd5e1",
-            background: "#fff",
-            color: "#172033",
+            border: intakeComplete ? "none" : "1px solid #cbd5e1",
+            background: intakeComplete ? "#172033" : "#fff",
+            color: intakeComplete ? "#fff" : "#172033",
             fontSize: 14,
             fontWeight: 600,
             textDecoration: "none",

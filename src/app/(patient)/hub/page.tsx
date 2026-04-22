@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { isIntakeComplete } from "@/lib/intakeComplete";
 import Link from "next/link";
 
 function formatWhen(iso: string) {
@@ -22,6 +23,14 @@ export default async function HubPage() {
     return null;
   }
 
+  const { data: draftRow } = await supabase
+    .from("intake_drafts")
+    .select("step")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const intakeComplete = isIntakeComplete(draftRow?.step);
+
   const { data: rows, error } = await supabase
     .from("submissions")
     .select("id, status, created_at, updated_at")
@@ -44,7 +53,9 @@ export default async function HubPage() {
 
       {!error && (!rows || rows.length === 0) ? (
         <p style={{ margin: "0 0 20px", fontSize: 15, color: "#172033" }}>
-          No visits yet. Start intake to create one.
+          {intakeComplete
+            ? "No visit records yet. They will appear here as your care moves forward."
+            : "No visits yet. Complete intake to create one."}
         </p>
       ) : null}
 
@@ -94,7 +105,7 @@ export default async function HubPage() {
               <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>
                 Started {formatWhen(r.created_at)}
               </p>
-              {r.status === "in_progress" ? (
+              {r.status === "in_progress" && !intakeComplete ? (
                 <Link
                   href="/intake"
                   style={{
@@ -108,12 +119,17 @@ export default async function HubPage() {
                   Continue intake →
                 </Link>
               ) : null}
+              {r.status === "in_progress" && intakeComplete ? (
+                <p style={{ margin: "10px 0 0", fontSize: 13, color: "#64748b" }}>
+                  Scheduling and next steps will show here when available.
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
       ) : null}
 
-      {!error && (!rows || rows.length === 0) ? (
+      {!error && (!rows || rows.length === 0) && !intakeComplete ? (
         <Link
           href="/intake"
           style={{

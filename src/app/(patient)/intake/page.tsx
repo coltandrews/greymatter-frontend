@@ -1,5 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { IntakeWizard } from "@/app/intake/IntakeWizard";
+import { isIntakeComplete } from "@/lib/intakeComplete";
+import { redirect } from "next/navigation";
 
 export default async function IntakePage() {
   const supabase = await createClient();
@@ -9,6 +11,16 @@ export default async function IntakePage() {
 
   if (!user) {
     return null;
+  }
+
+  const { data: draftRow } = await supabase
+    .from("intake_drafts")
+    .select("step")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (isIntakeComplete(draftRow?.step)) {
+    redirect("/home");
   }
 
   return (

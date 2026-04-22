@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { US_STATES } from "@/app/intake/usStates";
 
 type DraftData = {
@@ -56,6 +56,7 @@ async function ensureSubmission(supabase: ReturnType<typeof createClient>, userI
 }
 
 export function IntakeWizard() {
+  const router = useRouter();
   const [uiStep, setUiStep] = useState<UiStep>("eligibility");
   const [forSelf, setForSelf] = useState<boolean | null>(null);
   const [serviceState, setServiceState] = useState("");
@@ -105,9 +106,15 @@ export function IntakeWizard() {
       }
     }
 
-    setUiStep(resolveUiStep(row ?? null));
+    const resolved = resolveUiStep(row ?? null);
+    if (resolved === "done") {
+      setLoading(false);
+      router.replace("/home");
+      return;
+    }
+    setUiStep(resolved);
     setLoading(false);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     loadDraft();
@@ -204,8 +211,8 @@ export function IntakeWizard() {
       setError(upErr.message);
       return;
     }
-    setSaved(true);
-    setUiStep("done");
+    router.push("/home");
+    router.refresh();
   }
 
   if (loading) {
@@ -237,30 +244,6 @@ export function IntakeWizard() {
     border: "1px solid #cbd5e1",
     fontSize: 16,
   };
-
-  if (uiStep === "done") {
-    return (
-      <div style={{ display: "grid", gap: 16 }}>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
-          You are set up through state selection. Scheduling and the rest of intake
-          will go here next.
-        </p>
-        {saved ? (
-          <p style={{ margin: 0, color: "#15803d", fontSize: 14 }}>Saved.</p>
-        ) : null}
-        <Link
-          href="/hub"
-          style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: "#172033",
-          }}
-        >
-          My visits →
-        </Link>
-      </div>
-    );
-  }
 
   if (uiStep === "service_state") {
     return (
