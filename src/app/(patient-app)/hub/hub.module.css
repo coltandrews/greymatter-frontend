@@ -11,32 +11,17 @@
 }
 
 .hero {
-  margin-bottom: 32px;
-  padding-bottom: 24px;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
   border-bottom: 1px solid #e8ecf4;
 }
 
 .hero h1 {
-  margin: 0 0 10px;
+  margin: 0;
   font-size: clamp(1.55rem, 2.6vw, 1.95rem);
   font-weight: 700;
   color: #172033;
   letter-spacing: -0.02em;
-}
-
-.heroIntro {
-  margin: 0;
-  font-size: 15px;
-  line-height: 1.55;
-  color: #64748b;
-  max-width: 62ch;
-}
-
-.heroHint {
-  margin: 10px 0 0;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #94a3b8;
 }
 
 .stack {
@@ -60,19 +45,11 @@
 }
 
 .panelTitle {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 17px;
   font-weight: 700;
   color: #172033;
   letter-spacing: -0.02em;
-}
-
-.panelLead {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #64748b;
-  max-width: 70ch;
 }
 
 .ctaRow {

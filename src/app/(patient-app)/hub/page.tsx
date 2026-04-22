@@ -34,12 +34,6 @@ export default async function HubPage() {
     <main className={styles.page}>
       <header className={styles.hero}>
         <h1>Patient Hub</h1>
-        <p className={styles.heroIntro}>
-          One place to book visits, see what&apos;s on your calendar, and check medications.
-        </p>
-        <p className={styles.heroHint}>
-          Account settings are in the menu next to your name at the top.
-        </p>
       </header>
 
       <div className={styles.stack}>
@@ -48,10 +42,6 @@ export default async function HubPage() {
             <h2 id="quick-actions-title" className={styles.panelTitle}>
               Quick actions
             </h2>
-            <p className={styles.panelLead}>
-              Common tasks. These buttons will connect to scheduling and your care team as we finish
-              setup.
-            </p>
           </div>
           <div className={styles.ctaRow}>
             <button type="button" className={styles.ctaPrimary} disabled>
@@ -74,10 +64,6 @@ export default async function HubPage() {
             <h2 id="appointments-title" className={styles.panelTitle}>
               Appointments
             </h2>
-            <p className={styles.panelLead}>
-              Visits you&apos;ve booked and anything still being arranged (for example, finishing
-              scheduling after intake).
-            </p>
           </div>
 
           {error ? <p className={styles.error}>{error.message}</p> : null}
@@ -119,10 +105,6 @@ export default async function HubPage() {
             <h2 id="medications-title" className={styles.panelTitle}>
               Medications
             </h2>
-            <p className={styles.panelLead}>
-              Current prescriptions and the pharmacy your care team has on file—not the same as
-              booking a visit.
-            </p>
           </div>
           <div className={styles.prescriptionStub}>
             <div className={styles.rxMark} aria-hidden>
