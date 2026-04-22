@@ -19,8 +19,6 @@ export default async function HubPage() {
     .eq("user_id", user.id)
     .order("starts_at", { ascending: true });
 
-  const visitCount = rows?.length ?? 0;
-
   return (
     <main className={styles.page}>
       <header className={styles.hero}>
@@ -38,36 +36,17 @@ export default async function HubPage() {
             </Link>
           </div>
 
-          {error ? <p className={styles.error}>{error.message}</p> : null}
-
-          {!error && visitCount > 0 ? (
-            <div className={styles.listToolbar}>
-              <p className={styles.listHeading}>Your list</p>
-              <span className={styles.badge}>
-                {visitCount} {visitCount === 1 ? "appointment" : "appointments"}
-              </span>
-            </div>
-          ) : null}
-
-          {!error && (!rows || rows.length === 0) ? (
-            <p className={styles.emptyState}>
-              You don&apos;t have any appointments here yet. Use{" "}
-              <strong>+ Schedule Appointment</strong> to book one—they&apos;ll show up here.
-            </p>
-          ) : null}
-
-          {!error && rows && rows.length > 0 ? (
-            <HubAppointments
-              appointments={rows.map((r) => ({
-                id: r.id,
-                status: r.status,
-                starts_at: r.starts_at,
-                created_at: r.created_at,
-                updated_at: r.updated_at,
-                provider_name: r.provider_name,
-              }))}
-            />
-          ) : null}
+          <HubAppointments
+            initial={(rows ?? []).map((r) => ({
+              id: r.id,
+              status: r.status,
+              starts_at: r.starts_at,
+              created_at: r.created_at,
+              updated_at: r.updated_at,
+              provider_name: r.provider_name,
+            }))}
+            serverLoadError={error?.message ?? null}
+          />
         </section>
 
         <section className={styles.panel} aria-labelledby="medications-title">

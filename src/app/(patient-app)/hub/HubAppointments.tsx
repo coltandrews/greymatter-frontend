@@ -14,6 +14,44 @@ export type HubAppointmentRow = {
   provider_name: string | null;
 };
 
+function mapRows(data: unknown[]): HubAppointmentRow[] {
+  return data.map((r) => {
+    const o = r as Record<string, unknown>;
+    return {
+      id: String(o.id),
+      status: String(o.status),
+      starts_at: String(o.starts_at),
+      created_at: String(o.created_at),
+      updated_at: String(o.updated_at),
+      provider_name:
+        o.provider_name == null ? null : String(o.provider_name),
+    };
+  });
+}
+
+async function loadAppointmentsFromSupabase(): Promise<{
+  rows: HubAppointmentRow[];
+  error: string | null;
+}> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { rows: [], error: null };
+  }
+  const { data, error } = await supabase
+    .from("appointments")
+    .select("id, status, starts_at, created_at, updated_at, provider_name")
+    .eq("user_id", user.id)
+    .order("starts_at", { ascending: true });
+
+  if (error) {
+    return { rows: [], error: error.message };
+  }
+  return { rows: mapRows(data ?? []), error: null };
+}
+
 function formatWhen(iso: string) {
   try {
     return new Date(iso).toLocaleString(undefined, {
@@ -48,35 +86,53 @@ function formatListTime(iso: string) {
 }
 
 export function HubAppointments({
-  appointments: initial,
+  initial,
+  serverLoadError,
 }: {
-  appointments: HubAppointmentRow[];
+  initial: HubAppointmentRow[];
+  serverLoadError: string | null;
 }) {
   const router = useRouter();
   const [items, setItems] = useState(initial);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<HubAppointmentRow | null>(null);
-  const [confirmCancel, setConfirmCancel] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setItems(initial);
-  }, [initial]);
+    let cancelled = false;
+    (async () => {
+      const { rows, error: e } = await loadAppointmentsFromSupabase();
+      if (cancelled) {
+        return;
+      }
+      if (e) {
+        setLoadError(e);
+        return;
+      }
+      setLoadError(null);
+      setItems(rows);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const closeDetail = useCallback(() => {
     setSelected(null);
-    setConfirmCancel(false);
+    setConfirmRemove(false);
     setError(null);
   }, []);
 
   useEffect(() => {
-    if (!selected && !confirmCancel) {
+    if (!selected && !confirmRemove) {
       return;
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        if (confirmCancel) {
-          setConfirmCancel(false);
+        if (confirmRemove) {
+          setConfirmRemove(false);
         } else {
           closeDetail();
         }
@@ -84,73 +140,97 @@ export function HubAppointments({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [selected, confirmCancel, closeDetail]);
+  }, [selected, confirmRemove, closeDetail]);
 
-  async function confirmCancellation() {
+  async function confirmRemoveAppointment() {
     if (!selected || selected.status !== "booked") {
       return;
     }
     setError(null);
-    setCancelling(true);
+    setRemoving(true);
     const supabase = createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      setCancelling(false);
+      setRemoving(false);
       setError("Not signed in.");
       return;
     }
 
-    const { error: upErr } = await supabase
+    const { error: delErr } = await supabase
       .from("appointments")
-      .update({ status: "cancelled" })
+      .delete()
       .eq("id", selected.id)
       .eq("user_id", user.id);
 
-    setCancelling(false);
-    if (upErr) {
-      setError(upErr.message);
+    setRemoving(false);
+    if (delErr) {
+      setError(delErr.message);
       return;
     }
 
-    const updated = { ...selected, status: "cancelled" };
-    setItems((prev) => prev.map((r) => (r.id === selected.id ? updated : r)));
-    setSelected(updated);
-    setConfirmCancel(false);
+    const removedId = selected.id;
+    setItems((prev) => prev.filter((r) => r.id !== removedId));
+    setSelected(null);
+    setConfirmRemove(false);
     router.refresh();
   }
 
+  const displayError = serverLoadError ?? loadError;
+
+  if (displayError) {
+    return <p className={styles.error}>{displayError}</p>;
+  }
+
+  const visitCount = items.length;
+
   return (
     <>
-      <ul className={styles.visitList}>
-        {items.map((r) => (
-          <li key={r.id}>
-            <button
-              type="button"
-              className={`${styles.visitItem} ${styles.visitItemButton} ${r.status === "cancelled" ? styles.visitItemCancelled : ""}`}
-              onClick={() => {
-                setError(null);
-                setConfirmCancel(false);
-                setSelected(r);
-              }}
-            >
-              <div className={styles.visitTop}>
-                <div className={styles.visitLeft}>
-                  <div className={styles.visitRowLine}>
-                    <span className={styles.statusPill}>{r.status}</span>
-                    <span className={styles.visitDoctor}>
-                      {r.provider_name?.trim() || "Provider not set"}
-                    </span>
+      {visitCount > 0 ? (
+        <div className={styles.listToolbar}>
+          <p className={styles.listHeading}>Your list</p>
+          <span className={styles.badge}>
+            {visitCount} {visitCount === 1 ? "appointment" : "appointments"}
+          </span>
+        </div>
+      ) : null}
+
+      {visitCount === 0 ? (
+        <p className={styles.emptyState}>
+          You don&apos;t have any appointments here yet. Use{" "}
+          <strong>+ Schedule Appointment</strong> to book one—they&apos;ll show up here.
+        </p>
+      ) : (
+        <ul className={styles.visitList}>
+          {items.map((r) => (
+            <li key={r.id}>
+              <button
+                type="button"
+                className={`${styles.visitItem} ${styles.visitItemButton}`}
+                onClick={() => {
+                  setError(null);
+                  setConfirmRemove(false);
+                  setSelected(r);
+                }}
+              >
+                <div className={styles.visitTop}>
+                  <div className={styles.visitLeft}>
+                    <div className={styles.visitRowLine}>
+                      <span className={styles.statusPill}>{r.status}</span>
+                      <span className={styles.visitDoctor}>
+                        {r.provider_name?.trim() || "Provider not set"}
+                      </span>
+                    </div>
+                    <span className={styles.visitHint}>Click to view details</span>
                   </div>
-                  <span className={styles.visitHint}>Click to view details</span>
+                  <span className={styles.visitTime}>{formatListTime(r.starts_at)}</span>
                 </div>
-                <span className={styles.visitTime}>{formatListTime(r.starts_at)}</span>
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       {selected ? (
         <div
@@ -201,9 +281,8 @@ export function HubAppointments({
             </dl>
 
             <p className={styles.modalNote}>
-              Cancelling here updates your Greymatter record. Ola&apos;s published OpenAPI shows
-              order status and a <code className={styles.inlineCode}>cancellation_reason</code> field
-              on <strong>GET</strong> orders—not a cancel endpoint we can call yet.
+              Removing an appointment deletes it from your Greymatter hub. Ola sync is not wired yet
+              for this action.
             </p>
 
             {error ? (
@@ -219,10 +298,10 @@ export function HubAppointments({
                   className={styles.btnDanger}
                   onClick={() => {
                     setError(null);
-                    setConfirmCancel(true);
+                    setConfirmRemove(true);
                   }}
                 >
-                  Cancel appointment
+                  Remove appointment
                 </button>
               ) : null}
               <button type="button" className={styles.btnSecondary} onClick={closeDetail}>
@@ -233,13 +312,13 @@ export function HubAppointments({
         </div>
       ) : null}
 
-      {confirmCancel && selected?.status === "booked" ? (
+      {confirmRemove && selected?.status === "booked" ? (
         <div
           className={`${styles.modalBackdrop} ${styles.modalBackdropConfirm}`}
           role="presentation"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
-              setConfirmCancel(false);
+              setConfirmRemove(false);
             }
           }}
         >
@@ -247,18 +326,18 @@ export function HubAppointments({
             className={styles.modalCard}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="cancel-confirm-title"
+            aria-labelledby="remove-confirm-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 id="cancel-confirm-title" className={styles.modalTitle}>
-              Cancel this appointment?
+            <h3 id="remove-confirm-title" className={styles.modalTitle}>
+              Remove this appointment?
             </h3>
             <p className={styles.confirmBody}>
               {formatWhenShort(selected.starts_at)}
               {selected.provider_name?.trim()
                 ? ` · ${selected.provider_name.trim()}`
                 : ""}{" "}
-              — this cannot be undone here. You may need to book a new visit if you change your mind.
+              — it will be deleted from your list. You can schedule again anytime.
             </p>
             {error ? (
               <p className={styles.modalError} role="alert">
@@ -269,18 +348,18 @@ export function HubAppointments({
               <button
                 type="button"
                 className={styles.btnDanger}
-                disabled={cancelling}
+                disabled={removing}
                 onClick={() => {
-                  void confirmCancellation();
+                  void confirmRemoveAppointment();
                 }}
               >
-                {cancelling ? "Cancelling…" : "Yes, cancel appointment"}
+                {removing ? "Removing…" : "Yes, remove appointment"}
               </button>
               <button
                 type="button"
                 className={styles.btnSecondary}
-                disabled={cancelling}
-                onClick={() => setConfirmCancel(false)}
+                disabled={removing}
+                onClick={() => setConfirmRemove(false)}
               >
                 Keep appointment
               </button>
