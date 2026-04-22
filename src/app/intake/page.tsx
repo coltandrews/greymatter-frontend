@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
+import { IntakeEligibilityForm } from "@/app/intake/IntakeEligibilityForm";
 import { redirect } from "next/navigation";
 
 export default async function IntakePage() {
@@ -46,6 +47,7 @@ export default async function IntakePage() {
         <p style={{ margin: "0 0 20px", fontSize: 14, color: "#64748b" }}>
           {user.email ?? user.id}
         </p>
+        <IntakeEligibilityForm />
         <SignOutButton />
       </section>
     </main>

@@ -13,7 +13,7 @@ Minimal Next.js frontend scaffold for the Greymatter app.
 - `NEXT_PUBLIC_SUPABASE_URL` — project URL from Supabase **Settings → API**
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **publishable** key (safe in the browser with RLS)
 
-Auth entry is `/` (signup default; `/login` redirects to sign-in). Email confirmation uses `/auth/callback`. After login, `/post-login` sends **patient** → `/intake`, **staff/admin** → `/dashboard`. Run the backend repo migration `supabase/migrations/20260422120000_profiles.sql` in Supabase first.
+Auth entry is `/` (signup default; `/login` redirects to sign-in). Email confirmation uses `/auth/callback`. After login, `/post-login` sends **patient** → `/intake`, **staff/admin** → `/dashboard`. Run backend migrations in `supabase/migrations/` (profiles, then intake drafts) in Supabase SQL Editor.
 
 `GET /api/me` returns the signed-in user from the Supabase cookie session (same origin).
 
