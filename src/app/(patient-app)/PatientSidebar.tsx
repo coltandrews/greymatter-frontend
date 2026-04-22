@@ -4,7 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/SignOutButton";
 
-const nav = [{ href: "/hub", label: "Upcoming Visits" }] as const;
+/** Patient shell — MVP scope from SOW §6; trim or extend after review. */
+const nav = [
+  { href: "/hub", label: "Upcoming Visits" },
+  { href: "/schedule", label: "Schedule" },
+  { href: "/pharmacy", label: "Pharmacy" },
+  { href: "/review", label: "Review & submit" },
+  { href: "/confirmation", label: "Confirmation" },
+  { href: "/account", label: "Account" },
+] as const;
 
 export function PatientSidebar({ email }: { email: string }) {
   const pathname = usePathname();
