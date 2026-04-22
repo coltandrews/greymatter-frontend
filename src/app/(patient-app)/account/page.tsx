@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import type { IntakeDraftData } from "@/lib/intake/draftData";
+import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { AccountProfileForm } from "./AccountProfileForm";
 import styles from "./account.module.css";
 
 export default async function AccountPage() {
@@ -13,6 +16,20 @@ export default async function AccountPage() {
     redirect("/");
   }
 
+  const [{ data: draftRow }, { data: profileRow }] = await Promise.all([
+    supabase
+      .from("intake_drafts")
+      .select("step, data")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+  ]);
+
+  const draftData = draftRow?.data as IntakeDraftData | undefined;
+  const profileDemo = profileRow?.demographics as IntakeDraftData | undefined;
+  const initialData = mergeIntakeAndProfileDemographics(draftData, profileDemo);
+  const initialStep = draftRow?.step ?? "paused_before_scheduling";
+
   return (
     <main className={styles.page}>
       <Link href="/hub" className={styles.back}>
@@ -22,45 +39,16 @@ export default async function AccountPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>Account</h1>
         <p className={styles.subtitle}>
-          Your sign-in and profile details. More fields and save will be available as we build out
-          your care profile.
+          These details are stored on your profile and stay in sync with your intake. Updates apply to
+          scheduling and your care record as we connect integrations.
         </p>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="account-email">
-            Email
-          </label>
-          <input
-            id="account-email"
-            className={styles.input}
-            type="email"
-            value={user.email ?? ""}
-            disabled
-            readOnly
-            autoComplete="email"
-          />
-          <p className={styles.hint}>Email is managed through your sign-in provider.</p>
-        </div>
-
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="account-user-id">
-            Patient ID
-          </label>
-          <input
-            id="account-user-id"
-            className={styles.input}
-            value={user.id}
-            disabled
-            readOnly
-            autoComplete="off"
-          />
-          <p className={styles.hint}>Internal reference for support.</p>
-        </div>
-
-        <p className={styles.stub}>
-          Phone, address, insurance, and notification preferences will go here. HIPAA-appropriate
-          updates will sync to your care record when integrations are live.
-        </p>
+        <AccountProfileForm
+          email={user.email ?? ""}
+          patientId={user.id}
+          initialStep={initialStep}
+          initialData={initialData}
+        />
       </div>
     </main>
   );

@@ -1,6 +1,7 @@
 /**
- * Intake draft `data` (jsonb on `intake_drafts`) — demographics, eligibility, service state.
- * Aligns loosely with vendor `user_data` / address fields for future Ola submit.
+ * Patient demographics + eligibility fields stored in `intake_drafts.data` and mirrored on
+ * `profiles.demographics` (durable profile). Merge with {@link mergeIntakeAndProfileDemographics}
+ * when reading; after writes, call {@link syncProfileDemographics}.
  */
 
 export type DraftGender = "male" | "female" | "non_binary" | "prefer_not";

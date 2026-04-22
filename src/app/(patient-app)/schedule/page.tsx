@@ -1,11 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
+import type { IntakeDraftData } from "@/lib/intake/draftData";
+import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import Link from "next/link";
 import { ScheduleFlow } from "./ScheduleFlow";
 import styles from "./schedule.module.css";
-
-type DraftData = {
-  service_state?: string;
-};
 
 export default async function SchedulePage() {
   const supabase = await createClient();
@@ -17,14 +15,16 @@ export default async function SchedulePage() {
     return null;
   }
 
-  const { data: draft } = await supabase
-    .from("intake_drafts")
-    .select("data")
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const [{ data: draft }, { data: profileRow }] = await Promise.all([
+    supabase.from("intake_drafts").select("data").eq("user_id", user.id).maybeSingle(),
+    supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+  ]);
 
-  const data = draft?.data as DraftData | undefined;
-  const serviceState = data?.service_state?.trim() || null;
+  const merged = mergeIntakeAndProfileDemographics(
+    draft?.data as IntakeDraftData | undefined,
+    profileRow?.demographics as IntakeDraftData | undefined,
+  );
+  const serviceState = merged.service_state?.trim() || null;
 
   const serviceId =
     process.env.NEXT_PUBLIC_OLA_SERVICE_ID?.trim() || "placeholder-service-id";

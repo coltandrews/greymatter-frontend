@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
+import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { isIntakeComplete } from "@/lib/intakeComplete";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
 import { PatientTopBar } from "./PatientTopBar";
@@ -21,7 +22,7 @@ export default async function PatientAppLayout({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, demographics")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -41,6 +42,8 @@ export default async function PatientAppLayout({
   }
 
   const draftData = draftRow?.data as IntakeDraftData | undefined;
+  const profileDemo = profile?.demographics as IntakeDraftData | undefined;
+  const forWelcome = mergeIntakeAndProfileDemographics(draftData, profileDemo);
 
   return (
     <div
@@ -52,7 +55,7 @@ export default async function PatientAppLayout({
       }}
     >
       <PatientTopBar
-        welcomeName={patientWelcomeName(user, draftData)}
+        welcomeName={patientWelcomeName(user, forWelcome)}
         email={user.email ?? user.id}
       />
       <div style={{ flex: 1, minHeight: 0 }}>{children}</div>

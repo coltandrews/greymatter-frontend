@@ -91,3 +91,115 @@
   color: #64748b;
   line-height: 1.55;
 }
+
+.profileForm {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.readOnlyBlock {
+  margin-bottom: 8px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.inputReadonly {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.sectionLead {
+  margin: 24px 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.fieldGrid {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 520px) {
+  .fieldGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Full-width last row when a 2-col grid has an odd number of fields */
+  .fieldGrid:not(.fieldGridAddress) .field:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .fieldGridAddress {
+    grid-template-columns: 1fr minmax(140px, 0.55fr) minmax(100px, 0.45fr);
+  }
+}
+
+.inputEditable {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 15px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #172033;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inputEditable:hover {
+  border-color: #cbd5e1;
+}
+
+.inputEditable:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.formError {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.formSuccess {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 14px;
+}
+
+.saveBtn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #172033 0%, #243656 100%);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(23, 32, 51, 0.08);
+  transition: opacity 0.15s ease, transform 0.12s ease;
+}
+
+.saveBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.saveBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}

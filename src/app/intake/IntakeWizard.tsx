@@ -5,6 +5,8 @@ import {
   basicInfoComplete,
   type IntakeDraftData,
 } from "@/lib/intake/draftData";
+import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
+import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
 import { US_STATES } from "@/app/intake/usStates";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,21 +15,21 @@ type UiStep = "basic_info" | "eligibility" | "service_state" | "done";
 
 function resolveUiStep(
   row: { step: string; data: unknown } | null,
+  merged: IntakeDraftData,
 ): UiStep {
   if (!row) {
     return "basic_info";
   }
-  const d = row.data as IntakeDraftData;
   if (row.step === "paused_before_scheduling") {
     return "done";
   }
-  if (!basicInfoComplete(d)) {
+  if (!basicInfoComplete(merged)) {
     return "basic_info";
   }
   if (row.step === "service_state") {
     return "service_state";
   }
-  if (row.step === "eligibility" && typeof d.for_self === "boolean") {
+  if (row.step === "eligibility" && typeof merged.for_self === "boolean") {
     return "service_state";
   }
   return "eligibility";
@@ -136,11 +138,14 @@ export function IntakeWizard() {
       return;
     }
 
-    const { data: row, error: qErr } = await supabase
-      .from("intake_drafts")
-      .select("step, data")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const [{ data: row, error: qErr }, { data: profileRow }] = await Promise.all([
+      supabase
+        .from("intake_drafts")
+        .select("step, data")
+        .eq("user_id", user.id)
+        .maybeSingle(),
+      supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+    ]);
 
     if (qErr) {
       setError(qErr.message);
@@ -148,13 +153,16 @@ export function IntakeWizard() {
       return;
     }
 
-    const d = row?.data as IntakeDraftData | undefined;
-    setBasic(loadBasicFromDraft(d));
-    if (d && typeof d.for_self === "boolean") {
-      setForSelf(d.for_self);
+    const merged = mergeIntakeAndProfileDemographics(
+      row?.data as IntakeDraftData | undefined,
+      profileRow?.demographics as IntakeDraftData | undefined,
+    );
+    setBasic(loadBasicFromDraft(merged));
+    if (typeof merged.for_self === "boolean") {
+      setForSelf(merged.for_self);
     }
-    const svc = d?.service_state?.trim() ?? "";
-    const addrSt = d?.address_state?.trim() ?? "";
+    const svc = merged.service_state?.trim() ?? "";
+    const addrSt = merged.address_state?.trim() ?? "";
     setServiceState(svc || addrSt);
 
     if (row) {
@@ -167,7 +175,7 @@ export function IntakeWizard() {
       }
     }
 
-    const resolved = resolveUiStep(row ?? null);
+    const resolved = resolveUiStep(row ?? null, merged);
     if (resolved === "done") {
       setLoading(false);
       router.replace("/hub");
@@ -204,18 +212,22 @@ export function IntakeWizard() {
       return;
     }
 
-    const { data: existing } = await supabase
-      .from("intake_drafts")
-      .select("data")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const prior = (existing?.data as IntakeDraftData | undefined) ?? {};
+    const [{ data: existing }, { data: prof }] = await Promise.all([
+      supabase.from("intake_drafts").select("data").eq("user_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+    ]);
+    const prior = mergeIntakeAndProfileDemographics(
+      existing?.data as IntakeDraftData | undefined,
+      prof?.demographics as IntakeDraftData | undefined,
+    );
+
+    const data: IntakeDraftData = { ...prior, ...asDraft };
 
     const { error: upErr } = await supabase.from("intake_drafts").upsert(
       {
         user_id: user.id,
         step: "eligibility",
-        data: { ...prior, ...asDraft },
+        data,
       },
       { onConflict: "user_id" },
     );
@@ -223,6 +235,13 @@ export function IntakeWizard() {
     if (upErr) {
       setSaving(false);
       setError(upErr.message);
+      return;
+    }
+
+    const { error: syncErr } = await syncProfileDemographics(supabase, user.id, data);
+    if (syncErr) {
+      setSaving(false);
+      setError(`Could not save profile: ${syncErr}`);
       return;
     }
 
@@ -257,12 +276,14 @@ export function IntakeWizard() {
       return;
     }
 
-    const { data: existing } = await supabase
-      .from("intake_drafts")
-      .select("data")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const prior = (existing?.data as IntakeDraftData | undefined) ?? {};
+    const [{ data: existing }, { data: prof }] = await Promise.all([
+      supabase.from("intake_drafts").select("data").eq("user_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+    ]);
+    const prior = mergeIntakeAndProfileDemographics(
+      existing?.data as IntakeDraftData | undefined,
+      prof?.demographics as IntakeDraftData | undefined,
+    );
     const asDraft = draftFromBasicState(basic);
     const data: IntakeDraftData = { ...prior, ...asDraft, for_self: forSelf };
 
@@ -278,6 +299,13 @@ export function IntakeWizard() {
     if (upErr) {
       setSaving(false);
       setError(upErr.message);
+      return;
+    }
+
+    const { error: syncErr } = await syncProfileDemographics(supabase, user.id, data);
+    if (syncErr) {
+      setSaving(false);
+      setError(`Could not save profile: ${syncErr}`);
       return;
     }
 
@@ -325,12 +353,14 @@ export function IntakeWizard() {
       return;
     }
 
-    const { data: existing } = await supabase
-      .from("intake_drafts")
-      .select("data")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const prior = (existing?.data as IntakeDraftData | undefined) ?? {};
+    const [{ data: existing }, { data: prof }] = await Promise.all([
+      supabase.from("intake_drafts").select("data").eq("user_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+    ]);
+    const prior = mergeIntakeAndProfileDemographics(
+      existing?.data as IntakeDraftData | undefined,
+      prof?.demographics as IntakeDraftData | undefined,
+    );
     const asDraft = draftFromBasicState(basic);
     const data: IntakeDraftData = {
       ...prior,
@@ -353,6 +383,13 @@ export function IntakeWizard() {
       setError(upErr.message);
       return;
     }
+
+    const { error: syncErr } = await syncProfileDemographics(supabase, user.id, data);
+    if (syncErr) {
+      setError(`Could not save profile: ${syncErr}`);
+      return;
+    }
+
     router.push("/hub");
     router.refresh();
   }
