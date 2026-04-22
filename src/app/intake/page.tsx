@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
 import { IntakeWizard } from "@/app/intake/IntakeWizard";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function IntakePage() {
@@ -44,8 +45,13 @@ export default async function IntakePage() {
         }}
       >
         <h1 style={{ margin: "0 0 8px", fontSize: 22 }}>Intake</h1>
-        <p style={{ margin: "0 0 20px", fontSize: 14, color: "#64748b" }}>
+        <p style={{ margin: "0 0 8px", fontSize: 14, color: "#64748b" }}>
           {user.email ?? user.id}
+        </p>
+        <p style={{ margin: "0 0 20px", fontSize: 14 }}>
+          <Link href="/hub" style={{ fontWeight: 600, color: "#172033" }}>
+            My visits
+          </Link>
         </p>
         <IntakeWizard />
         <SignOutButton />

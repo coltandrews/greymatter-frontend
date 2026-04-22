@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { US_STATES } from "@/app/intake/usStates";
 
 type DraftData = {
@@ -247,6 +248,16 @@ export function IntakeWizard() {
         {saved ? (
           <p style={{ margin: 0, color: "#15803d", fontSize: 14 }}>Saved.</p>
         ) : null}
+        <Link
+          href="/hub"
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#172033",
+          }}
+        >
+          My visits →
+        </Link>
       </div>
     );
   }
