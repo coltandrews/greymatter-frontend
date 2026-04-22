@@ -78,19 +78,18 @@
   transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
 }
 
-.scheduleNewBtn:hover:not(:disabled) {
+.scheduleNewBtn:hover,
+.scheduleNewLink:hover {
   border-color: #c7d2fe;
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
   transform: translateY(-1px);
 }
 
-.scheduleNewBtn:disabled {
-  cursor: not-allowed;
-  opacity: 0.88;
-  background: #94a3b8;
-  border-color: #94a3b8;
-  transform: none;
-  box-shadow: none;
+.scheduleNewLink {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .listToolbar {

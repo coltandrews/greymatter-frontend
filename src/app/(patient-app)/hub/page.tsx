@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 import styles from "./hub.module.css";
 
 function formatWhen(iso: string) {
@@ -42,14 +43,9 @@ export default async function HubPage() {
             <h2 id="appointments-title" className={styles.panelTitle}>
               Appointments
             </h2>
-            <button
-              type="button"
-              className={styles.scheduleNewBtn}
-              disabled
-              title="Uses provider availability from Ola when your integration is live."
-            >
+            <Link href="/schedule" className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}>
               Schedule new appointment
-            </button>
+            </Link>
           </div>
 
           {error ? <p className={styles.error}>{error.message}</p> : null}
@@ -65,8 +61,8 @@ export default async function HubPage() {
 
           {!error && (!rows || rows.length === 0) ? (
             <p className={styles.emptyState}>
-              You don&apos;t have any appointments here yet. When scheduling is connected to Ola,
-              use <strong>Schedule new appointment</strong> to add one—they&apos;ll show up here.
+              You don&apos;t have any appointments here yet. Use{" "}
+              <strong>Schedule new appointment</strong> to book one—they&apos;ll show up here.
             </p>
           ) : null}
 
