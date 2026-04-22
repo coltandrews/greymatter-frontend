@@ -93,6 +93,17 @@ export function IntakeWizard() {
       setServiceState(d.service_state);
     }
 
+    // Repair: draft can exist without a submission if insert failed earlier or user was on an old build.
+    if (row) {
+      try {
+        await ensureSubmission(supabase, user.id);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Could not sync submission record.",
+        );
+      }
+    }
+
     setUiStep(resolveUiStep(row ?? null));
     setLoading(false);
   }, []);
@@ -164,6 +175,16 @@ export function IntakeWizard() {
     if (!user) {
       setSaving(false);
       setError("Not signed in.");
+      return;
+    }
+
+    try {
+      await ensureSubmission(supabase, user.id);
+    } catch (err) {
+      setSaving(false);
+      setError(
+        err instanceof Error ? err.message : "Could not sync submission record.",
+      );
       return;
     }
 
