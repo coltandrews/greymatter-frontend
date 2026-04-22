@@ -35,8 +35,8 @@ export default async function HubPage() {
       <div className={styles.welcome}>
         <h1>Your dashboard</h1>
         <p>
-          Schedule visits, track what&apos;s in progress, and view prescriptions. Click your email
-          above anytime to update your account.
+          Schedule visits, track what&apos;s in progress, and view prescriptions. Open the menu next
+          to your name above for account settings.
         </p>
       </div>
 

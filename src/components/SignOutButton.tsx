@@ -4,7 +4,14 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SignOutButton({ noMargin }: { noMargin?: boolean }) {
+export function SignOutButton({
+  noMargin,
+  menuItem,
+}: {
+  noMargin?: boolean;
+  /** Full-width row for header dropdowns */
+  menuItem?: boolean;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -17,12 +24,21 @@ export function SignOutButton({ noMargin }: { noMargin?: boolean }) {
     router.refresh();
   }
 
-  return (
-    <button
-      type="button"
-      onClick={handleSignOut}
-      disabled={loading}
-      style={{
+  const style = menuItem
+    ? {
+        marginTop: 0,
+        width: "100%" as const,
+        textAlign: "left" as const,
+        padding: "10px 12px",
+        borderRadius: 8,
+        border: "none",
+        background: "transparent",
+        color: "#b91c1c",
+        fontSize: 14,
+        fontWeight: 600,
+        cursor: loading ? ("not-allowed" as const) : ("pointer" as const),
+      }
+    : {
         marginTop: noMargin ? 0 : 16,
         padding: "10px 16px",
         borderRadius: 8,
@@ -31,8 +47,15 @@ export function SignOutButton({ noMargin }: { noMargin?: boolean }) {
         color: "#172033",
         fontSize: 14,
         fontWeight: 600,
-        cursor: loading ? "not-allowed" : "pointer",
-      }}
+        cursor: loading ? ("not-allowed" as const) : ("pointer" as const),
+      };
+
+  return (
+    <button
+      type="button"
+      onClick={handleSignOut}
+      disabled={loading}
+      style={style}
     >
       {loading ? "Signing out…" : "Sign out"}
     </button>

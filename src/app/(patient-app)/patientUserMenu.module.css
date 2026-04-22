@@ -1,0 +1,106 @@
+.wrap {
+  position: relative;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: -8px -12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  color: #334155;
+  transition: background 0.15s ease;
+}
+
+.trigger:hover {
+  background: #f1f5f9;
+}
+
+.trigger:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+.welcome {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.name {
+  font-weight: 700;
+  color: #172033;
+}
+
+.chevron {
+  flex-shrink: 0;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 220px;
+  padding: 8px;
+  background: #fff;
+  border: 1px solid #e8ecf4;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(23, 32, 51, 0.12);
+  z-index: 50;
+}
+
+.dropdownEmail {
+  margin: 0 8px 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 12px;
+  color: #94a3b8;
+  word-break: break-all;
+  line-height: 1.35;
+}
+
+.menuLink {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #172033;
+  text-decoration: none;
+  transition: background 0.12s ease;
+}
+
+.menuLink:hover {
+  background: #f8fafc;
+}
+
+.menuFooter {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.signOutWrap {
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+
+.signOutWrap:hover {
+  background: #fef2f2;
+}
+
+@media (max-width: 520px) {
+  .dropdown {
+    right: -12px;
+  }
+}
