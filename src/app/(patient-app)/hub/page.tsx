@@ -91,13 +91,7 @@ export default async function HubPage() {
               Medications
             </h2>
           </div>
-          <div className={styles.prescriptionStub}>
-            <div className={styles.rxMark} aria-hidden>
-              Rx
-            </div>
-            Pharmacy search and visit scheduling run through Ola; medication-related details from
-            your orders and service records will show here once we sync those Ola responses.
-          </div>
+          <p className={styles.emptyState}>No current prescriptions.</p>
         </section>
       </div>
     </main>
