@@ -19,6 +19,15 @@ const input = {
   fontSize: 16,
 };
 
+const card = {
+  width: "100%" as const,
+  maxWidth: 380,
+  padding: 28,
+  background: "#fff",
+  borderRadius: 12,
+  border: "1px solid #e5ebf5",
+};
+
 export function AuthEntry() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -27,7 +36,7 @@ export function AuthEntry() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [awaitingEmail, setAwaitingEmail] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -40,7 +49,6 @@ export function AuthEntry() {
   async function onSignUp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setMessage(null);
     if (password !== passwordConfirm) {
       setError("Passwords do not match.");
       return;
@@ -63,13 +71,12 @@ export function AuthEntry() {
       router.refresh();
       return;
     }
-    setMessage("Check your email to finish.");
+    setAwaitingEmail(true);
   }
 
   async function onSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setMessage(null);
     setLoading(true);
     const supabase = createClient();
     const { error: err } = await supabase.auth.signInWithPassword({
@@ -85,6 +92,53 @@ export function AuthEntry() {
     router.refresh();
   }
 
+  function leaveCheckEmail() {
+    setAwaitingEmail(false);
+    setPassword("");
+    setPasswordConfirm("");
+    setError(null);
+  }
+
+  if (awaitingEmail) {
+    return (
+      <main
+        style={{
+          display: "grid",
+          placeItems: "center",
+          padding: "32px 20px",
+          minHeight: "100vh",
+        }}
+      >
+        <section style={card}>
+          <h1 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 600 }}>
+            Check your email
+          </h1>
+          <p style={{ margin: 0, fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
+            We sent a link to <strong>{email}</strong>. Open it to finish.
+          </p>
+          <button
+            type="button"
+            onClick={leaveCheckEmail}
+            style={{
+              marginTop: 20,
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: 8,
+              border: "1px solid #cbd5e1",
+              background: "#fff",
+              color: "#172033",
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Back
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main
       style={{
@@ -94,16 +148,7 @@ export function AuthEntry() {
         minHeight: "100vh",
       }}
     >
-      <section
-        style={{
-          width: "100%",
-          maxWidth: 380,
-          padding: 28,
-          background: "#fff",
-          borderRadius: 12,
-          border: "1px solid #e5ebf5",
-        }}
-      >
+      <section style={card}>
         <h1 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 600 }}>
           {mode === "signup" ? "Create account" : "Sign in"}
         </h1>
@@ -156,9 +201,6 @@ export function AuthEntry() {
               {error}
             </p>
           ) : null}
-          {message ? (
-            <p style={{ margin: 0, color: "#15803d", fontSize: 14 }}>{message}</p>
-          ) : null}
           <button
             type="submit"
             disabled={loading}
@@ -196,7 +238,7 @@ export function AuthEntry() {
                   setMode("signin");
                   setPasswordConfirm("");
                   setError(null);
-                  setMessage(null);
+                  setAwaitingEmail(false);
                 }}
                 style={{
                   padding: 0,
@@ -220,7 +262,7 @@ export function AuthEntry() {
                   setMode("signup");
                   setPasswordConfirm("");
                   setError(null);
-                  setMessage(null);
+                  setAwaitingEmail(false);
                 }}
                 style={{
                   padding: 0,
