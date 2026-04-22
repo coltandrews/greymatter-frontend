@@ -2,7 +2,12 @@
 
 import { fetchVendorOlaSchedules } from "@/lib/api/vendorOla";
 import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
-import { mockSlotsForDate } from "@/lib/scheduling/mockSlots";
+import {
+  buildFixtureOlaProviderSchedules,
+  olaSchedulesLiveEnabled,
+  slotsFromOlaScheduleResponse,
+  type SlotDisplay,
+} from "@/lib/scheduling/olaProviderSchedules";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -10,8 +15,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./schedule.module.css";
 
 type Step = "intake" | "calendar";
-
-type SlotDisplay = { start: string; label: string; provider?: string };
 
 function toIsoDate(d: Date): string {
   const y = d.getFullYear();
@@ -52,49 +55,6 @@ function buildCalendarCells(cursor: Date) {
   return { year, month, cells };
 }
 
-function parseOlaScheduleSlots(json: unknown, dateIso: string): SlotDisplay[] {
-  if (!json || typeof json !== "object") {
-    return [];
-  }
-  const o = json as Record<string, unknown>;
-  const data = o.data;
-  if (!Array.isArray(data)) {
-    return [];
-  }
-  const dayPrefix = dateIso.slice(0, 10);
-  const out: SlotDisplay[] = [];
-  for (const row of data) {
-    if (!row || typeof row !== "object") {
-      continue;
-    }
-    const r = row as Record<string, unknown>;
-    const start = typeof r.start_datetime === "string" ? r.start_datetime : null;
-    if (!start) {
-      continue;
-    }
-    const slotDay = start.slice(0, 10);
-    if (slotDay !== dayPrefix) {
-      continue;
-    }
-    const d = new Date(start);
-    const pd = r.provider_details;
-    let provider: string | undefined;
-    if (pd && typeof pd === "object") {
-      const p = pd as Record<string, unknown>;
-      const fn = typeof p.first_name === "string" ? p.first_name : "";
-      const ln = typeof p.last_name === "string" ? p.last_name : "";
-      const name = `${fn} ${ln}`.trim();
-      provider = name || undefined;
-    }
-    out.push({
-      start,
-      label: d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
-      provider,
-    });
-  }
-  return out.sort((a, b) => a.start.localeCompare(b.start));
-}
-
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function ScheduleFlow({
@@ -110,9 +70,11 @@ export function ScheduleFlow({
   const [monthCursor, setMonthCursor] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotDisplay[]>([]);
-  const [slotsSource, setSlotsSource] = useState<"mock" | "ola">("mock");
+  const [slotsSource, setSlotsSource] = useState<"fixture" | "live">("fixture");
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [confirmSaving, setConfirmSaving] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const effectiveState = (serviceState ?? "").trim() || "CA";
 
@@ -163,42 +125,41 @@ export function ScheduleFlow({
     (async () => {
       setLoadingSlots(true);
       setSelectedSlot(null);
+      const fixture = buildFixtureOlaProviderSchedules(selectedDate);
+      let parsed = slotsFromOlaScheduleResponse(fixture, selectedDate);
+      let source: "fixture" | "live" = "fixture";
+
       try {
-        const supabase = createClient();
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-        if (session?.access_token && base && serviceId && serviceId !== "placeholder-service-id") {
-          const res = await fetchVendorOlaSchedules(
-            session.access_token,
-            effectiveState,
-            serviceId,
-          );
-          if (res.ok) {
-            const json: unknown = await res.json();
-            const parsed = parseOlaScheduleSlots(json, selectedDate);
-            if (!cancelled && parsed.length > 0) {
-              setSlots(parsed);
-              setSlotsSource("ola");
-              setLoadingSlots(false);
-              return;
+        if (olaSchedulesLiveEnabled()) {
+          const supabase = createClient();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+          const sid = (serviceId ?? "").trim();
+          if (session?.access_token && base && sid && sid !== "placeholder-service-id") {
+            const res = await fetchVendorOlaSchedules(
+              session.access_token,
+              effectiveState,
+              sid,
+            );
+            if (res.ok) {
+              const liveJson: unknown = await res.json();
+              const liveParsed = slotsFromOlaScheduleResponse(liveJson, selectedDate);
+              if (liveParsed.length > 0) {
+                parsed = liveParsed;
+                source = "live";
+              }
             }
           }
         }
       } catch {
-        /* mock fallback */
+        /* keep fixture */
       }
+
       if (!cancelled) {
-        setSlots(
-          mockSlotsForDate(selectedDate).map((s) => ({
-            start: s.start,
-            label: s.label,
-          })),
-        );
-        setSlotsSource("mock");
-      }
-      if (!cancelled) {
+        setSlots(parsed);
+        setSlotsSource(source);
         setLoadingSlots(false);
       }
     })();
@@ -210,16 +171,45 @@ export function ScheduleFlow({
   const canConfirm =
     Boolean(selectedDate && selectedSlot && !loadingSlots);
 
-  const onConfirmAppointment = useCallback(() => {
-    if (!selectedDate || !selectedSlot) {
+  const onConfirmAppointment = useCallback(async () => {
+    if (!selectedDate || !selectedSlot || confirmSaving) {
       return;
     }
-    const q = new URLSearchParams({
-      date: selectedDate,
-      t: selectedSlot,
-    });
-    router.push(`/schedule/confirmed?${q.toString()}`);
-  }, [router, selectedDate, selectedSlot]);
+    setConfirmError(null);
+    setConfirmSaving(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+      if (authError || !user) {
+        setConfirmError("You must be signed in to book.");
+        return;
+      }
+      const starts = new Date(selectedSlot);
+      if (Number.isNaN(starts.getTime())) {
+        setConfirmError("That time slot is invalid. Pick another time.");
+        return;
+      }
+      const { error: insertError } = await supabase.from("appointments").insert({
+        user_id: user.id,
+        starts_at: starts.toISOString(),
+        status: "booked",
+      });
+      if (insertError) {
+        setConfirmError(insertError.message);
+        return;
+      }
+      const q = new URLSearchParams({
+        date: selectedDate,
+        t: selectedSlot,
+      });
+      router.push(`/schedule/confirmed?${q.toString()}`);
+    } finally {
+      setConfirmSaving(false);
+    }
+  }, [router, selectedDate, selectedSlot, confirmSaving]);
 
   if (step === "intake") {
     return (
@@ -294,9 +284,9 @@ export function ScheduleFlow({
       <h1 className={styles.title}>Choose date &amp; time</h1>
       <p className={styles.stepHint}>
         Step 2 of 2 — pick a day, then a time.{" "}
-        {slotsSource === "mock"
-          ? "Showing sample times until Ola returns slots for your service."
-          : "Times from Ola for your state and service."}
+        {slotsSource === "live"
+          ? "Times from the live Ola schedule API (via our backend)."
+          : "Sample times use the same JSON structure as Ola’s provider schedules until the live API is on."}
       </p>
       <div className={styles.calendarCard}>
         <div className={styles.monthNav}>
@@ -379,19 +369,27 @@ export function ScheduleFlow({
               </ul>
             ) : null}
             <p className={styles.olaNote}>
-              Final booking will sync with Ola when that integration is complete.
+              Booking is saved in your hub. Ola &quot;new schedule request&quot; can use the same slot fields
+              (start/end, provider_guid) when we turn that on.
             </p>
           </div>
         ) : null}
       </div>
+      {confirmError ? (
+        <p className={styles.confirmError} role="alert">
+          {confirmError}
+        </p>
+      ) : null}
       <div className={styles.confirmBar}>
         <button
           type="button"
           className={styles.btnGhost}
+          disabled={confirmSaving}
           onClick={() => {
             setStep("intake");
             setSelectedDate(null);
             setSelectedSlot(null);
+            setConfirmError(null);
           }}
         >
           ← Back to questions
@@ -399,10 +397,12 @@ export function ScheduleFlow({
         <button
           type="button"
           className={styles.btnConfirm}
-          disabled={!canConfirm}
-          onClick={onConfirmAppointment}
+          disabled={!canConfirm || confirmSaving}
+          onClick={() => {
+            void onConfirmAppointment();
+          }}
         >
-          Confirm appointment
+          {confirmSaving ? "Saving…" : "Confirm appointment"}
         </button>
       </div>
     </>

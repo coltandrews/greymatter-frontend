@@ -24,10 +24,10 @@ export default async function HubPage() {
   }
 
   const { data: rows, error } = await supabase
-    .from("submissions")
-    .select("id, status, created_at, updated_at")
+    .from("appointments")
+    .select("id, status, starts_at, created_at")
     .eq("user_id", user.id)
-    .order("updated_at", { ascending: false });
+    .order("starts_at", { ascending: true });
 
   const visitCount = rows?.length ?? 0;
 
@@ -54,7 +54,7 @@ export default async function HubPage() {
             <div className={styles.listToolbar}>
               <p className={styles.listHeading}>Your list</p>
               <span className={styles.badge}>
-                {visitCount} {visitCount === 1 ? "entry" : "entries"}
+                {visitCount} {visitCount === 1 ? "appointment" : "appointments"}
               </span>
             </div>
           ) : null}
@@ -71,10 +71,10 @@ export default async function HubPage() {
               {rows.map((r) => (
                 <li key={r.id} className={styles.visitItem}>
                   <div className={styles.visitMeta}>
-                    <span className={styles.statusPill}>{r.status.replace("_", " ")}</span>
-                    <span className={styles.visitDate}>Updated {formatWhen(r.updated_at)}</span>
+                    <span className={styles.statusPill}>{r.status}</span>
+                    <span className={styles.visitDate}>{formatWhen(r.starts_at)}</span>
                   </div>
-                  <p className={styles.visitFoot}>Started {formatWhen(r.created_at)}</p>
+                  <p className={styles.visitFoot}>Booked {formatWhen(r.created_at)}</p>
                 </li>
               ))}
             </ul>

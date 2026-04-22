@@ -259,6 +259,15 @@ a.btnGhost {
   color: #94a3b8;
 }
 
+.confirmError {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
 .confirmBar {
   margin-top: 28px;
   display: flex;
