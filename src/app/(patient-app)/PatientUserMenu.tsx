@@ -67,6 +67,7 @@ export function PatientUserMenu({
         aria-haspopup="menu"
         aria-label={`Account menu for ${email}`}
         onClick={() => setOpen((v) => !v)}
+        title={email}
       >
         <span className={styles.welcome}>
           Welcome, <span className={styles.name}>{welcomeName}</span>

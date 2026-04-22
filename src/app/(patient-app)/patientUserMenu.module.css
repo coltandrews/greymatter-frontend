@@ -29,6 +29,11 @@
 .welcome {
   font-size: 14px;
   font-weight: 500;
+  max-width: min(42vw, 320px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
 }
 
 .name {
