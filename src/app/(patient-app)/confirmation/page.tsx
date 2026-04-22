@@ -4,7 +4,7 @@ export default function ConfirmationPage() {
   return (
     <MvpPlaceholder
       title="Confirmation"
-      description="Post-submit confirmation, next steps, optional redirect URL, and polling order or service details for status."
+      description="After your appointment request is submitted: confirmation details, next steps, optional redirect, and status from the vendor order or service APIs."
       sowRef="§6.7 Confirmation & post-submit"
     />
   );

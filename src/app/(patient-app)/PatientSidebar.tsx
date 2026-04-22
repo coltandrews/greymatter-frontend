@@ -6,7 +6,7 @@ import { SignOutButton } from "@/components/SignOutButton";
 
 /** Patient shell — MVP scope from SOW §6; trim or extend after review. */
 const nav = [
-  { href: "/hub", label: "Upcoming Visits" },
+  { href: "/hub", label: "Dashboard" },
   { href: "/schedule", label: "Schedule" },
   { href: "/pharmacy", label: "Pharmacy" },
   { href: "/review", label: "Review & submit" },

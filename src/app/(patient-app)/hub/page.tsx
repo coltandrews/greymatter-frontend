@@ -32,9 +32,11 @@ export default async function HubPage() {
 
   return (
     <div style={{ maxWidth: 640 }}>
-      <h1 style={{ margin: "0 0 8px", fontSize: 26, color: "#172033" }}>Upcoming Visits</h1>
+      <h1 style={{ margin: "0 0 8px", fontSize: 26, color: "#172033" }}>Dashboard</h1>
       <p style={{ margin: "0 0 28px", fontSize: 15, color: "#475569", lineHeight: 1.5 }}>
-        Track visit status here. Scheduling and pharmacy will appear as we connect them.
+        Intake only covered eligibility and required health information. Use{" "}
+        <strong style={{ fontWeight: 600, color: "#172033" }}>Schedule</strong> to book an
+        appointment; pharmacy and other steps follow from there.
       </p>
 
       <div
@@ -53,7 +55,9 @@ export default async function HubPage() {
             background: "#fff",
           }}
         >
-          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#64748b" }}>Visits</p>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#64748b" }}>
+            Care requests
+          </p>
           <p style={{ margin: "8px 0 0", fontSize: 28, fontWeight: 700, color: "#172033" }}>
             {total}
           </p>
@@ -83,7 +87,8 @@ export default async function HubPage() {
 
       {!error && (!rows || rows.length === 0) ? (
         <p style={{ margin: 0, fontSize: 15, color: "#172033" }}>
-          No visit records yet. They will appear here as your care moves forward.
+          Nothing in progress yet. Open <strong style={{ fontWeight: 600 }}>Schedule</strong> to book
+          an appointment—status and next steps will show here.
         </p>
       ) : null}
 
@@ -135,7 +140,8 @@ export default async function HubPage() {
               </p>
               {r.status === "in_progress" ? (
                 <p style={{ margin: "10px 0 0", fontSize: 13, color: "#64748b" }}>
-                  Scheduling and next steps will show here when available.
+                  Continue under <strong style={{ fontWeight: 600 }}>Schedule</strong> to book or
+                  manage your appointment when that flow is available.
                 </p>
               ) : null}
             </li>

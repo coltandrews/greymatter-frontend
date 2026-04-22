@@ -55,12 +55,15 @@ export default async function IntakePage() {
           border: "1px solid #e5ebf5",
         }}
       >
-        <h1 style={{ margin: "0 0 8px", fontSize: 22, color: "#172033" }}>Intake</h1>
+        <h1 style={{ margin: "0 0 8px", fontSize: 22, color: "#172033" }}>
+          Health intake & eligibility
+        </h1>
         <p style={{ margin: "0 0 20px", fontSize: 14, color: "#64748b" }}>
           {user.email ?? user.id}
         </p>
         <p style={{ margin: "0 0 20px", fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
-          Answer a few questions so we can route you correctly. This only takes a minute.
+          We collect only what we need to verify eligibility and meet HIPAA requirements. This is
+          not scheduling an appointment—you will do that next from your dashboard.
         </p>
         <IntakeWizard />
         <SignOutButton />

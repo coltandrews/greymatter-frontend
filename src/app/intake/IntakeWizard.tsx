@@ -249,10 +249,11 @@ export function IntakeWizard() {
     return (
       <form onSubmit={saveServiceState} style={{ display: "grid", gap: 16 }}>
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
-          Which state are you in? (Used for provider availability.)
+          Which state do you live in? We use this to confirm telehealth eligibility and service
+          area—not to book an appointment yet.
         </p>
         <label style={labelStyle}>
-          State
+          State of residence
           <select
             required
             value={serviceState}
@@ -301,7 +302,7 @@ export function IntakeWizard() {
   return (
     <form onSubmit={saveEligibility} style={{ display: "grid", gap: 16 }}>
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
-        Are you completing this intake for yourself?
+        Are you providing this health and eligibility information for yourself?
       </p>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <button
