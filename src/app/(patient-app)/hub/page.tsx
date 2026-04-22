@@ -44,7 +44,7 @@ export default async function HubPage() {
               Appointments
             </h2>
             <Link href="/schedule" className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}>
-              Schedule new appointment
+              + Schedule Appointment
             </Link>
           </div>
 
@@ -62,7 +62,7 @@ export default async function HubPage() {
           {!error && (!rows || rows.length === 0) ? (
             <p className={styles.emptyState}>
               You don&apos;t have any appointments here yet. Use{" "}
-              <strong>Schedule new appointment</strong> to book one—they&apos;ll show up here.
+              <strong>+ Schedule Appointment</strong> to book one—they&apos;ll show up here.
             </p>
           ) : null}
 
