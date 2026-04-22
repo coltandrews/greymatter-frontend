@@ -37,27 +37,19 @@ export default async function HubPage() {
       </header>
 
       <div className={styles.stack}>
-        <section className={styles.panel} aria-labelledby="quick-actions-title">
-          <div className={styles.panelHeader}>
-            <h2 id="quick-actions-title" className={styles.panelTitle}>
-              Quick actions
-            </h2>
-          </div>
-          <div className={styles.ctaRow}>
-            <button type="button" className={styles.ctaPrimary} disabled>
-              <span className={styles.ctaLabel}>Schedule a visit</span>
-              <span className={styles.ctaHint}>
-                Uses provider availability from Ola when your integration is live.
-              </span>
-            </button>
-          </div>
-        </section>
-
         <section className={styles.panel} aria-labelledby="appointments-title">
-          <div className={styles.panelHeader}>
+          <div className={styles.panelHeaderRow}>
             <h2 id="appointments-title" className={styles.panelTitle}>
               Appointments
             </h2>
+            <button
+              type="button"
+              className={styles.scheduleNewBtn}
+              disabled
+              title="Uses provider availability from Ola when your integration is live."
+            >
+              Schedule new appointment
+            </button>
           </div>
 
           {error ? <p className={styles.error}>{error.message}</p> : null}
@@ -73,9 +65,8 @@ export default async function HubPage() {
 
           {!error && (!rows || rows.length === 0) ? (
             <p className={styles.emptyState}>
-              You don&apos;t have any appointments here yet. When{" "}
-              <strong>Schedule a visit</strong> is turned on, new bookings will show up in this
-              section.
+              You don&apos;t have any appointments here yet. When scheduling is connected to Ola,
+              use <strong>Schedule new appointment</strong> to add one—they&apos;ll show up here.
             </p>
           ) : null}
 
