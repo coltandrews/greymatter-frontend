@@ -15,6 +15,8 @@ Minimal Next.js frontend scaffold for the Greymatter app.
 
 Routes: `/login`, `/signup`, email confirmation uses `/auth/callback`, protected example at `/dashboard`.
 
+`GET /api/me` returns the signed-in user from the Supabase cookie session (same origin).
+
 ## Calling the backend with a session
 
 Use `Authorization: Bearer <access_token>` from `supabase.auth.getSession()` when calling `NEXT_PUBLIC_API_BASE_URL` (e.g. `GET /api/me` on the Greymatter backend).
