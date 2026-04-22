@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { isIntakeComplete } from "@/lib/intakeComplete";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
 import { PatientTopBar } from "./PatientTopBar";
@@ -31,13 +32,15 @@ export default async function PatientAppLayout({
 
   const { data: draftRow } = await supabase
     .from("intake_drafts")
-    .select("step")
+    .select("step, data")
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (!isIntakeComplete(draftRow?.step)) {
     redirect("/intake");
   }
+
+  const draftData = draftRow?.data as IntakeDraftData | undefined;
 
   return (
     <div
@@ -49,7 +52,7 @@ export default async function PatientAppLayout({
       }}
     >
       <PatientTopBar
-        welcomeName={patientWelcomeName(user)}
+        welcomeName={patientWelcomeName(user, draftData)}
         email={user.email ?? user.id}
       />
       <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
