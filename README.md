@@ -4,5 +4,17 @@ Minimal Next.js frontend scaffold for the Greymatter app.
 
 ## Getting started
 
-1. Install dependencies: `npm install`
-2. Run the dev server: `npm run dev`
+1. Copy `.env.example` to `.env.local` and set Supabase variables (see below).
+2. Install dependencies: `npm install`
+3. Run the dev server: `npm run dev`
+
+## Auth (Supabase)
+
+- `NEXT_PUBLIC_SUPABASE_URL` — project URL from Supabase **Settings → API**
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **publishable** key (safe in the browser with RLS)
+
+Routes: `/login`, `/signup`, email confirmation uses `/auth/callback`, protected example at `/dashboard`.
+
+## Calling the backend with a session
+
+Use `Authorization: Bearer <access_token>` from `supabase.auth.getSession()` when calling `NEXT_PUBLIC_API_BASE_URL` (e.g. `GET /api/me` on the Greymatter backend).

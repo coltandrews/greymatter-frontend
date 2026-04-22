@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const intakeSteps = [
   "Sign in or create your account",
   "Confirm eligibility",
@@ -46,6 +48,39 @@ export default function HomePage() {
           This frontend repo is prepared for the patient intake experience and
           the internal dashboard. The public landing page is intentionally out
           of scope for this app.
+        </p>
+
+        <p style={{ marginTop: 20, display: "flex", gap: 16, flexWrap: "wrap" }}>
+          <Link
+            href="/login"
+            style={{
+              color: "#2563eb",
+              fontWeight: 600,
+              fontSize: 16,
+            }}
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            style={{
+              color: "#2563eb",
+              fontWeight: 600,
+              fontSize: 16,
+            }}
+          >
+            Create account
+          </Link>
+          <Link
+            href="/dashboard"
+            style={{
+              color: "#64748b",
+              fontWeight: 600,
+              fontSize: 16,
+            }}
+          >
+            Dashboard (protected)
+          </Link>
         </p>
 
         <div
