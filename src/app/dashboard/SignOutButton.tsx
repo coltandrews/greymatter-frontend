@@ -13,7 +13,7 @@ export function SignOutButton() {
     const supabase = createClient();
     await supabase.auth.signOut();
     setLoading(false);
-    router.push("/login");
+    router.push("/");
     router.refresh();
   }
 

@@ -19,13 +19,13 @@ export default function AuthCodeErrorPage() {
           border: "1px solid #e5ebf5",
         }}
       >
-        <h1 style={{ marginTop: 0 }}>Sign-in link did not work</h1>
-        <p style={{ color: "#4f6b95", lineHeight: 1.6 }}>
-          The link may have expired or already been used. Try signing in again.
+        <h1 style={{ marginTop: 0 }}>Link invalid or expired</h1>
+        <p style={{ margin: "12px 0 0", color: "#64748b", fontSize: 14 }}>
+          Try again from the app.
         </p>
-        <p style={{ marginTop: 24 }}>
-          <Link href="/login" style={{ color: "#2563eb", fontWeight: 600 }}>
-            Back to sign in
+        <p style={{ marginTop: 20 }}>
+          <Link href="/" style={{ color: "#2563eb", fontWeight: 600 }}>
+            Back
           </Link>
         </p>
       </section>

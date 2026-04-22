@@ -13,7 +13,7 @@ Minimal Next.js frontend scaffold for the Greymatter app.
 - `NEXT_PUBLIC_SUPABASE_URL` — project URL from Supabase **Settings → API**
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **publishable** key (safe in the browser with RLS)
 
-Routes: `/login`, `/signup`, email confirmation uses `/auth/callback`, protected example at `/dashboard`.
+Auth entry is `/` (signup default; `/login` redirects to sign-in). Email confirmation uses `/auth/callback`. `/dashboard` is protected.
 
 `GET /api/me` returns the signed-in user from the Supabase cookie session (same origin).
 

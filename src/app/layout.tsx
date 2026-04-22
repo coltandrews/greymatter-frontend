@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Greymatter Intake",
-  description: "Patient intake and internal operations dashboard.",
+  title: "Greymatter",
+  description: "Greymatter",
 };
 
 export default function RootLayout({
