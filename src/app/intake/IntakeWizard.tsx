@@ -2,7 +2,8 @@
 
 import { createClient } from "@/lib/supabase/client";
 import {
-  basicInfoComplete,
+  demographicsContactComplete,
+  demographicsIdentityComplete,
   type IntakeDraftData,
 } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
@@ -11,20 +12,28 @@ import { US_STATES } from "@/app/intake/usStates";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-type UiStep = "basic_info" | "eligibility" | "service_state" | "done";
+type UiStep =
+  | "basic_identity"
+  | "basic_contact"
+  | "eligibility"
+  | "service_state"
+  | "done";
 
 function resolveUiStep(
   row: { step: string; data: unknown } | null,
   merged: IntakeDraftData,
 ): UiStep {
   if (!row) {
-    return "basic_info";
+    return "basic_identity";
   }
   if (row.step === "paused_before_scheduling") {
     return "done";
   }
-  if (!basicInfoComplete(merged)) {
-    return "basic_info";
+  if (!demographicsIdentityComplete(merged)) {
+    return "basic_identity";
+  }
+  if (!demographicsContactComplete(merged)) {
+    return "basic_contact";
   }
   if (row.step === "service_state") {
     return "service_state";
@@ -119,7 +128,7 @@ function loadBasicFromDraft(d: IntakeDraftData | undefined): typeof EMPTY_BASIC 
 
 export function IntakeWizard() {
   const router = useRouter();
-  const [uiStep, setUiStep] = useState<UiStep>("basic_info");
+  const [uiStep, setUiStep] = useState<UiStep>("basic_identity");
   const [basic, setBasic] = useState(loadBasicFromDraft(undefined));
   const [forSelf, setForSelf] = useState<boolean | null>(null);
   const [serviceState, setServiceState] = useState("");
@@ -189,15 +198,10 @@ export function IntakeWizard() {
     loadDraft();
   }, [loadDraft]);
 
-  async function saveBasicInfo(e: React.FormEvent) {
+  async function saveBasicIdentity(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const merged = { ...EMPTY_BASIC, ...basic };
-    const asDraft = draftFromBasicState(merged);
-    if (!basicInfoComplete({ ...asDraft })) {
-      setError("Please fill in all required fields. Phone needs at least 10 digits.");
-      return;
-    }
+    const asDraft = draftFromBasicState({ ...EMPTY_BASIC, ...basic });
 
     setSaving(true);
     setSaved(false);
@@ -222,6 +226,81 @@ export function IntakeWizard() {
     );
 
     const data: IntakeDraftData = { ...prior, ...asDraft };
+    if (!demographicsIdentityComplete(data)) {
+      setSaving(false);
+      setError("Please complete legal name, date of birth, and gender.");
+      return;
+    }
+
+    const { error: upErr } = await supabase.from("intake_drafts").upsert(
+      {
+        user_id: user.id,
+        step: "basic_contact",
+        data,
+      },
+      { onConflict: "user_id" },
+    );
+
+    if (upErr) {
+      setSaving(false);
+      setError(upErr.message);
+      return;
+    }
+
+    const { error: syncErr } = await syncProfileDemographics(supabase, user.id, data);
+    if (syncErr) {
+      setSaving(false);
+      setError(`Could not save profile: ${syncErr}`);
+      return;
+    }
+
+    try {
+      await ensureSubmission(supabase, user.id);
+    } catch (err) {
+      setSaving(false);
+      setError(err instanceof Error ? err.message : "Could not start submission.");
+      return;
+    }
+
+    setSaving(false);
+    setUiStep("basic_contact");
+  }
+
+  async function saveBasicContact(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const asDraft = draftFromBasicState({ ...EMPTY_BASIC, ...basic });
+
+    setSaving(true);
+    setSaved(false);
+
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      setError("Not signed in.");
+      return;
+    }
+
+    const [{ data: existing }, { data: prof }] = await Promise.all([
+      supabase.from("intake_drafts").select("data").eq("user_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+    ]);
+    const prior = mergeIntakeAndProfileDemographics(
+      existing?.data as IntakeDraftData | undefined,
+      prof?.demographics as IntakeDraftData | undefined,
+    );
+
+    const data: IntakeDraftData = { ...prior, ...asDraft };
+    if (!demographicsContactComplete(data)) {
+      setSaving(false);
+      setError(
+        "Please complete phone and address. Primary phone needs at least 10 digits.",
+      );
+      return;
+    }
 
     const { error: upErr } = await supabase.from("intake_drafts").upsert(
       {
@@ -255,6 +334,53 @@ export function IntakeWizard() {
 
     setSaving(false);
     setUiStep("eligibility");
+  }
+
+  async function backToIdentity() {
+    setError(null);
+    setSaving(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setSaving(false);
+      setError("Not signed in.");
+      return;
+    }
+
+    const [{ data: existing }, { data: prof }] = await Promise.all([
+      supabase.from("intake_drafts").select("data").eq("user_id", user.id).maybeSingle(),
+      supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+    ]);
+    const prior = mergeIntakeAndProfileDemographics(
+      existing?.data as IntakeDraftData | undefined,
+      prof?.demographics as IntakeDraftData | undefined,
+    );
+    const data: IntakeDraftData = { ...prior, ...draftFromBasicState(basic) };
+
+    const { error: upErr } = await supabase.from("intake_drafts").upsert(
+      {
+        user_id: user.id,
+        step: "basic_identity",
+        data,
+      },
+      { onConflict: "user_id" },
+    );
+
+    setSaving(false);
+    if (upErr) {
+      setError(upErr.message);
+      return;
+    }
+
+    const { error: syncErr } = await syncProfileDemographics(supabase, user.id, data);
+    if (syncErr) {
+      setError(`Could not save profile: ${syncErr}`);
+      return;
+    }
+
+    setUiStep("basic_identity");
   }
 
   async function saveEligibility(e: React.FormEvent) {
@@ -429,12 +555,15 @@ export function IntakeWizard() {
     .toISOString()
     .slice(0, 10);
 
-  if (uiStep === "basic_info") {
+  if (uiStep === "basic_identity") {
     return (
-      <form onSubmit={saveBasicInfo} style={{ display: "grid", gap: 14 }}>
+      <form onSubmit={saveBasicIdentity} style={{ display: "grid", gap: 14 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+          Step 1 of 4 — About you
+        </p>
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
-          Start with your contact details. We use this for your chart, scheduling, and required
-          disclosures.
+          Legal name and demographics for your chart and eligibility. Next you&apos;ll add where we
+          can reach you.
         </p>
 
         <div style={{ display: "grid", gap: 12 }}>
@@ -517,6 +646,42 @@ export function IntakeWizard() {
             </select>
           </label>
         </div>
+
+        {error ? (
+          <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+            {error}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          disabled={saving}
+          style={{
+            padding: "12px 16px",
+            borderRadius: 8,
+            border: "none",
+            background: saving ? "#94a3b8" : "#172033",
+            color: "#fff",
+            fontSize: 16,
+            fontWeight: 600,
+            cursor: saving ? "not-allowed" : "pointer",
+          }}
+        >
+          {saving ? "Saving…" : "Continue"}
+        </button>
+      </form>
+    );
+  }
+
+  if (uiStep === "basic_contact") {
+    return (
+      <form onSubmit={saveBasicContact} style={{ display: "grid", gap: 14 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+          Step 2 of 4 — Contact &amp; address
+        </p>
+        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
+          How we reach you and where you live. Then we&apos;ll continue with a few eligibility
+          questions.
+        </p>
 
         <div style={{ display: "grid", gap: 12 }}>
           <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#64748b" }}>Phone</p>
@@ -643,22 +808,43 @@ export function IntakeWizard() {
             {error}
           </p>
         ) : null}
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            padding: "12px 16px",
-            borderRadius: 8,
-            border: "none",
-            background: saving ? "#94a3b8" : "#172033",
-            color: "#fff",
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: saving ? "not-allowed" : "pointer",
-          }}
-        >
-          {saving ? "Saving…" : "Continue"}
-        </button>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => {
+              void backToIdentity();
+            }}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 8,
+              border: "1px solid #cbd5e1",
+              background: "#fff",
+              color: "#475569",
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: saving ? "not-allowed" : "pointer",
+            }}
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              padding: "12px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: saving ? "#94a3b8" : "#172033",
+              color: "#fff",
+              fontSize: 16,
+              fontWeight: 600,
+              cursor: saving ? "not-allowed" : "pointer",
+            }}
+          >
+            {saving ? "Saving…" : "Continue"}
+          </button>
+        </div>
       </form>
     );
   }
@@ -666,6 +852,9 @@ export function IntakeWizard() {
   if (uiStep === "service_state") {
     return (
       <form onSubmit={saveServiceState} style={{ display: "grid", gap: 16 }}>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+          Step 4 of 4 — Care location
+        </p>
         <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
           Confirm the state we should use for telehealth eligibility and scheduling. This is usually
           the same as your home address ({basic.address_state || "—"}).
@@ -719,6 +908,9 @@ export function IntakeWizard() {
 
   return (
     <form onSubmit={saveEligibility} style={{ display: "grid", gap: 16 }}>
+      <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
+        Step 3 of 4 — Eligibility
+      </p>
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
         Are you providing this health and eligibility information for yourself?
       </p>
