@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { isIntakeComplete } from "@/lib/intakeComplete";
-import { PatientSidebar } from "./PatientSidebar";
+import { PatientTopBar } from "./PatientTopBar";
 import { redirect } from "next/navigation";
 
 export default async function PatientAppLayout({
@@ -41,21 +41,14 @@ export default async function PatientAppLayout({
   return (
     <div
       style={{
-        display: "flex",
         minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
         background: "#f8fafc",
       }}
     >
-      <PatientSidebar email={user.email ?? user.id} />
-      <div
-        style={{
-          flex: 1,
-          minWidth: 0,
-          padding: "32px 40px",
-        }}
-      >
-        {children}
-      </div>
+      <PatientTopBar email={user.email ?? user.id} />
+      <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
     </div>
   );
 }
