@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function SignOutButton() {
+export function SignOutButton({ noMargin }: { noMargin?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -23,7 +23,7 @@ export function SignOutButton() {
       onClick={handleSignOut}
       disabled={loading}
       style={{
-        marginTop: 16,
+        marginTop: noMargin ? 0 : 16,
         padding: "10px 16px",
         borderRadius: 8,
         border: "1px solid #cbd5e1",

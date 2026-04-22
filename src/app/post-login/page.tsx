@@ -23,5 +23,5 @@ export default async function PostLoginPage() {
     redirect("/dashboard");
   }
 
-  redirect("/intake");
+  redirect("/home");
 }
