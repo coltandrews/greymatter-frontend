@@ -90,6 +90,36 @@ export function AuthEntry() {
       router.refresh();
       return;
     }
+
+    // Duplicate email: Supabase returns no error and no session, but user.identities is empty
+    // (avoids enumeration). Real new signups still have at least one identity while awaiting confirm.
+    const identities = data.user?.identities;
+    if (
+      data.user &&
+      (!identities || identities.length === 0)
+    ) {
+      setLoading(true);
+      const { data: signInData, error: signInErr } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+      setLoading(false);
+      if (!signInErr && signInData.session) {
+        router.push("/post-login");
+        router.refresh();
+        return;
+      }
+      setMode("signin");
+      setPassword("");
+      setPasswordConfirm("");
+      setNotice("That email already has an account. Sign in below.");
+      if (signInErr) {
+        setError(signInErr.message);
+      }
+      return;
+    }
+
     setAwaitingEmail(true);
   }
 
