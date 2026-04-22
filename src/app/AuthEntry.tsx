@@ -25,6 +25,7 @@ export function AuthEntry() {
   const [mode, setMode] = useState<Mode>("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -40,6 +41,10 @@ export function AuthEntry() {
     e.preventDefault();
     setError(null);
     setMessage(null);
+    if (password !== passwordConfirm) {
+      setError("Passwords do not match.");
+      return;
+    }
     setLoading(true);
     const supabase = createClient();
     const origin = window.location.origin;
@@ -132,6 +137,20 @@ export function AuthEntry() {
               style={input}
             />
           </label>
+          {mode === "signup" ? (
+            <label style={field}>
+              Confirm password
+              <input
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                style={input}
+              />
+            </label>
+          ) : null}
           {error ? (
             <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
               {error}
@@ -175,6 +194,7 @@ export function AuthEntry() {
                 type="button"
                 onClick={() => {
                   setMode("signin");
+                  setPasswordConfirm("");
                   setError(null);
                   setMessage(null);
                 }}
@@ -198,6 +218,7 @@ export function AuthEntry() {
                 type="button"
                 onClick={() => {
                   setMode("signup");
+                  setPasswordConfirm("");
                   setError(null);
                   setMessage(null);
                 }}
