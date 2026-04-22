@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
 import { redirect } from "next/navigation";
 
-export default async function DashboardPage() {
+export default async function IntakePage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -19,8 +19,8 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   const role = profile?.role ?? "patient";
-  if (role !== "staff" && role !== "admin") {
-    redirect("/intake");
+  if (role === "staff" || role === "admin") {
+    redirect("/dashboard");
   }
 
   return (
@@ -42,8 +42,8 @@ export default async function DashboardPage() {
           border: "1px solid #e5ebf5",
         }}
       >
-        <h1 style={{ margin: "0 0 8px", fontSize: 22 }}>Dashboard</h1>
-        <p style={{ margin: "0 0 16px", fontSize: 14, color: "#64748b" }}>
+        <h1 style={{ margin: "0 0 8px", fontSize: 22 }}>Intake</h1>
+        <p style={{ margin: "0 0 20px", fontSize: 14, color: "#64748b" }}>
           {user.email ?? user.id}
         </p>
         <SignOutButton />

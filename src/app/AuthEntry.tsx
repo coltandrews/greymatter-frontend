@@ -67,7 +67,7 @@ export function AuthEntry() {
       return;
     }
     if (data.session) {
-      router.push("/dashboard");
+      router.push("/post-login");
       router.refresh();
       return;
     }
@@ -88,7 +88,7 @@ export function AuthEntry() {
       setError(err.message);
       return;
     }
-    router.push("/dashboard");
+    router.push("/post-login");
     router.refresh();
   }
 
