@@ -192,10 +192,13 @@ export function ScheduleFlow({
         setConfirmError("That time slot is invalid. Pick another time.");
         return;
       }
+      const slotRow = slots.find((s) => s.start === selectedSlot);
+      const providerName = slotRow?.provider?.trim() || null;
       const { error: insertError } = await supabase.from("appointments").insert({
         user_id: user.id,
         starts_at: starts.toISOString(),
         status: "booked",
+        provider_name: providerName,
       });
       if (insertError) {
         setConfirmError(insertError.message);
@@ -209,7 +212,7 @@ export function ScheduleFlow({
     } finally {
       setConfirmSaving(false);
     }
-  }, [router, selectedDate, selectedSlot, confirmSaving]);
+  }, [router, selectedDate, selectedSlot, slots, confirmSaving]);
 
   if (step === "intake") {
     return (

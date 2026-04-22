@@ -1,17 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
+import { HubAppointments } from "./HubAppointments";
 import styles from "./hub.module.css";
-
-function formatWhen(iso: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return iso;
-  }
-}
 
 export default async function HubPage() {
   const supabase = await createClient();
@@ -25,7 +15,7 @@ export default async function HubPage() {
 
   const { data: rows, error } = await supabase
     .from("appointments")
-    .select("id, status, starts_at, created_at")
+    .select("id, status, starts_at, created_at, updated_at, provider_name")
     .eq("user_id", user.id)
     .order("starts_at", { ascending: true });
 
@@ -67,17 +57,16 @@ export default async function HubPage() {
           ) : null}
 
           {!error && rows && rows.length > 0 ? (
-            <ul className={styles.visitList}>
-              {rows.map((r) => (
-                <li key={r.id} className={styles.visitItem}>
-                  <div className={styles.visitMeta}>
-                    <span className={styles.statusPill}>{r.status}</span>
-                    <span className={styles.visitDate}>{formatWhen(r.starts_at)}</span>
-                  </div>
-                  <p className={styles.visitFoot}>Booked {formatWhen(r.created_at)}</p>
-                </li>
-              ))}
-            </ul>
+            <HubAppointments
+              appointments={rows.map((r) => ({
+                id: r.id,
+                status: r.status,
+                starts_at: r.starts_at,
+                created_at: r.created_at,
+                updated_at: r.updated_at,
+                provider_name: r.provider_name,
+              }))}
+            />
           ) : null}
         </section>
 
