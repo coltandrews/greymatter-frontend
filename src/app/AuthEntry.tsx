@@ -28,6 +28,8 @@ const card = {
   border: "1px solid #e5ebf5",
 };
 
+const EXISTING_EMAIL_MESSAGE = "That email already has an account.";
+
 function isExistingUserSignupError(message: string) {
   const m = message.toLowerCase();
   return (
@@ -46,7 +48,6 @@ export function AuthEntry() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
   const [awaitingEmail, setAwaitingEmail] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -60,7 +61,6 @@ export function AuthEntry() {
   async function onSignUp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setNotice(null);
     if (password !== passwordConfirm) {
       setError("Passwords do not match.");
       return;
@@ -79,7 +79,7 @@ export function AuthEntry() {
         setMode("signin");
         setPassword("");
         setPasswordConfirm("");
-        setNotice("That email already has an account. Sign in below.");
+        setError(EXISTING_EMAIL_MESSAGE);
         return;
       }
       setError(err.message);
@@ -113,10 +113,7 @@ export function AuthEntry() {
       setMode("signin");
       setPassword("");
       setPasswordConfirm("");
-      setNotice("That email already has an account. Sign in below.");
-      if (signInErr) {
-        setError(signInErr.message);
-      }
+      setError(EXISTING_EMAIL_MESSAGE);
       return;
     }
 
@@ -126,7 +123,6 @@ export function AuthEntry() {
   async function onSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setNotice(null);
     setLoading(true);
     const supabase = createClient();
     const { error: err } = await supabase.auth.signInWithPassword({
@@ -147,7 +143,6 @@ export function AuthEntry() {
     setPassword("");
     setPasswordConfirm("");
     setError(null);
-    setNotice(null);
   }
 
   if (awaitingEmail) {
@@ -203,18 +198,6 @@ export function AuthEntry() {
         <h1 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 600 }}>
           {mode === "signup" ? "Create account" : "Sign in"}
         </h1>
-        {notice ? (
-          <p
-            style={{
-              margin: "-12px 0 16px",
-              fontSize: 14,
-              color: "#64748b",
-              lineHeight: 1.45,
-            }}
-          >
-            {notice}
-          </p>
-        ) : null}
 
         <form
           onSubmit={mode === "signup" ? onSignUp : onSignIn}
@@ -301,7 +284,6 @@ export function AuthEntry() {
                   setMode("signin");
                   setPasswordConfirm("");
                   setError(null);
-                  setNotice(null);
                   setAwaitingEmail(false);
                 }}
                 style={{
@@ -326,7 +308,6 @@ export function AuthEntry() {
                   setMode("signup");
                   setPasswordConfirm("");
                   setError(null);
-                  setNotice(null);
                   setAwaitingEmail(false);
                 }}
                 style={{
