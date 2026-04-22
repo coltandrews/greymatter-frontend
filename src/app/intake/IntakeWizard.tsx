@@ -109,7 +109,7 @@ export function IntakeWizard() {
     const resolved = resolveUiStep(row ?? null);
     if (resolved === "done") {
       setLoading(false);
-      router.replace("/home");
+      router.replace("/hub");
       return;
     }
     setUiStep(resolved);
@@ -211,7 +211,7 @@ export function IntakeWizard() {
       setError(upErr.message);
       return;
     }
-    router.push("/home");
+    router.push("/hub");
     router.refresh();
   }
 

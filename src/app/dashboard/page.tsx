@@ -31,7 +31,7 @@ export default async function DashboardPage() {
 
   const role = profile?.role ?? "patient";
   if (role !== "staff" && role !== "admin") {
-    redirect("/home");
+    redirect("/hub");
   }
 
   const { data: submissions, error: subErr } = await supabase

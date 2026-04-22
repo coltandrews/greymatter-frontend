@@ -1,6 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { isIntakeComplete } from "@/lib/intakeComplete";
-import Link from "next/link";
 
 function formatWhen(iso: string) {
   try {
@@ -23,27 +21,59 @@ export default async function HubPage() {
     return null;
   }
 
-  const { data: draftRow } = await supabase
-    .from("intake_drafts")
-    .select("step")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  const intakeComplete = isIntakeComplete(draftRow?.step);
-
   const { data: rows, error } = await supabase
     .from("submissions")
     .select("id, status, created_at, updated_at")
     .eq("user_id", user.id)
     .order("updated_at", { ascending: false });
 
+  const inProgress = rows?.filter((r) => r.status === "in_progress").length ?? 0;
+  const total = rows?.length ?? 0;
+
   return (
-    <div style={{ maxWidth: 560 }}>
-      <h1 style={{ margin: "0 0 8px", fontSize: 26, color: "#172033" }}>My visits</h1>
-      <p style={{ margin: "0 0 24px", fontSize: 14, color: "#64748b" }}>
-        Track intake and visit status. Scheduling and pharmacy will appear here as we connect
-        them.
+    <div style={{ maxWidth: 640 }}>
+      <h1 style={{ margin: "0 0 8px", fontSize: 26, color: "#172033" }}>Upcoming Visits</h1>
+      <p style={{ margin: "0 0 28px", fontSize: 15, color: "#475569", lineHeight: 1.5 }}>
+        Track visit status here. Scheduling and pharmacy will appear as we connect them.
       </p>
+
+      <div
+        style={{
+          display: "grid",
+          gap: 16,
+          gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+          marginBottom: 28,
+        }}
+      >
+        <section
+          style={{
+            padding: 20,
+            borderRadius: 12,
+            border: "1px solid #e5ebf5",
+            background: "#fff",
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#64748b" }}>Visits</p>
+          <p style={{ margin: "8px 0 0", fontSize: 28, fontWeight: 700, color: "#172033" }}>
+            {total}
+          </p>
+        </section>
+        <section
+          style={{
+            padding: 20,
+            borderRadius: 12,
+            border: "1px solid #e5ebf5",
+            background: "#fff",
+          }}
+        >
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: "#64748b" }}>
+            In progress
+          </p>
+          <p style={{ margin: "8px 0 0", fontSize: 28, fontWeight: 700, color: "#172033" }}>
+            {inProgress}
+          </p>
+        </section>
+      </div>
 
       {error ? (
         <p role="alert" style={{ margin: "0 0 16px", color: "#b91c1c", fontSize: 14 }}>
@@ -52,10 +82,8 @@ export default async function HubPage() {
       ) : null}
 
       {!error && (!rows || rows.length === 0) ? (
-        <p style={{ margin: "0 0 20px", fontSize: 15, color: "#172033" }}>
-          {intakeComplete
-            ? "No visit records yet. They will appear here as your care moves forward."
-            : "No visits yet. Complete intake to create one."}
+        <p style={{ margin: 0, fontSize: 15, color: "#172033" }}>
+          No visit records yet. They will appear here as your care moves forward.
         </p>
       ) : null}
 
@@ -105,21 +133,7 @@ export default async function HubPage() {
               <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>
                 Started {formatWhen(r.created_at)}
               </p>
-              {r.status === "in_progress" && !intakeComplete ? (
-                <Link
-                  href="/intake"
-                  style={{
-                    display: "inline-block",
-                    marginTop: 10,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    color: "#172033",
-                  }}
-                >
-                  Continue intake →
-                </Link>
-              ) : null}
-              {r.status === "in_progress" && intakeComplete ? (
+              {r.status === "in_progress" ? (
                 <p style={{ margin: "10px 0 0", fontSize: 13, color: "#64748b" }}>
                   Scheduling and next steps will show here when available.
                 </p>
@@ -127,21 +141,6 @@ export default async function HubPage() {
             </li>
           ))}
         </ul>
-      ) : null}
-
-      {!error && (!rows || rows.length === 0) && !intakeComplete ? (
-        <Link
-          href="/intake"
-          style={{
-            display: "inline-block",
-            marginTop: 8,
-            fontSize: 14,
-            fontWeight: 600,
-            color: "#172033",
-          }}
-        >
-          Go to intake →
-        </Link>
       ) : null}
     </div>
   );

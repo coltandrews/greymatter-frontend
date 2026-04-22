@@ -3,7 +3,7 @@ import { isIntakeComplete } from "@/lib/intakeComplete";
 import { PatientSidebar } from "./PatientSidebar";
 import { redirect } from "next/navigation";
 
-export default async function PatientLayout({
+export default async function PatientAppLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -34,7 +34,9 @@ export default async function PatientLayout({
     .eq("user_id", user.id)
     .maybeSingle();
 
-  const intakeComplete = isIntakeComplete(draftRow?.step);
+  if (!isIntakeComplete(draftRow?.step)) {
+    redirect("/intake");
+  }
 
   return (
     <div
@@ -44,7 +46,7 @@ export default async function PatientLayout({
         background: "#f8fafc",
       }}
     >
-      <PatientSidebar email={user.email ?? user.id} intakeComplete={intakeComplete} />
+      <PatientSidebar email={user.email ?? user.id} />
       <div
         style={{
           flex: 1,
