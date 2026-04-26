@@ -2,8 +2,6 @@
  * Ola Portal "get provider schedules" response shape
  * (`GET .../telehealth/schedules/get-provider-schedules/{state}/service/{service_id}`).
  * @see greymatter-backend/docs/ola-portal-openapi.json
- *
- * We use fixtures with this shape until `NEXT_PUBLIC_OLA_SCHEDULES_LIVE=true` wires the backend proxy.
  */
 
 export type OlaProviderDetails = {
@@ -29,44 +27,6 @@ export type OlaProviderSchedulesResponse = {
 };
 
 export type SlotDisplay = { start: string; label: string; provider?: string };
-
-/** Demo provider (stable GUIDs help future Ola booking payloads). */
-const FIXTURE_PROVIDER_GUID = "7efa59e3-fc64-42eb-8a3f-daa07026ac7c";
-
-const FIXTURE_PROVIDER: OlaProviderDetails = {
-  first_name: "Alex",
-  last_name: "Morgan",
-};
-
-function addMinutesIso(isoStart: string, minutes: number): string {
-  const t = new Date(isoStart).getTime();
-  return new Date(t + minutes * 60 * 1000).toISOString();
-}
-
-/**
- * Build a valid Ola-style JSON body with sample slots for `dateIso` (YYYY-MM-DD).
- */
-export function buildFixtureOlaProviderSchedules(dateIso: string): OlaProviderSchedulesResponse {
-  const base = `${dateIso}T17:00:00.000Z`;
-  const rows: OlaProviderScheduleSlot[] = [];
-  for (let i = 0; i < 8; i++) {
-    const start_datetime = addMinutesIso(base, i * 15);
-    const end_datetime = addMinutesIso(start_datetime, 15);
-    rows.push({
-      schedule_date: dateIso,
-      start_datetime,
-      end_datetime,
-      provider_guid: FIXTURE_PROVIDER_GUID,
-      appt_length: 15,
-      provider_details: { ...FIXTURE_PROVIDER },
-    });
-  }
-  return {
-    success: true,
-    message: "Schedules Retrieved Successfully",
-    data: rows,
-  };
-}
 
 /**
  * Parse Ola schedule JSON into UI slot rows for a single calendar day.
@@ -115,8 +75,4 @@ export function slotsFromOlaScheduleResponse(
     });
   }
   return out.sort((a, b) => a.start.localeCompare(b.start));
-}
-
-export function olaSchedulesLiveEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_OLA_SCHEDULES_LIVE === "true";
 }

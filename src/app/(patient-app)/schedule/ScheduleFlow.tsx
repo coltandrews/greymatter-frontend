@@ -3,8 +3,6 @@
 import { fetchVendorOlaSchedules } from "@/lib/api/vendorOla";
 import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
 import {
-  buildFixtureOlaProviderSchedules,
-  olaSchedulesLiveEnabled,
   slotsFromOlaScheduleResponse,
   type SlotDisplay,
 } from "@/lib/scheduling/olaProviderSchedules";
@@ -57,12 +55,37 @@ function buildCalendarCells(cursor: Date) {
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+async function availabilityErrorMessage(res: Response): Promise<string> {
+  const raw = await res.text().catch(() => "");
+  if (!raw.trim()) {
+    return `Ola availability request failed (${res.status}).`;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed && typeof parsed === "object") {
+      const obj = parsed as Record<string, unknown>;
+      const message =
+        typeof obj.message === "string"
+          ? obj.message
+          : typeof obj.error === "string"
+            ? obj.error
+            : raw;
+      return `Ola availability request failed (${res.status}): ${message}`;
+    }
+  } catch {
+    /* use raw response text */
+  }
+
+  return `Ola availability request failed (${res.status}): ${raw}`;
+}
+
 export function ScheduleFlow({
   serviceState,
   serviceId,
 }: {
   serviceState: string | null;
-  serviceId: string;
+  serviceId: string | null;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("intake");
@@ -70,13 +93,19 @@ export function ScheduleFlow({
   const [monthCursor, setMonthCursor] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotDisplay[]>([]);
-  const [slotsSource, setSlotsSource] = useState<"fixture" | "live">("fixture");
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [confirmSaving, setConfirmSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
-  const effectiveState = (serviceState ?? "").trim() || "CA";
+  const serviceStateValue = (serviceState ?? "").trim();
+  const serviceIdValue = (serviceId ?? "").trim();
+  const scheduleBlockedReason = !serviceStateValue
+    ? "Complete intake with a service state before scheduling."
+    : !serviceIdValue
+      ? "Scheduling is not configured for this service."
+      : null;
 
   const { year, month, cells } = useMemo(
     () => buildCalendarCells(monthCursor),
@@ -107,66 +136,74 @@ export function ScheduleFlow({
   const onIntakeSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      if (!intakeValid) {
+      if (!intakeValid || scheduleBlockedReason) {
         return;
       }
       setStep("calendar");
     },
-    [intakeValid],
+    [intakeValid, scheduleBlockedReason],
   );
 
   useEffect(() => {
     if (!selectedDate) {
       setSlots([]);
       setSelectedSlot(null);
+      setSlotsError(null);
       return;
     }
     let cancelled = false;
     (async () => {
       setLoadingSlots(true);
+      setSlots([]);
+      setSlotsError(null);
       setSelectedSlot(null);
-      const fixture = buildFixtureOlaProviderSchedules(selectedDate);
-      let parsed = slotsFromOlaScheduleResponse(fixture, selectedDate);
-      let source: "fixture" | "live" = "fixture";
 
       try {
-        if (olaSchedulesLiveEnabled()) {
-          const supabase = createClient();
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          const base = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
-          const sid = (serviceId ?? "").trim();
-          if (session?.access_token && base && sid && sid !== "placeholder-service-id") {
-            const res = await fetchVendorOlaSchedules(
-              session.access_token,
-              effectiveState,
-              sid,
-            );
-            if (res.ok) {
-              const liveJson: unknown = await res.json();
-              const liveParsed = slotsFromOlaScheduleResponse(liveJson, selectedDate);
-              if (liveParsed.length > 0) {
-                parsed = liveParsed;
-                source = "live";
-              }
-            }
-          }
+        if (scheduleBlockedReason) {
+          throw new Error(scheduleBlockedReason);
         }
-      } catch {
-        /* keep fixture */
-      }
 
-      if (!cancelled) {
-        setSlots(parsed);
-        setSlotsSource(source);
-        setLoadingSlots(false);
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error("Sign in again to load availability.");
+        }
+
+        const res = await fetchVendorOlaSchedules(
+          session.access_token,
+          serviceStateValue,
+          serviceIdValue,
+        );
+        if (!res.ok) {
+          throw new Error(await availabilityErrorMessage(res));
+        }
+
+        const json: unknown = await res.json();
+        const parsed = slotsFromOlaScheduleResponse(json, selectedDate);
+        if (!cancelled) {
+          setSlots(parsed);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setSlots([]);
+          setSlotsError(
+            err instanceof Error
+              ? err.message
+              : "Could not load availability from Ola.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingSlots(false);
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, effectiveState, serviceId]);
+  }, [selectedDate, scheduleBlockedReason, serviceStateValue, serviceIdValue]);
 
   const canConfirm =
     Boolean(selectedDate && selectedSlot && !loadingSlots);
@@ -219,16 +256,15 @@ export function ScheduleFlow({
       <>
         <h1 className={styles.title}>Schedule appointment</h1>
         <p className={styles.stepHint}>
-          Step 1 of 2 — a few questions for this visit. (Questions will be configurable later.)
+          Step 1 of 2 — a few questions for this visit.
         </p>
-        {serviceState ? (
-          <p className={styles.stateNote}>
-            Using service state <strong>{serviceState}</strong> from your profile for availability.
+        {scheduleBlockedReason ? (
+          <p className={styles.stateNote} role="alert">
+            {scheduleBlockedReason}
           </p>
         ) : (
           <p className={styles.stateNote}>
-            No state on file; using <strong>{effectiveState}</strong> for demo availability. Update
-            intake if needed.
+            Using service state <strong>{serviceStateValue}</strong> from your profile for availability.
           </p>
         )}
         <form className={styles.form} onSubmit={onIntakeSubmit}>
@@ -270,7 +306,11 @@ export function ScheduleFlow({
             </div>
           ))}
           <div className={styles.actions}>
-            <button type="submit" className={styles.btnPrimary} disabled={!intakeValid}>
+            <button
+              type="submit"
+              className={styles.btnPrimary}
+              disabled={!intakeValid || Boolean(scheduleBlockedReason)}
+            >
               Continue to calendar
             </button>
             <Link href="/hub" className={styles.btnGhost}>
@@ -286,10 +326,7 @@ export function ScheduleFlow({
     <>
       <h1 className={styles.title}>Choose date &amp; time</h1>
       <p className={styles.stepHint}>
-        Step 2 of 2 — pick a day, then a time.{" "}
-        {slotsSource === "live"
-          ? "Times from the live Ola schedule API (via our backend)."
-          : "Sample times use the same JSON structure as Ola’s provider schedules until the live API is on."}
+        Step 2 of 2 — pick a day, then a time.
       </p>
       <div className={styles.calendarCard}>
         <div className={styles.monthNav}>
@@ -353,7 +390,9 @@ export function ScheduleFlow({
                   })}`}
             </p>
             {!loadingSlots && slots.length === 0 ? (
-              <p className={styles.stepHint}>No open slots that day. Try another date.</p>
+              <p className={styles.stepHint}>
+                {slotsError ?? "No open slots that day. Try another date."}
+              </p>
             ) : null}
             {!loadingSlots && slots.length > 0 ? (
               <ul className={styles.slotList}>
@@ -371,10 +410,6 @@ export function ScheduleFlow({
                 ))}
               </ul>
             ) : null}
-            <p className={styles.olaNote}>
-              Booking is saved in your hub. Ola &quot;new schedule request&quot; can use the same slot fields
-              (start/end, provider_guid) when we turn that on.
-            </p>
           </div>
         ) : null}
       </div>

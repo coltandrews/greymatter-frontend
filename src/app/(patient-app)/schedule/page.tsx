@@ -26,8 +26,7 @@ export default async function SchedulePage() {
   );
   const serviceState = merged.service_state?.trim() || null;
 
-  const serviceId =
-    process.env.NEXT_PUBLIC_OLA_SERVICE_ID?.trim() || "placeholder-service-id";
+  const serviceId = process.env.NEXT_PUBLIC_OLA_SERVICE_ID?.trim() || null;
 
   return (
     <main className={styles.page}>
