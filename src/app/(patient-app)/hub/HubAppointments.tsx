@@ -232,6 +232,7 @@ export function HubAppointments({
                   rel="noreferrer"
                 >
                   <span className={styles.nextStepsText}>Next Steps</span>
+                  <span className={styles.nextStepsChevron} aria-hidden="true" />
                 </a>
               ) : null}
             </li>
