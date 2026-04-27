@@ -250,7 +250,9 @@ export function HubAppointments({
                 <div className={styles.visitTop}>
                   <div className={styles.visitLeft}>
                     <div className={styles.visitRowLine}>
-                      <span className={styles.statusPill}>{r.status}</span>
+                      <span className={styles.statusPill}>
+                        {r.status === "booked" ? "Confirmed" : r.status}
+                      </span>
                       <span className={styles.visitDoctor}>
                         {r.provider_name?.trim() || "Provider not set"}
                       </span>
@@ -274,7 +276,10 @@ export function HubAppointments({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Next steps
+                  <span className={styles.nextStepsCheck} aria-hidden="true">
+                    &#10003;
+                  </span>
+                  <span className={styles.nextStepsText}>Next Steps -&gt;</span>
                 </a>
               ) : null}
             </li>
