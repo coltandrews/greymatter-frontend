@@ -33,14 +33,11 @@ function resolveUiStep(
   if (!demographicsIdentityComplete(merged)) {
     return "basic_identity";
   }
-  if (!demographicsContactComplete(merged)) {
-    return "basic_contact";
+  if (!(merged.service_state?.trim() || merged.address_state?.trim())) {
+    return "basic_identity";
   }
-  if (row.step === "service_state") {
-    return "service_state";
-  }
-  if (row.step === "eligibility" && typeof merged.for_self === "boolean") {
-    return "service_state";
+  if (typeof merged.for_self !== "boolean") {
+    return "eligibility";
   }
   return "eligibility";
 }
@@ -232,11 +229,19 @@ export function IntakeWizard() {
       setError("Please complete legal name, date of birth, and gender.");
       return;
     }
+    if (!serviceState) {
+      setSaving(false);
+      setError("Please choose your state.");
+      return;
+    }
+
+    data.address_state = serviceState;
+    data.service_state = serviceState;
 
     const { error: upErr } = await supabase.from("intake_drafts").upsert(
       {
         user_id: user.id,
-        step: "basic_contact",
+        step: "eligibility",
         data,
       },
       { onConflict: "user_id" },
@@ -264,7 +269,7 @@ export function IntakeWizard() {
     }
 
     setSaving(false);
-    setUiStep("basic_contact");
+    setUiStep("eligibility");
   }
 
   async function saveBasicContact(e: React.FormEvent) {
@@ -412,12 +417,18 @@ export function IntakeWizard() {
       prof?.demographics as IntakeDraftData | undefined,
     );
     const asDraft = draftFromBasicState(basic);
-    const data: IntakeDraftData = { ...prior, ...asDraft, for_self: forSelf };
+    const st = serviceState || prior.service_state || prior.address_state || "";
+    const data: IntakeDraftData = {
+      ...prior,
+      ...asDraft,
+      for_self: forSelf,
+      ...(st ? { service_state: st, address_state: st } : {}),
+    };
 
     const { error: upErr } = await supabase.from("intake_drafts").upsert(
       {
         user_id: user.id,
-        step: "service_state",
+        step: "paused_before_scheduling",
         data,
       },
       { onConflict: "user_id" },
@@ -444,11 +455,8 @@ export function IntakeWizard() {
       return;
     }
 
-    const st = data.service_state?.trim() || data.address_state?.trim() || "";
-    setServiceState(st);
-    setSaving(false);
-    setSaved(false);
-    setUiStep("service_state");
+    router.push("/hub");
+    router.refresh();
   }
 
   async function saveServiceState(e: React.FormEvent) {
@@ -636,10 +644,9 @@ export function IntakeWizard() {
   if (uiStep === "basic_identity") {
     return (
       <form onSubmit={saveBasicIdentity} style={formStyle}>
-        <p style={stepStyle}>Step 1 of 4 - About you</p>
+        <p style={stepStyle}>Step 1 of 2 - About you</p>
         <p style={introStyle}>
-          Legal name and demographics for your chart and eligibility. Next you&apos;ll add where we
-          can reach you.
+          Basic information for your chart, eligibility, and scheduling.
         </p>
 
         <div style={fieldGroupStyle}>
@@ -687,7 +694,7 @@ export function IntakeWizard() {
         </div>
 
         <div style={fieldGroupStyle}>
-          <p style={groupTitleStyle}>Date of birth &amp; gender</p>
+          <p style={groupTitleStyle}>Date of birth, gender &amp; state</p>
           <div style={gridStyle}>
             <label style={labelStyle}>
               Date of birth *
@@ -720,6 +727,26 @@ export function IntakeWizard() {
                 <option value="female">Female</option>
                 <option value="non_binary">Non-binary</option>
                 <option value="prefer_not">Prefer not to say</option>
+              </select>
+            </label>
+            <label style={labelStyle}>
+              State *
+              <select
+                required
+                value={serviceState}
+                onChange={(e) => {
+                  setServiceState(e.target.value);
+                  setBasic((p) => ({ ...p, address_state: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              >
+                <option value="">Select...</option>
+                {US_STATES.map((s) => (
+                  <option key={s.code} value={s.code}>
+                    {s.name}
+                  </option>
+                ))}
               </select>
             </label>
           </div>
@@ -957,7 +984,7 @@ export function IntakeWizard() {
 
   return (
     <form onSubmit={saveEligibility} style={formStyle}>
-      <p style={stepStyle}>Step 3 of 4 - Eligibility</p>
+      <p style={stepStyle}>Step 2 of 2 - Eligibility</p>
       <p style={introStyle}>
         Are you providing this health and eligibility information for yourself?
       </p>
