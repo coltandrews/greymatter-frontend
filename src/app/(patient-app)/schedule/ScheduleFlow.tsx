@@ -19,6 +19,20 @@ import styles from "./schedule.module.css";
 
 type Step = "intake" | "calendar";
 
+type InsuranceForm = {
+  insurance_member_id: string;
+  insurance_plan_name: string;
+  payer_identification: string;
+  cover_type: string;
+};
+
+const EMPTY_INSURANCE: InsuranceForm = {
+  insurance_member_id: "",
+  insurance_plan_name: "",
+  payer_identification: "",
+  cover_type: "Primary",
+};
+
 function toIsoDate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -122,12 +136,14 @@ function buildOlaAppointmentPayload({
   patient,
   selectedSlot,
   slot,
+  userInsurance,
 }: {
   answers: Record<string, string>;
   email: string;
   patient: IntakeDraftData;
   selectedSlot: string;
   slot: SlotDisplay;
+  userInsurance: InsuranceForm;
 }) {
   const state = patient.service_state?.trim() || patient.address_state?.trim() || "";
   const street = patient.street_address?.trim() || "";
@@ -183,7 +199,12 @@ function buildOlaAppointmentPayload({
       schedule_end_date: slot.end,
       provider_guid: slot.providerGuid ?? "",
     },
-    user_insurance: {},
+    user_insurance: {
+      insurance_member_id: userInsurance.insurance_member_id.trim(),
+      insurance_plan_name: userInsurance.insurance_plan_name.trim(),
+      payer_identification: userInsurance.payer_identification.trim(),
+      cover_type: userInsurance.cover_type.trim(),
+    },
   };
 }
 
@@ -207,6 +228,8 @@ export function ScheduleFlow({
   const [slots, setSlots] = useState<SlotDisplay[]>([]);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [insurance, setInsurance] = useState<InsuranceForm>(EMPTY_INSURANCE);
+  const [insuranceModalOpen, setInsuranceModalOpen] = useState(false);
   const [confirmSaving, setConfirmSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
@@ -342,8 +365,32 @@ export function ScheduleFlow({
   const canConfirm =
     Boolean(selectedDate && selectedSlotId && !loadingAvailability);
 
+  const selectedSlot = useMemo(
+    () => slots.find((s) => s.id === selectedSlotId) ?? null,
+    [selectedSlotId, slots],
+  );
+
+  const selectedSlotSummary = useMemo(() => {
+    if (!selectedDate || !selectedSlot) {
+      return null;
+    }
+    const day = new Date(`${selectedDate}T12:00:00`).toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "short",
+      day: "numeric",
+    });
+    return `${day} at ${selectedSlot.label}`;
+  }, [selectedDate, selectedSlot]);
+
+  const insuranceComplete = Boolean(
+    insurance.insurance_member_id.trim() &&
+      insurance.insurance_plan_name.trim() &&
+      insurance.payer_identification.trim() &&
+      insurance.cover_type.trim(),
+  );
+
   const onConfirmAppointment = useCallback(async () => {
-    if (!selectedDate || !selectedSlotId || confirmSaving) {
+    if (!selectedDate || !selectedSlot || confirmSaving) {
       return;
     }
     setConfirmError(null);
@@ -365,12 +412,7 @@ export function ScheduleFlow({
         setConfirmError("Sign in again to book.");
         return;
       }
-      const slotRow = slots.find((s) => s.id === selectedSlotId);
-      if (!slotRow) {
-        setConfirmError("Pick a time slot before continuing.");
-        return;
-      }
-      const starts = new Date(slotRow.start);
+      const starts = new Date(selectedSlot.start);
       if (Number.isNaN(starts.getTime())) {
         setConfirmError("That time slot is invalid. Pick another time.");
         return;
@@ -381,8 +423,9 @@ export function ScheduleFlow({
           answers,
           email,
           patient,
-          selectedSlot: slotRow.start,
-          slot: slotRow,
+          selectedSlot: selectedSlot.start,
+          slot: selectedSlot,
+          userInsurance: insurance,
         }),
       );
       if (!vendorRes.ok) {
@@ -390,7 +433,7 @@ export function ScheduleFlow({
         return;
       }
       const vendorJson = (await vendorRes.json().catch(() => ({}))) as Record<string, unknown>;
-      const providerName = slotRow?.provider?.trim() || null;
+      const providerName = selectedSlot.provider?.trim() || null;
       const { error: insertError } = await supabase.from("appointments").insert({
         user_id: user.id,
         starts_at: starts.toISOString(),
@@ -411,16 +454,16 @@ export function ScheduleFlow({
       }
       const q = new URLSearchParams({
         date: selectedDate,
-        t: slotRow.start,
+        t: selectedSlot.start,
       });
-      if (slotRow?.label) {
-        q.set("time", slotRow.label);
+      if (selectedSlot.label) {
+        q.set("time", selectedSlot.label);
       }
       router.push(`/schedule/confirmed?${q.toString()}`);
     } finally {
       setConfirmSaving(false);
     }
-  }, [answers, email, patient, router, selectedDate, selectedSlotId, slots, confirmSaving]);
+  }, [answers, email, insurance, patient, router, selectedDate, selectedSlot, confirmSaving]);
 
   if (step === "intake") {
     return (
@@ -620,12 +663,135 @@ export function ScheduleFlow({
           className={styles.btnConfirm}
           disabled={!canConfirm || confirmSaving}
           onClick={() => {
-            void onConfirmAppointment();
+            setConfirmError(null);
+            setInsuranceModalOpen(true);
           }}
         >
           {confirmSaving ? "Saving…" : selectedSlotId ? "Continue" : "Select a time"}
         </button>
       </div>
+
+      {insuranceModalOpen ? (
+        <div
+          className={styles.modalBackdrop}
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !confirmSaving) {
+              setInsuranceModalOpen(false);
+            }
+          }}
+        >
+          <form
+            className={styles.modalCard}
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!insuranceComplete || confirmSaving) {
+                return;
+              }
+              void onConfirmAppointment();
+            }}
+          >
+            <h2 className={styles.modalTitle}>Insurance details</h2>
+            <p className={styles.modalLead}>
+              Ola requires these details before booking. You can find them on your insurance card.
+            </p>
+            {selectedSlotSummary ? (
+              <p className={styles.selectedSummary}>
+                Selected time: <strong>{selectedSlotSummary}</strong>
+              </p>
+            ) : null}
+
+            <div className={styles.modalFields}>
+              <label className={styles.field}>
+                <span className={styles.label}>Member ID *</span>
+                <input
+                  className={styles.input}
+                  required
+                  autoComplete="off"
+                  value={insurance.insurance_member_id}
+                  onChange={(e) =>
+                    setInsurance((p) => ({
+                      ...p,
+                      insurance_member_id: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>Insurance plan name *</span>
+                <input
+                  className={styles.input}
+                  required
+                  autoComplete="off"
+                  value={insurance.insurance_plan_name}
+                  onChange={(e) =>
+                    setInsurance((p) => ({
+                      ...p,
+                      insurance_plan_name: e.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>Payer ID *</span>
+                <input
+                  className={styles.input}
+                  required
+                  autoComplete="off"
+                  value={insurance.payer_identification}
+                  onChange={(e) =>
+                    setInsurance((p) => ({
+                      ...p,
+                      payer_identification: e.target.value,
+                    }))
+                  }
+                />
+                <span className={styles.fieldHint}>
+                  Usually listed on the back of the card near claims or provider information.
+                </span>
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>Coverage type *</span>
+                <select
+                  className={styles.select}
+                  required
+                  value={insurance.cover_type}
+                  onChange={(e) =>
+                    setInsurance((p) => ({ ...p, cover_type: e.target.value }))
+                  }
+                >
+                  <option value="Primary">Primary</option>
+                  <option value="Secondary">Secondary</option>
+                </select>
+              </label>
+            </div>
+
+            {confirmError ? (
+              <p className={styles.confirmError} role="alert">
+                {confirmError}
+              </p>
+            ) : null}
+
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.btnGhost}
+                disabled={confirmSaving}
+                onClick={() => setInsuranceModalOpen(false)}
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                className={styles.btnConfirm}
+                disabled={!insuranceComplete || confirmSaving}
+              >
+                {confirmSaving ? "Booking…" : "Book appointment"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
     </>
   );
 }
