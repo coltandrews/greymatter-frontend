@@ -432,8 +432,9 @@
 
 .modalCard {
   width: 100%;
-  max-width: 520px;
-  overflow: visible;
+  max-width: 720px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
   background: #fff;
   border-radius: 16px;
   padding: 24px 22px 22px;
@@ -455,6 +456,10 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.detailListCompact {
+  gap: 12px;
 }
 
 .detailRow {
@@ -503,6 +508,34 @@
 
 .detailLink:hover {
   background: #bbf7d0;
+}
+
+.detailSection {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid #e8ecf4;
+}
+
+.detailSectionTitle {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #172033;
+}
+
+.detailMuted,
+.detailError {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.detailMuted {
+  color: #64748b;
+}
+
+.detailError {
+  color: #b91c1c;
 }
 
 .inlineCode {

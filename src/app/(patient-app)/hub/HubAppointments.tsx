@@ -1,7 +1,8 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useCallback, useEffect, useState } from "react";
+import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./hub.module.css";
 
 export type HubAppointmentRow = {
@@ -15,6 +16,148 @@ export type HubAppointmentRow = {
   ola_popup_message: string | null;
   ola_order_guid: string | null;
 };
+
+type OrderDetailState = {
+  loading: boolean;
+  error: string | null;
+  payload: unknown | null;
+};
+
+type DisplayDetailRow = {
+  label: string;
+  value: string;
+  mono?: boolean;
+  cap?: boolean;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function stringValue(record: Record<string, unknown> | null, keys: string[]): string | null {
+  if (!record) {
+    return null;
+  }
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return String(value);
+    }
+    if (typeof value === "boolean") {
+      return value ? "Yes" : "No";
+    }
+  }
+  return null;
+}
+
+function arrayCount(record: Record<string, unknown> | null, key: string): number | null {
+  if (!record) {
+    return null;
+  }
+  const value = record[key];
+  return Array.isArray(value) ? value.length : null;
+}
+
+function formatOlaDate(value: string | null): string | null {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+function providerName(provider: Record<string, unknown> | null): string | null {
+  const direct = stringValue(provider, ["name", "display_name", "provider_name"]);
+  if (direct) {
+    return direct;
+  }
+  const first = stringValue(provider, ["first_name", "firstName"]);
+  const last = stringValue(provider, ["last_name", "lastName"]);
+  return [first, last].filter(Boolean).join(" ").trim() || null;
+}
+
+function orderDetailRows(payload: unknown): DisplayDetailRow[] {
+  const root = asRecord(payload);
+  const result = asRecord(root?.result) ?? root;
+  if (!result) {
+    return [];
+  }
+
+  const provider = asRecord(result.provider);
+  const providerDetail = asRecord(asRecord(provider?.user_detail)?.data);
+  const service = asRecord(result.service);
+  const scheduled = asRecord(result.scheduled);
+
+  const rows: DisplayDetailRow[] = [];
+  const add = (
+    label: string,
+    value: string | null | undefined,
+    options: Pick<DisplayDetailRow, "mono" | "cap"> = {},
+  ) => {
+    if (value) {
+      rows.push({ label, value, ...options });
+    }
+  };
+
+  add("Ola status", stringValue(result, ["status", "order_status", "appointment_status"]), {
+    cap: true,
+  });
+  add("Service", stringValue(service, ["service_name", "name", "title"]) ?? stringValue(result, ["service_name"]));
+  add("Service type", stringValue(result, ["service_type", "type"]), { cap: true });
+  add("Scheduled", formatOlaDate(stringValue(scheduled, [
+    "schedule_start_date",
+    "scheduleStartDate",
+    "start_date",
+    "startDate",
+    "starts_at",
+    "start_time",
+    "appointment_date",
+    "date",
+  ])));
+  add("Clinician", providerName(provider));
+  add("Clinician title", stringValue(providerDetail, ["title"]));
+  add("Pharmacy", stringValue(result, ["pharmacy_name", "pharmacyName"]));
+  add("Pharmacy phone", stringValue(result, ["pharmacy_phone", "pharmacyPhone"]));
+  add("Pharmacy address", stringValue(result, ["pharmacy_address", "pharmacyAddress"]));
+  add("Cancellation reason", stringValue(result, ["cancellation_reason", "cancellationReason"]));
+
+  const prescriptionCount = arrayCount(result, "prescriptions");
+  if (prescriptionCount != null) {
+    add("Prescriptions", String(prescriptionCount));
+  }
+  const consultNoteCount = arrayCount(result, "consult_notes");
+  if (consultNoteCount != null) {
+    add("Clinical notes", String(consultNoteCount));
+  }
+
+  add("Ola order", stringValue(result, ["order_guid", "orderGuid"]), { mono: true });
+  add("Ola updated", formatOlaDate(stringValue(result, ["updated_at", "updatedAt"])));
+
+  return rows;
+}
+
+function responseMessage(payload: unknown): string | null {
+  return stringValue(asRecord(payload), ["message", "error"]);
+}
+
+function detailValueClass(row: DisplayDetailRow): string | undefined {
+  const classes = [
+    row.cap ? styles.detailCap : "",
+    row.mono ? styles.detailMono : "",
+  ].filter(Boolean);
+  return classes.length > 0 ? classes.join(" ") : undefined;
+}
 
 function mapRows(data: unknown[]): HubAppointmentRow[] {
   return data.map((r) => {
@@ -130,6 +273,9 @@ export function HubAppointments({
   const [items, setItems] = useState(initial);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<HubAppointmentRow | null>(null);
+  const [orderDetailsByGuid, setOrderDetailsByGuid] = useState<Record<string, OrderDetailState>>({});
+  const orderDetailRequests = useRef(new Set<string>());
+  const selectedOrderGuid = selected?.ola_order_guid ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -167,6 +313,69 @@ export function HubAppointments({
     return () => document.removeEventListener("keydown", onKey);
   }, [selected, closeDetail]);
 
+  useEffect(() => {
+    if (!selectedOrderGuid || orderDetailRequests.current.has(selectedOrderGuid)) {
+      return;
+    }
+
+    orderDetailRequests.current.add(selectedOrderGuid);
+    setOrderDetailsByGuid((current) => ({
+      ...current,
+      [selectedOrderGuid]: {
+        loading: true,
+        error: null,
+        payload: null,
+      },
+    }));
+
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          throw new Error("Sign in again to load provider details.");
+        }
+
+        const response = await fetchVendorOlaOrderDetails(
+          session.access_token,
+          selectedOrderGuid,
+        );
+        const payload = (await response.json().catch(() => null)) as unknown;
+
+        if (!response.ok) {
+          throw new Error(
+            responseMessage(payload) ??
+              `Provider details could not load (${response.status}).`,
+          );
+        }
+
+        setOrderDetailsByGuid((current) => ({
+          ...current,
+          [selectedOrderGuid]: {
+            loading: false,
+            error: null,
+            payload,
+          },
+        }));
+      } catch (err) {
+        setOrderDetailsByGuid((current) => ({
+          ...current,
+          [selectedOrderGuid]: {
+            loading: false,
+            error:
+              err instanceof Error
+                ? err.message
+                : "Provider details could not load.",
+            payload: null,
+          },
+        }));
+      }
+    })();
+  }, [selectedOrderGuid]);
+
   const displayError = serverLoadError ?? loadError;
 
   if (displayError) {
@@ -174,6 +383,12 @@ export function HubAppointments({
   }
 
   const visitCount = items.length;
+  const selectedOrderState = selectedOrderGuid
+    ? orderDetailsByGuid[selectedOrderGuid]
+    : null;
+  const selectedOrderRows = selectedOrderState?.payload
+    ? orderDetailRows(selectedOrderState.payload)
+    : [];
 
   return (
     <>
@@ -303,6 +518,35 @@ export function HubAppointments({
                 <dd>{formatWhenShort(selected.updated_at)}</dd>
               </div>
             </dl>
+
+            {selected.ola_order_guid ? (
+              <div className={styles.detailSection}>
+                <h4 className={styles.detailSectionTitle}>Provider details</h4>
+                {selectedOrderState?.loading ? (
+                  <p className={styles.detailMuted}>Loading provider details...</p>
+                ) : null}
+                {selectedOrderState?.error ? (
+                  <p className={styles.detailError}>
+                    {selectedOrderState.error}
+                  </p>
+                ) : null}
+                {selectedOrderState?.payload && selectedOrderRows.length === 0 ? (
+                  <p className={styles.detailMuted}>
+                    No additional provider details are available yet.
+                  </p>
+                ) : null}
+                {selectedOrderRows.length > 0 ? (
+                  <dl className={`${styles.detailList} ${styles.detailListCompact}`}>
+                    {selectedOrderRows.map((row) => (
+                      <div key={`${row.label}-${row.value}`} className={styles.detailRow}>
+                        <dt>{row.label}</dt>
+                        <dd className={detailValueClass(row)}>{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : null}
+              </div>
+            ) : null}
 
             <div className={styles.modalActions}>
               <button type="button" className={styles.btnSecondary} onClick={closeDetail}>
