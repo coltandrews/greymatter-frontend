@@ -2,7 +2,6 @@
 
 import { US_STATES } from "@/app/intake/usStates";
 import {
-  basicInfoComplete,
   type IntakeDraftData,
 } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
@@ -13,54 +12,23 @@ import { useCallback, useState } from "react";
 import styles from "./account.module.css";
 
 type FormState = {
-  legal_first_name: string;
-  legal_last_name: string;
-  preferred_name: string;
-  date_of_birth: string;
   gender: string;
-  phone: string;
-  phone_secondary: string;
-  street_address: string;
-  address_line2: string;
-  city: string;
   address_state: string;
-  zip: string;
-  country: string;
 };
 
 function fromDraft(d: IntakeDraftData | undefined): FormState {
   return {
-    legal_first_name: d?.legal_first_name ?? "",
-    legal_last_name: d?.legal_last_name ?? "",
-    preferred_name: d?.preferred_name ?? "",
-    date_of_birth: d?.date_of_birth ?? "",
     gender: typeof d?.gender === "string" ? d.gender : "",
-    phone: d?.phone ?? "",
-    phone_secondary: d?.phone_secondary ?? "",
-    street_address: d?.street_address ?? "",
-    address_line2: d?.address_line2 ?? "",
-    city: d?.city ?? "",
-    address_state: d?.address_state ?? "",
-    zip: d?.zip ?? "",
-    country: d?.country?.trim() || "US",
+    address_state: d?.service_state?.trim() || d?.address_state?.trim() || "",
   };
 }
 
 function toDraftPatch(f: FormState): IntakeDraftData {
+  const state = f.address_state.trim() || undefined;
   return {
-    legal_first_name: f.legal_first_name.trim() || undefined,
-    legal_last_name: f.legal_last_name.trim() || undefined,
-    preferred_name: f.preferred_name.trim() || undefined,
-    date_of_birth: f.date_of_birth.trim() || undefined,
     gender: f.gender.trim() || undefined,
-    phone: f.phone.trim() || undefined,
-    phone_secondary: f.phone_secondary.trim() || undefined,
-    street_address: f.street_address.trim() || undefined,
-    address_line2: f.address_line2.trim() || undefined,
-    city: f.city.trim() || undefined,
-    address_state: f.address_state.trim() || undefined,
-    zip: f.zip.trim() || undefined,
-    country: f.country.trim() || "US",
+    address_state: state,
+    service_state: state,
   };
 }
 
@@ -81,22 +49,14 @@ export function AccountProfileForm({
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  const maxDob = new Date().toISOString().slice(0, 10);
-  const minDob = new Date(new Date().getFullYear() - 120, 0, 1)
-    .toISOString()
-    .slice(0, 10);
-
   const onSave = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
       setError(null);
       setSaved(false);
       const patch = toDraftPatch(form);
-      const mergedForCheck: IntakeDraftData = { ...initialData, ...patch };
-      if (!basicInfoComplete(mergedForCheck)) {
-        setError(
-          "Please complete all required fields. Phone needs at least 10 digits.",
-        );
+      if (!patch.gender || !patch.address_state) {
+        setError("Please choose gender and state.");
         return;
       }
 
@@ -162,7 +122,7 @@ export function AccountProfileForm({
 
   const set =
     (key: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
       setForm((p) => ({ ...p, [key]: e.target.value }));
       setSaved(false);
     };
@@ -203,66 +163,9 @@ export function AccountProfileForm({
         </div>
       </div>
 
-      <p className={styles.sectionLead}>Your details</p>
+      <p className={styles.sectionLead}>Profile settings</p>
 
       <div className={styles.fieldGrid}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="acct-first">
-            Legal first name *
-          </label>
-          <input
-            id="acct-first"
-            className={styles.inputEditable}
-            required
-            autoComplete="given-name"
-            value={form.legal_first_name}
-            onChange={set("legal_first_name")}
-          />
-        </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="acct-last">
-            Legal last name *
-          </label>
-          <input
-            id="acct-last"
-            className={styles.inputEditable}
-            required
-            autoComplete="family-name"
-            value={form.legal_last_name}
-            onChange={set("legal_last_name")}
-          />
-        </div>
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="acct-preferred">
-          Preferred name (optional)
-        </label>
-        <input
-          id="acct-preferred"
-          className={styles.inputEditable}
-          autoComplete="nickname"
-          value={form.preferred_name}
-          onChange={set("preferred_name")}
-        />
-      </div>
-
-      <div className={styles.fieldGrid}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="acct-dob">
-            Date of birth *
-          </label>
-          <input
-            id="acct-dob"
-            type="date"
-            className={styles.inputEditable}
-            required
-            min={minDob}
-            max={maxDob}
-            value={form.date_of_birth}
-            onChange={set("date_of_birth")}
-          />
-        </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="acct-gender">
             Gender *
@@ -280,78 +183,6 @@ export function AccountProfileForm({
             <option value="non_binary">Non-binary</option>
             <option value="prefer_not">Prefer not to say</option>
           </select>
-        </div>
-      </div>
-
-      <div className={styles.fieldGrid}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="acct-phone">
-            Primary phone *
-          </label>
-          <input
-            id="acct-phone"
-            type="tel"
-            className={styles.inputEditable}
-            required
-            autoComplete="tel"
-            value={form.phone}
-            onChange={set("phone")}
-          />
-        </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="acct-phone2">
-            Secondary phone (optional)
-          </label>
-          <input
-            id="acct-phone2"
-            type="tel"
-            className={styles.inputEditable}
-            autoComplete="tel"
-            value={form.phone_secondary}
-            onChange={set("phone_secondary")}
-          />
-        </div>
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="acct-street">
-          Street address *
-        </label>
-        <input
-          id="acct-street"
-          className={styles.inputEditable}
-          required
-          autoComplete="street-address"
-          value={form.street_address}
-          onChange={set("street_address")}
-        />
-      </div>
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="acct-line2">
-          Apt / suite (optional)
-        </label>
-        <input
-          id="acct-line2"
-          className={styles.inputEditable}
-          autoComplete="address-line2"
-          value={form.address_line2}
-          onChange={set("address_line2")}
-        />
-      </div>
-
-      <div className={`${styles.fieldGrid} ${styles.fieldGridAddress}`}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="acct-city">
-            City *
-          </label>
-          <input
-            id="acct-city"
-            className={styles.inputEditable}
-            required
-            autoComplete="address-level2"
-            value={form.city}
-            onChange={set("city")}
-          />
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="acct-state">
@@ -373,33 +204,6 @@ export function AccountProfileForm({
             ))}
           </select>
         </div>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="acct-zip">
-            ZIP *
-          </label>
-          <input
-            id="acct-zip"
-            className={styles.inputEditable}
-            required
-            autoComplete="postal-code"
-            value={form.zip}
-            onChange={set("zip")}
-          />
-        </div>
-      </div>
-
-      <div className={styles.field}>
-        <label className={styles.label} htmlFor="acct-country">
-          Country
-        </label>
-        <select
-          id="acct-country"
-          className={styles.inputEditable}
-          value={form.country}
-          onChange={set("country")}
-        >
-          <option value="US">United States</option>
-        </select>
       </div>
 
       {error ? (

@@ -39,8 +39,7 @@ export default async function AccountPage() {
       <div className={styles.card}>
         <h1 className={styles.title}>Account</h1>
         <p className={styles.subtitle}>
-          These details are stored on your profile and stay in sync with your intake. Updates apply to
-          scheduling and your care record as we connect integrations.
+          Update the settings that affect eligibility and scheduling.
         </p>
 
         <AccountProfileForm
