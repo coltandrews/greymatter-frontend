@@ -212,11 +212,6 @@ export function HubAppointments({
                         {r.provider_name?.trim() || "Provider not set"}
                       </span>
                     </div>
-                    {r.ola_popup_message ? (
-                      <p className={styles.consultMessage}>
-                        &ldquo;{r.ola_popup_message}&rdquo;
-                      </p>
-                    ) : null}
                   </div>
                   <div className={styles.visitTimeBlock}>
                     <span className={styles.visitTime}>{formatListTime(r.starts_at)}</span>
