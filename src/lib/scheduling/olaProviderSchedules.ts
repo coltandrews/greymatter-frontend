@@ -27,6 +27,7 @@ export type OlaProviderSchedulesResponse = {
 };
 
 export type SlotDisplay = {
+  id: string;
   start: string;
   end: string;
   label: string;
@@ -90,13 +91,16 @@ export function slotsFromOlaScheduleResponse(
       const name = `${fn} ${ln}`.trim();
       provider = name || undefined;
     }
+    const end = typeof r.end_datetime === "string" ? r.end_datetime : start;
+    const providerGuid =
+      typeof r.provider_guid === "string" ? r.provider_guid : undefined;
     out.push({
+      id: [start, end, providerGuid ?? provider ?? ""].join("|"),
       start,
-      end: typeof r.end_datetime === "string" ? r.end_datetime : start,
+      end,
       label: d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
       provider,
-      providerGuid:
-        typeof r.provider_guid === "string" ? r.provider_guid : undefined,
+      providerGuid,
     });
   }
   return out.sort((a, b) => a.start.localeCompare(b.start));

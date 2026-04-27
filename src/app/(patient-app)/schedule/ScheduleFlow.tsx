@@ -206,7 +206,7 @@ export function ScheduleFlow({
   const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotDisplay[]>([]);
   const [slotsError, setSlotsError] = useState<string | null>(null);
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [confirmSaving, setConfirmSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
@@ -268,7 +268,7 @@ export function ScheduleFlow({
       setAvailabilityError(null);
       setScheduleResponse(null);
       setSlots([]);
-      setSelectedSlot(null);
+      setSelectedSlotId(null);
       setSlotsError(null);
 
       try {
@@ -318,32 +318,32 @@ export function ScheduleFlow({
   useEffect(() => {
     if (!selectedDate) {
       setSlots([]);
-      setSelectedSlot(null);
+      setSelectedSlotId(null);
       setSlotsError(null);
       return;
     }
     if (availabilityError) {
       setSlots([]);
-      setSelectedSlot(null);
+      setSelectedSlotId(null);
       setSlotsError(availabilityError);
       return;
     }
     if (loadingAvailability || !scheduleResponse) {
       setSlots([]);
-      setSelectedSlot(null);
+      setSelectedSlotId(null);
       setSlotsError(null);
       return;
     }
     setSlots(slotsFromOlaScheduleResponse(scheduleResponse, selectedDate));
-    setSelectedSlot(null);
+    setSelectedSlotId(null);
     setSlotsError(null);
   }, [availabilityError, loadingAvailability, scheduleResponse, selectedDate]);
 
   const canConfirm =
-    Boolean(selectedDate && selectedSlot && !loadingAvailability);
+    Boolean(selectedDate && selectedSlotId && !loadingAvailability);
 
   const onConfirmAppointment = useCallback(async () => {
-    if (!selectedDate || !selectedSlot || confirmSaving) {
+    if (!selectedDate || !selectedSlotId || confirmSaving) {
       return;
     }
     setConfirmError(null);
@@ -365,14 +365,14 @@ export function ScheduleFlow({
         setConfirmError("Sign in again to book.");
         return;
       }
-      const starts = new Date(selectedSlot);
-      if (Number.isNaN(starts.getTime())) {
-        setConfirmError("That time slot is invalid. Pick another time.");
-        return;
-      }
-      const slotRow = slots.find((s) => s.start === selectedSlot);
+      const slotRow = slots.find((s) => s.id === selectedSlotId);
       if (!slotRow) {
         setConfirmError("Pick a time slot before continuing.");
+        return;
+      }
+      const starts = new Date(slotRow.start);
+      if (Number.isNaN(starts.getTime())) {
+        setConfirmError("That time slot is invalid. Pick another time.");
         return;
       }
       const vendorRes = await createVendorOlaScheduleRequest(
@@ -381,7 +381,7 @@ export function ScheduleFlow({
           answers,
           email,
           patient,
-          selectedSlot,
+          selectedSlot: slotRow.start,
           slot: slotRow,
         }),
       );
@@ -411,7 +411,7 @@ export function ScheduleFlow({
       }
       const q = new URLSearchParams({
         date: selectedDate,
-        t: selectedSlot,
+        t: slotRow.start,
       });
       if (slotRow?.label) {
         q.set("time", slotRow.label);
@@ -420,7 +420,7 @@ export function ScheduleFlow({
     } finally {
       setConfirmSaving(false);
     }
-  }, [answers, email, patient, router, selectedDate, selectedSlot, slots, confirmSaving]);
+  }, [answers, email, patient, router, selectedDate, selectedSlotId, slots, confirmSaving]);
 
   if (step === "intake") {
     return (
@@ -579,12 +579,12 @@ export function ScheduleFlow({
             {selectedDate && !loadingAvailability && slots.length > 0 ? (
               <ul className={styles.slotList}>
                 {slots.map((s) => (
-                  <li key={s.start}>
+                  <li key={s.id}>
                     <button
                       type="button"
-                      className={`${styles.slotBtn} ${selectedSlot === s.start ? styles.slotBtnSelected : ""}`}
-                      onClick={() => setSelectedSlot(s.start)}
-                      aria-pressed={selectedSlot === s.start}
+                      className={`${styles.slotBtn} ${selectedSlotId === s.id ? styles.slotBtnSelected : ""}`}
+                      onClick={() => setSelectedSlotId(s.id)}
+                      aria-pressed={selectedSlotId === s.id}
                     >
                       {s.label}
                       {s.provider ? ` · ${s.provider}` : ""}
@@ -609,7 +609,7 @@ export function ScheduleFlow({
           onClick={() => {
             setStep("intake");
             setSelectedDate(null);
-            setSelectedSlot(null);
+            setSelectedSlotId(null);
             setConfirmError(null);
           }}
         >
@@ -623,7 +623,7 @@ export function ScheduleFlow({
             void onConfirmAppointment();
           }}
         >
-          {confirmSaving ? "Saving…" : selectedSlot ? "Continue" : "Select a time"}
+          {confirmSaving ? "Saving…" : selectedSlotId ? "Continue" : "Select a time"}
         </button>
       </div>
     </>
