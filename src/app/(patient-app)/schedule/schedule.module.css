@@ -194,6 +194,7 @@ a.btnGhost {
 }
 
 .dayCell {
+  position: relative;
   aspect-ratio: 1;
   min-height: 40px;
   border: 1px solid transparent;
@@ -211,19 +212,27 @@ a.btnGhost {
 }
 
 .dayCellAvailable {
-  background: #dcfce7;
-  border: 1px solid #86efac;
-  color: #14532d;
   font-weight: 700;
 }
 
-.dayCellAvailable:hover:not(:disabled) {
-  background: #bbf7d0;
+.availabilityDot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 2px #f8fafc;
 }
 
 .dayCellSelected {
   background: #172033;
   color: #fff;
+}
+
+.dayCellSelected .availabilityDot {
+  box-shadow: 0 0 0 2px #172033;
 }
 
 .dayCellDisabled {

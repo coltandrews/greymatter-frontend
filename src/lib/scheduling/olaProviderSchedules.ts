@@ -103,5 +103,12 @@ export function slotsFromOlaScheduleResponse(
       providerGuid,
     });
   }
-  return out.sort((a, b) => a.start.localeCompare(b.start));
+  return out.sort((a, b) => {
+    const aTime = new Date(a.start).getTime();
+    const bTime = new Date(b.start).getTime();
+    if (Number.isFinite(aTime) && Number.isFinite(bTime)) {
+      return aTime - bTime;
+    }
+    return a.start.localeCompare(b.start);
+  });
 }

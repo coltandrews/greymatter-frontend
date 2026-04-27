@@ -591,6 +591,9 @@ export function ScheduleFlow({
                     title={hasAvailability ? "Available times" : undefined}
                   >
                     {cell.day}
+                    {hasAvailability ? (
+                      <span className={styles.availabilityDot} aria-hidden="true" />
+                    ) : null}
                   </button>
                 );
               })}
