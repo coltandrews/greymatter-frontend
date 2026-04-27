@@ -6,6 +6,7 @@ import {
 } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
+import { updateVendorOlaProfile } from "@/lib/api/vendorOla";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
@@ -32,14 +33,57 @@ function toDraftPatch(f: FormState): IntakeDraftData {
   };
 }
 
+async function vendorResponseErrorMessage(res: Response): Promise<string> {
+  const raw = await res.text().catch(() => "");
+  if (!raw.trim()) {
+    return `Ola profile update failed (${res.status}).`;
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed && typeof parsed === "object") {
+      const obj = parsed as Record<string, unknown>;
+      const message =
+        typeof obj.message === "string"
+          ? obj.message
+          : typeof obj.error === "string"
+            ? obj.error
+            : raw;
+      return `Ola profile update failed (${res.status}): ${message}`;
+    }
+  } catch {
+    /* use raw response text */
+  }
+  return `Ola profile update failed (${res.status}): ${raw}`;
+}
+
+function buildOlaProfilePayload(email: string, data: IntakeDraftData) {
+  return {
+    email,
+    first_name: data.legal_first_name?.trim() || "",
+    last_name: data.legal_last_name?.trim() || "",
+    dob: data.date_of_birth?.trim() || "",
+    gender: data.gender?.trim() || "",
+    phone: data.phone?.trim() || "",
+    address: {
+      street1: data.street_address?.trim() || "",
+      street2: data.address_line2?.trim() || "",
+      city: data.city?.trim() || "",
+      state: data.service_state?.trim() || data.address_state?.trim() || "",
+      postalCode: data.zip?.trim() || "",
+    },
+  };
+}
+
 export function AccountProfileForm({
   email,
   patientId,
+  olaUserGuid,
   initialStep,
   initialData,
 }: {
   email: string;
   patientId: string;
+  olaUserGuid: string | null;
   initialStep: string;
   initialData: IntakeDraftData;
 }) {
@@ -70,6 +114,9 @@ export function AccountProfileForm({
         setError("Not signed in.");
         return;
       }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       const [{ data: row, error: fetchErr }, { data: prof }] = await Promise.all([
         supabase
@@ -102,22 +149,42 @@ export function AccountProfileForm({
         { onConflict: "user_id" },
       );
 
-      setSaving(false);
       if (upErr) {
+        setSaving(false);
         setError(upErr.message);
         return;
       }
 
       const { error: syncErr } = await syncProfileDemographics(supabase, user.id, data);
       if (syncErr) {
+        setSaving(false);
         setError(`Could not update profile: ${syncErr}`);
         return;
       }
 
+      if (olaUserGuid) {
+        if (!session?.access_token) {
+          setSaving(false);
+          setError("Sign in again to update Ola profile.");
+          return;
+        }
+        const olaRes = await updateVendorOlaProfile(
+          session.access_token,
+          olaUserGuid,
+          buildOlaProfilePayload(email, data),
+        );
+        if (!olaRes.ok) {
+          setSaving(false);
+          setError(await vendorResponseErrorMessage(olaRes));
+          return;
+        }
+      }
+
+      setSaving(false);
       setSaved(true);
       router.refresh();
     },
-    [form, initialData, initialStep, router],
+    [email, form, initialData, initialStep, olaUserGuid, router],
   );
 
   const set =

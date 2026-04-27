@@ -1,6 +1,10 @@
 "use client";
 
-import { fetchVendorOlaSchedules } from "@/lib/api/vendorOla";
+import {
+  createVendorOlaScheduleRequest,
+  fetchVendorOlaSchedules,
+} from "@/lib/api/vendorOla";
+import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
 import {
   availableDatesFromOlaScheduleResponse,
@@ -81,9 +85,115 @@ async function availabilityErrorMessage(res: Response): Promise<string> {
   return `Ola availability request failed (${res.status}): ${raw}`;
 }
 
+async function vendorResponseErrorMessage(res: Response): Promise<string> {
+  const raw = await res.text().catch(() => "");
+  if (!raw.trim()) {
+    return `Ola appointment request failed (${res.status}).`;
+  }
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (parsed && typeof parsed === "object") {
+      const obj = parsed as Record<string, unknown>;
+      const message =
+        typeof obj.message === "string"
+          ? obj.message
+          : typeof obj.error === "string"
+            ? obj.error
+            : raw;
+      return `Ola appointment request failed (${res.status}): ${message}`;
+    }
+  } catch {
+    /* use raw response text */
+  }
+  return `Ola appointment request failed (${res.status}): ${raw}`;
+}
+
+function answerLabel(id: string, value: string): string {
+  const q = APPOINTMENT_QUESTIONS.find((item) => item.id === id);
+  if (!q || q.type !== "select") {
+    return value;
+  }
+  return q.options.find((opt) => opt.value === value)?.label ?? value;
+}
+
+function buildOlaAppointmentPayload({
+  answers,
+  email,
+  patient,
+  selectedSlot,
+  slot,
+}: {
+  answers: Record<string, string>;
+  email: string;
+  patient: IntakeDraftData;
+  selectedSlot: string;
+  slot: SlotDisplay;
+}) {
+  const state = patient.service_state?.trim() || patient.address_state?.trim() || "";
+  const street = patient.street_address?.trim() || "";
+  const city = patient.city?.trim() || "";
+  const zip = patient.zip?.trim() || "";
+  return {
+    user_data: {
+      first_name: patient.legal_first_name?.trim() || "Patient",
+      last_name: patient.legal_last_name?.trim() || "",
+      gender: patient.gender?.trim() || "",
+      dob: patient.date_of_birth?.trim() || "",
+      email,
+      phone: patient.phone?.trim() || "",
+      role: "USER",
+      sub_role: "",
+      release_medical: false,
+      tennant: "grey_matter",
+    },
+    address: [
+      {
+        use: "home",
+        text: [street, city, state, zip].filter(Boolean).join(" "),
+        street1: street,
+        city,
+        state,
+        postalCode: zip,
+        line: [street, city, state, zip].filter(Boolean),
+        type: "both",
+      },
+    ],
+    service_data: {
+      question_answer: Object.entries(answers)
+        .filter(([, value]) => value.trim())
+        .map(([id, value]) => {
+          const question = APPOINTMENT_QUESTIONS.find((q) => q.id === id);
+          return {
+            question_text: question?.label ?? id,
+            answer: answerLabel(id, value),
+            other_text: "",
+          };
+        }),
+    },
+    identifier: {
+      service: "Grey Matter Semaglutide Injection One Month",
+      sessionType: "initial",
+      tennant: "grey_matter",
+      scheduleType: "one-time",
+    },
+    transaction_id: crypto.randomUUID(),
+    pharmacyDetails: {},
+    schedule: {
+      schedule_start_date: selectedSlot,
+      schedule_end_date: slot.end,
+      provider_guid: slot.providerGuid ?? "",
+    },
+    user_insurance: {},
+  };
+}
+
 export function ScheduleFlow({
+  email,
+  patient,
   serviceState,
 }: {
+  email: string;
+  patient: IntakeDraftData;
   serviceState: string | null;
 }) {
   const router = useRouter();
@@ -248,18 +358,52 @@ export function ScheduleFlow({
         setConfirmError("You must be signed in to book.");
         return;
       }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setConfirmError("Sign in again to book.");
+        return;
+      }
       const starts = new Date(selectedSlot);
       if (Number.isNaN(starts.getTime())) {
         setConfirmError("That time slot is invalid. Pick another time.");
         return;
       }
       const slotRow = slots.find((s) => s.start === selectedSlot);
+      if (!slotRow) {
+        setConfirmError("Pick a time slot before continuing.");
+        return;
+      }
+      const vendorRes = await createVendorOlaScheduleRequest(
+        session.access_token,
+        buildOlaAppointmentPayload({
+          answers,
+          email,
+          patient,
+          selectedSlot,
+          slot: slotRow,
+        }),
+      );
+      if (!vendorRes.ok) {
+        setConfirmError(await vendorResponseErrorMessage(vendorRes));
+        return;
+      }
+      const vendorJson = (await vendorRes.json().catch(() => ({}))) as Record<string, unknown>;
       const providerName = slotRow?.provider?.trim() || null;
       const { error: insertError } = await supabase.from("appointments").insert({
         user_id: user.id,
         starts_at: starts.toISOString(),
         status: "booked",
         provider_name: providerName,
+        ola_redirect_url:
+          typeof vendorJson.redirectUrl === "string" ? vendorJson.redirectUrl : null,
+        ola_popup_message:
+          typeof vendorJson.popupMsg === "string" ? vendorJson.popupMsg : null,
+        ola_user_guid:
+          typeof vendorJson.user_guid === "string" ? vendorJson.user_guid : null,
+        ola_order_guid:
+          typeof vendorJson.data === "string" ? vendorJson.data : null,
       });
       if (insertError) {
         setConfirmError(insertError.message);
@@ -276,7 +420,7 @@ export function ScheduleFlow({
     } finally {
       setConfirmSaving(false);
     }
-  }, [router, selectedDate, selectedSlot, slots, confirmSaving]);
+  }, [answers, email, patient, router, selectedDate, selectedSlot, slots, confirmSaving]);
 
   if (step === "intake") {
     return (

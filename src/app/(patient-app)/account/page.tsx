@@ -16,13 +16,20 @@ export default async function AccountPage() {
     redirect("/");
   }
 
-  const [{ data: draftRow }, { data: profileRow }] = await Promise.all([
+  const [{ data: draftRow }, { data: profileRow }, { data: olaRows }] = await Promise.all([
     supabase
       .from("intake_drafts")
       .select("step, data")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase.from("profiles").select("demographics").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("appointments")
+      .select("ola_user_guid")
+      .eq("user_id", user.id)
+      .not("ola_user_guid", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
 
   const draftData = draftRow?.data as IntakeDraftData | undefined;
@@ -45,6 +52,7 @@ export default async function AccountPage() {
         <AccountProfileForm
           email={user.email ?? ""}
           patientId={user.id}
+          olaUserGuid={olaRows?.[0]?.ola_user_guid ?? null}
           initialStep={initialStep}
           initialData={initialData}
         />

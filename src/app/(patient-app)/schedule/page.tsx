@@ -31,7 +31,11 @@ export default async function SchedulePage() {
       <Link href="/hub" className={styles.back}>
         ← Patient Hub
       </Link>
-      <ScheduleFlow serviceState={serviceState} />
+      <ScheduleFlow
+        email={user.email ?? ""}
+        patient={merged}
+        serviceState={serviceState}
+      />
     </main>
   );
 }

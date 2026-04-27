@@ -26,7 +26,13 @@ export type OlaProviderSchedulesResponse = {
   data: OlaProviderScheduleSlot[];
 };
 
-export type SlotDisplay = { start: string; label: string; provider?: string };
+export type SlotDisplay = {
+  start: string;
+  end: string;
+  label: string;
+  provider?: string;
+  providerGuid?: string;
+};
 
 function scheduleRows(json: unknown): Record<string, unknown>[] {
   if (!json || typeof json !== "object") {
@@ -86,8 +92,11 @@ export function slotsFromOlaScheduleResponse(
     }
     out.push({
       start,
+      end: typeof r.end_datetime === "string" ? r.end_datetime : start,
       label: d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
       provider,
+      providerGuid:
+        typeof r.provider_guid === "string" ? r.provider_guid : undefined,
     });
   }
   return out.sort((a, b) => a.start.localeCompare(b.start));

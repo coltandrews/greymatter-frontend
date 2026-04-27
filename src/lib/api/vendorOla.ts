@@ -32,3 +32,34 @@ export async function fetchVendorOlaSchedules(
     },
   });
 }
+
+export async function createVendorOlaScheduleRequest(
+  supabaseAccessToken: string,
+  payload: unknown,
+) {
+  return fetch(`${apiBase()}/api/vendor/ola/schedule-request`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateVendorOlaProfile(
+  supabaseAccessToken: string,
+  userUuid: string,
+  payload: unknown,
+) {
+  return fetch(`${apiBase()}/api/vendor/ola/profile/${encodeURIComponent(userUuid)}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}

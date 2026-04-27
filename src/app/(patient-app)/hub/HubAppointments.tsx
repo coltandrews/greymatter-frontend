@@ -12,6 +12,8 @@ export type HubAppointmentRow = {
   created_at: string;
   updated_at: string;
   provider_name: string | null;
+  ola_redirect_url: string | null;
+  ola_popup_message: string | null;
 };
 
 function mapRows(data: unknown[]): HubAppointmentRow[] {
@@ -25,6 +27,10 @@ function mapRows(data: unknown[]): HubAppointmentRow[] {
       updated_at: String(o.updated_at),
       provider_name:
         o.provider_name == null ? null : String(o.provider_name),
+      ola_redirect_url:
+        o.ola_redirect_url == null ? null : String(o.ola_redirect_url),
+      ola_popup_message:
+        o.ola_popup_message == null ? null : String(o.ola_popup_message),
     };
   });
 }
@@ -42,7 +48,7 @@ async function loadAppointmentsFromSupabase(): Promise<{
   }
   const { data, error } = await supabase
     .from("appointments")
-    .select("id, status, starts_at, created_at, updated_at, provider_name")
+    .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message")
     .eq("user_id", user.id)
     .order("starts_at", { ascending: true });
 
@@ -204,7 +210,7 @@ export function HubAppointments({
       ) : (
         <ul className={styles.visitList}>
           {items.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} className={styles.visitRow}>
               <button
                 type="button"
                 className={`${styles.visitItem} ${styles.visitItemButton}`}
@@ -227,6 +233,16 @@ export function HubAppointments({
                   <span className={styles.visitTime}>{formatListTime(r.starts_at)}</span>
                 </div>
               </button>
+              {r.ola_redirect_url ? (
+                <a
+                  className={styles.nextStepsLink}
+                  href={r.ola_redirect_url}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Next steps
+                </a>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -266,6 +282,27 @@ export function HubAppointments({
                 <dt>Status</dt>
                 <dd className={styles.detailCap}>{selected.status}</dd>
               </div>
+              {selected.ola_redirect_url ? (
+                <div className={styles.detailRow}>
+                  <dt>Next steps</dt>
+                  <dd>
+                    <a
+                      className={styles.detailLink}
+                      href={selected.ola_redirect_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Open next steps
+                    </a>
+                  </dd>
+                </div>
+              ) : null}
+              {selected.ola_popup_message ? (
+                <div className={styles.detailRow}>
+                  <dt>Ola message</dt>
+                  <dd>{selected.ola_popup_message}</dd>
+                </div>
+              ) : null}
               <div className={styles.detailRow}>
                 <dt>Reference ID</dt>
                 <dd className={styles.detailMono}>{selected.id}</dd>

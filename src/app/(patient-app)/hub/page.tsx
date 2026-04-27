@@ -15,7 +15,7 @@ export default async function HubPage() {
 
   const { data: rows, error } = await supabase
     .from("appointments")
-    .select("id, status, starts_at, created_at, updated_at, provider_name")
+    .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message")
     .eq("user_id", user.id)
     .order("starts_at", { ascending: true });
 
@@ -44,6 +44,8 @@ export default async function HubPage() {
               created_at: r.created_at,
               updated_at: r.updated_at,
               provider_name: r.provider_name,
+              ola_redirect_url: r.ola_redirect_url,
+              ola_popup_message: r.ola_popup_message,
             }))}
             serverLoadError={error?.message ?? null}
           />
