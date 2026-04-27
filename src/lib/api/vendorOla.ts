@@ -23,9 +23,8 @@ export async function fetchVendorOlaValidateToken(supabaseAccessToken: string) {
 export async function fetchVendorOlaSchedules(
   supabaseAccessToken: string,
   state: string,
-  serviceId: string,
 ) {
-  const path = `${apiBase()}/api/vendor/ola/schedules/${encodeURIComponent(state)}/${encodeURIComponent(serviceId)}`;
+  const path = `${apiBase()}/api/vendor/ola/schedules/${encodeURIComponent(state)}`;
   return fetch(path, {
     headers: {
       Authorization: `Bearer ${supabaseAccessToken}`,

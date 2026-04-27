@@ -26,14 +26,12 @@ export default async function SchedulePage() {
   );
   const serviceState = merged.service_state?.trim() || null;
 
-  const serviceId = process.env.NEXT_PUBLIC_OLA_SERVICE_ID?.trim() || null;
-
   return (
     <main className={styles.page}>
       <Link href="/hub" className={styles.back}>
         ← Patient Hub
       </Link>
-      <ScheduleFlow serviceState={serviceState} serviceId={serviceId} />
+      <ScheduleFlow serviceState={serviceState} />
     </main>
   );
 }

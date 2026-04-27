@@ -28,8 +28,6 @@ const card = {
   border: "1px solid #e5ebf5",
 };
 
-const EXISTING_EMAIL_MESSAGE = "That email already has an account.";
-
 function isExistingUserSignupError(message: string) {
   const m = message.toLowerCase();
   return (
@@ -48,6 +46,7 @@ export function AuthEntry() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [existingEmailError, setExistingEmailError] = useState(false);
   const [awaitingEmail, setAwaitingEmail] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -61,6 +60,7 @@ export function AuthEntry() {
   async function onSignUp(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setExistingEmailError(false);
     if (password !== passwordConfirm) {
       setError("Passwords do not match.");
       return;
@@ -76,10 +76,9 @@ export function AuthEntry() {
     setLoading(false);
     if (err) {
       if (isExistingUserSignupError(err.message)) {
-        setMode("signin");
         setPassword("");
         setPasswordConfirm("");
-        setError(EXISTING_EMAIL_MESSAGE);
+        setExistingEmailError(true);
         return;
       }
       setError(err.message);
@@ -98,22 +97,9 @@ export function AuthEntry() {
       data.user &&
       (!identities || identities.length === 0)
     ) {
-      setLoading(true);
-      const { data: signInData, error: signInErr } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-      setLoading(false);
-      if (!signInErr && signInData.session) {
-        router.push("/post-login");
-        router.refresh();
-        return;
-      }
-      setMode("signin");
       setPassword("");
       setPasswordConfirm("");
-      setError(EXISTING_EMAIL_MESSAGE);
+      setExistingEmailError(true);
       return;
     }
 
@@ -123,6 +109,7 @@ export function AuthEntry() {
   async function onSignIn(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setExistingEmailError(false);
     setLoading(true);
     const supabase = createClient();
     const { error: err } = await supabase.auth.signInWithPassword({
@@ -143,6 +130,7 @@ export function AuthEntry() {
     setPassword("");
     setPasswordConfirm("");
     setError(null);
+    setExistingEmailError(false);
   }
 
   if (awaitingEmail) {
@@ -210,7 +198,10 @@ export function AuthEntry() {
               autoComplete="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setExistingEmailError(false);
+              }}
               style={input}
             />
           </label>
@@ -245,6 +236,33 @@ export function AuthEntry() {
           {error ? (
             <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
               {error}
+            </p>
+          ) : null}
+          {existingEmailError ? (
+            <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+              That email is already in use.{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signin");
+                  setPassword("");
+                  setPasswordConfirm("");
+                  setError(null);
+                  setExistingEmailError(false);
+                }}
+                style={{
+                  padding: 0,
+                  border: "none",
+                  background: "none",
+                  color: "#2563eb",
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: "pointer",
+                }}
+              >
+                Sign in here
+              </button>
+              .
             </p>
           ) : null}
           <button
@@ -284,6 +302,7 @@ export function AuthEntry() {
                   setMode("signin");
                   setPasswordConfirm("");
                   setError(null);
+                  setExistingEmailError(false);
                   setAwaitingEmail(false);
                 }}
                 style={{
@@ -308,6 +327,7 @@ export function AuthEntry() {
                   setMode("signup");
                   setPasswordConfirm("");
                   setError(null);
+                  setExistingEmailError(false);
                   setAwaitingEmail(false);
                 }}
                 style={{

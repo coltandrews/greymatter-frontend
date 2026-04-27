@@ -82,10 +82,8 @@ async function availabilityErrorMessage(res: Response): Promise<string> {
 
 export function ScheduleFlow({
   serviceState,
-  serviceId,
 }: {
   serviceState: string | null;
-  serviceId: string | null;
 }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("intake");
@@ -100,12 +98,9 @@ export function ScheduleFlow({
   const [confirmError, setConfirmError] = useState<string | null>(null);
 
   const serviceStateValue = (serviceState ?? "").trim();
-  const serviceIdValue = (serviceId ?? "").trim();
   const scheduleBlockedReason = !serviceStateValue
     ? "Complete intake with a service state before scheduling."
-    : !serviceIdValue
-      ? "Scheduling is not configured for this service."
-      : null;
+    : null;
 
   const { year, month, cells } = useMemo(
     () => buildCalendarCells(monthCursor),
@@ -174,7 +169,6 @@ export function ScheduleFlow({
         const res = await fetchVendorOlaSchedules(
           session.access_token,
           serviceStateValue,
-          serviceIdValue,
         );
         if (!res.ok) {
           throw new Error(await availabilityErrorMessage(res));
@@ -203,7 +197,7 @@ export function ScheduleFlow({
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, scheduleBlockedReason, serviceStateValue, serviceIdValue]);
+  }, [selectedDate, scheduleBlockedReason, serviceStateValue]);
 
   const canConfirm =
     Boolean(selectedDate && selectedSlot && !loadingSlots);
