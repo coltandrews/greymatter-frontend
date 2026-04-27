@@ -171,7 +171,7 @@ function buildOlaAppointmentPayload({
         }),
     },
     identifier: {
-      service: "Grey Matter Semaglutide Injection One Month",
+      service: "grey-matter-semaglutide-injection-one-month",
       sessionType: "initial",
       tennant: "grey_matter",
       scheduleType: "one-time",
