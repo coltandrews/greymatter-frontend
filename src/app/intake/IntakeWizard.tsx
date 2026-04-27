@@ -2,8 +2,6 @@
 
 import { createClient } from "@/lib/supabase/client";
 import {
-  demographicsContactComplete,
-  demographicsIdentityComplete,
   type IntakeDraftData,
 } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
@@ -15,10 +13,18 @@ import { useRouter } from "next/navigation";
 
 type UiStep =
   | "basic_identity"
-  | "basic_contact"
+  | "basic_demographics"
   | "eligibility"
   | "service_state"
   | "done";
+
+function legalNameComplete(d: IntakeDraftData): boolean {
+  return Boolean(d.legal_first_name?.trim() && d.legal_last_name?.trim());
+}
+
+function demographicsDetailsComplete(d: IntakeDraftData): boolean {
+  return Boolean(d.date_of_birth?.trim() && d.gender?.trim());
+}
 
 function resolveUiStep(
   row: { step: string; data: unknown } | null,
@@ -30,11 +36,14 @@ function resolveUiStep(
   if (row.step === "paused_before_scheduling") {
     return "done";
   }
-  if (!demographicsIdentityComplete(merged)) {
+  if (!legalNameComplete(merged)) {
     return "basic_identity";
   }
+  if (!demographicsDetailsComplete(merged)) {
+    return "basic_demographics";
+  }
   if (!(merged.service_state?.trim() || merged.address_state?.trim())) {
-    return "basic_identity";
+    return "service_state";
   }
   if (typeof merged.for_self !== "boolean") {
     return "eligibility";
@@ -44,11 +53,10 @@ function resolveUiStep(
 
 const EMPTY_BASIC: Omit<
   IntakeDraftData,
-  "for_self" | "service_state"
+  "for_self" | "preferred_name" | "service_state"
 > = {
   legal_first_name: "",
   legal_last_name: "",
-  preferred_name: "",
   date_of_birth: "",
   gender: "",
   phone: "",
@@ -89,7 +97,6 @@ function draftFromBasicState(b: typeof EMPTY_BASIC): IntakeDraftData {
   return {
     legal_first_name: b.legal_first_name?.trim() || undefined,
     legal_last_name: b.legal_last_name?.trim() || undefined,
-    preferred_name: b.preferred_name?.trim() || undefined,
     date_of_birth: b.date_of_birth?.trim() || undefined,
     gender: b.gender?.trim() || undefined,
     phone: b.phone?.trim() || undefined,
@@ -110,7 +117,6 @@ function loadBasicFromDraft(d: IntakeDraftData | undefined): typeof EMPTY_BASIC 
   return {
     legal_first_name: d.legal_first_name ?? "",
     legal_last_name: d.legal_last_name ?? "",
-    preferred_name: d.preferred_name ?? "",
     date_of_birth: d.date_of_birth ?? "",
     gender: typeof d.gender === "string" ? d.gender : "",
     phone: d.phone ?? "",
@@ -224,24 +230,16 @@ export function IntakeWizard() {
     );
 
     const data: IntakeDraftData = { ...prior, ...asDraft };
-    if (!demographicsIdentityComplete(data)) {
+    if (!legalNameComplete(data)) {
       setSaving(false);
-      setError("Please complete legal name, date of birth, and gender.");
+      setError("Please complete your legal first and last name.");
       return;
     }
-    if (!serviceState) {
-      setSaving(false);
-      setError("Please choose your state.");
-      return;
-    }
-
-    data.address_state = serviceState;
-    data.service_state = serviceState;
 
     const { error: upErr } = await supabase.from("intake_drafts").upsert(
       {
         user_id: user.id,
-        step: "eligibility",
+        step: "basic_demographics",
         data,
       },
       { onConflict: "user_id" },
@@ -269,10 +267,10 @@ export function IntakeWizard() {
     }
 
     setSaving(false);
-    setUiStep("eligibility");
+    setUiStep("basic_demographics");
   }
 
-  async function saveBasicContact(e: React.FormEvent) {
+  async function saveBasicDemographics(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     const asDraft = draftFromBasicState({ ...EMPTY_BASIC, ...basic });
@@ -300,18 +298,16 @@ export function IntakeWizard() {
     );
 
     const data: IntakeDraftData = { ...prior, ...asDraft };
-    if (!demographicsContactComplete(data)) {
+    if (!demographicsDetailsComplete(data)) {
       setSaving(false);
-      setError(
-        "Please complete phone and address. Primary phone needs at least 10 digits.",
-      );
+      setError("Please complete date of birth and gender.");
       return;
     }
 
     const { error: upErr } = await supabase.from("intake_drafts").upsert(
       {
         user_id: user.id,
-        step: "eligibility",
+        step: "service_state",
         data,
       },
       { onConflict: "user_id" },
@@ -339,7 +335,7 @@ export function IntakeWizard() {
     }
 
     setSaving(false);
-    setUiStep("eligibility");
+    setUiStep("service_state");
   }
 
   async function backToIdentity() {
@@ -501,13 +497,14 @@ export function IntakeWizard() {
       ...prior,
       ...asDraft,
       ...(forSelf !== null ? { for_self: forSelf } : {}),
+      address_state: serviceState,
       service_state: serviceState,
     };
 
     const { error: upErr } = await supabase.from("intake_drafts").upsert(
       {
         user_id: user.id,
-        step: "paused_before_scheduling",
+        step: "eligibility",
         data,
       },
       { onConflict: "user_id" },
@@ -525,8 +522,7 @@ export function IntakeWizard() {
       return;
     }
 
-    router.push("/hub");
-    router.refresh();
+    setUiStep("eligibility");
   }
 
   if (loading) {
@@ -644,9 +640,9 @@ export function IntakeWizard() {
   if (uiStep === "basic_identity") {
     return (
       <form onSubmit={saveBasicIdentity} style={formStyle}>
-        <p style={stepStyle}>Step 1 of 2 - About you</p>
+        <p style={stepStyle}>Step 1 of 4 - Name</p>
         <p style={introStyle}>
-          Basic information for your chart, eligibility, and scheduling.
+          Legal name for your chart and eligibility.
         </p>
 
         <div style={fieldGroupStyle}>
@@ -678,23 +674,35 @@ export function IntakeWizard() {
                 style={inputStyle}
               />
             </label>
-            <label style={labelStyle}>
-              Preferred name
-              <input
-                autoComplete="nickname"
-                value={basic.preferred_name}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, preferred_name: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              />
-            </label>
           </div>
         </div>
 
+        {error ? (
+          <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+            {error}
+          </p>
+        ) : null}
+        <button
+          type="submit"
+          disabled={saving}
+          style={{ ...primaryButtonStyle, justifySelf: "end" }}
+        >
+          {saving ? "Saving…" : "Continue"}
+        </button>
+      </form>
+    );
+  }
+
+  if (uiStep === "basic_demographics") {
+    return (
+      <form onSubmit={saveBasicDemographics} style={formStyle}>
+        <p style={stepStyle}>Step 2 of 4 - Details</p>
+        <p style={introStyle}>
+          Date of birth and gender for eligibility.
+        </p>
+
         <div style={fieldGroupStyle}>
-          <p style={groupTitleStyle}>Date of birth, gender &amp; state</p>
+          <p style={groupTitleStyle}>Date of birth &amp; gender</p>
           <div style={gridStyle}>
             <label style={labelStyle}>
               Date of birth *
@@ -727,175 +735,6 @@ export function IntakeWizard() {
                 <option value="female">Female</option>
                 <option value="non_binary">Non-binary</option>
                 <option value="prefer_not">Prefer not to say</option>
-              </select>
-            </label>
-            <label style={labelStyle}>
-              State *
-              <select
-                required
-                value={serviceState}
-                onChange={(e) => {
-                  setServiceState(e.target.value);
-                  setBasic((p) => ({ ...p, address_state: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              >
-                <option value="">Select...</option>
-                {US_STATES.map((s) => (
-                  <option key={s.code} value={s.code}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
-
-        {error ? (
-          <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
-            {error}
-          </p>
-        ) : null}
-        <button
-          type="submit"
-          disabled={saving}
-          style={{ ...primaryButtonStyle, justifySelf: "end" }}
-        >
-          {saving ? "Saving…" : "Continue"}
-        </button>
-      </form>
-    );
-  }
-
-  if (uiStep === "basic_contact") {
-    return (
-      <form onSubmit={saveBasicContact} style={formStyle}>
-        <p style={stepStyle}>Step 2 of 4 - Contact &amp; address</p>
-        <p style={introStyle}>
-          How we reach you and where you live. Then we&apos;ll continue with a few eligibility
-          questions.
-        </p>
-
-        <div style={fieldGroupStyle}>
-          <p style={groupTitleStyle}>Phone</p>
-          <div style={gridStyle}>
-            <label style={labelStyle}>
-              Primary phone *
-              <input
-                type="tel"
-                required
-                autoComplete="tel"
-                placeholder="(555) 555-5555"
-                value={basic.phone}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, phone: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              />
-            </label>
-            <label style={labelStyle}>
-              Secondary phone
-              <input
-                type="tel"
-                autoComplete="tel"
-                value={basic.phone_secondary}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, phone_secondary: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              />
-            </label>
-          </div>
-        </div>
-
-        <div style={fieldGroupStyle}>
-          <p style={groupTitleStyle}>Address</p>
-          <div style={gridStyle}>
-            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
-              Street address *
-              <input
-                required
-                autoComplete="street-address"
-                value={basic.street_address}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, street_address: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              />
-            </label>
-            <label style={labelStyle}>
-              Apt / suite
-              <input
-                autoComplete="address-line2"
-                value={basic.address_line2}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, address_line2: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              />
-            </label>
-            <label style={labelStyle}>
-              City *
-              <input
-                required
-                autoComplete="address-level2"
-                value={basic.city}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, city: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              />
-            </label>
-            <label style={labelStyle}>
-              State *
-              <select
-                required
-                autoComplete="address-level1"
-                value={basic.address_state}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, address_state: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              >
-                <option value="">Select...</option>
-                {US_STATES.map((s) => (
-                  <option key={s.code} value={s.code}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label style={labelStyle}>
-              ZIP code *
-              <input
-                required
-                autoComplete="postal-code"
-                value={basic.zip}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, zip: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              />
-            </label>
-            <label style={labelStyle}>
-              Country
-              <select
-                value={basic.country}
-                onChange={(e) => {
-                  setBasic((p) => ({ ...p, country: e.target.value }));
-                  setSaved(false);
-                }}
-                style={inputStyle}
-              >
-                <option value="US">United States</option>
               </select>
             </label>
           </div>
@@ -932,10 +771,9 @@ export function IntakeWizard() {
   if (uiStep === "service_state") {
     return (
       <form onSubmit={saveServiceState} style={formStyle}>
-        <p style={stepStyle}>Step 4 of 4 - Care location</p>
+        <p style={stepStyle}>Step 3 of 4 - Care location</p>
         <p style={introStyle}>
-          Confirm the state we should use for telehealth eligibility and scheduling. This is usually
-          the same as your home address ({basic.address_state || "—"}).
+          State for telehealth eligibility and scheduling.
         </p>
         <div style={fieldGroupStyle}>
           <label style={{ ...labelStyle, maxWidth: 360 }}>
@@ -966,25 +804,34 @@ export function IntakeWizard() {
         {saved ? (
           <p style={{ margin: 0, color: "#15803d", fontSize: 14 }}>Saved.</p>
         ) : null}
-        <button
-          type="submit"
-          disabled={!serviceState || saving}
-          style={{
-            ...primaryButtonStyle,
-            background: !serviceState || saving ? "#94a3b8" : "#172033",
-            cursor: !serviceState || saving ? "not-allowed" : "pointer",
-            justifySelf: "end",
-          }}
-        >
-          {saving ? "Saving…" : "Continue to hub"}
-        </button>
+        <div style={actionsStyle}>
+          <button
+            type="button"
+            disabled={saving}
+            onClick={() => setUiStep("basic_demographics")}
+            style={secondaryButtonStyle}
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            disabled={!serviceState || saving}
+            style={{
+              ...primaryButtonStyle,
+              background: !serviceState || saving ? "#94a3b8" : "#172033",
+              cursor: !serviceState || saving ? "not-allowed" : "pointer",
+            }}
+          >
+            {saving ? "Saving…" : "Continue"}
+          </button>
+        </div>
       </form>
     );
   }
 
   return (
     <form onSubmit={saveEligibility} style={formStyle}>
-      <p style={stepStyle}>Step 2 of 2 - Eligibility</p>
+      <p style={stepStyle}>Step 4 of 4 - Eligibility</p>
       <p style={introStyle}>
         Are you providing this health and eligibility information for yourself?
       </p>
@@ -1029,18 +876,27 @@ export function IntakeWizard() {
           {error}
         </p>
       ) : null}
-      <button
-        type="submit"
-        disabled={forSelf === null || saving}
-        style={{
-          ...primaryButtonStyle,
-          background: forSelf === null || saving ? "#94a3b8" : "#172033",
-          cursor: forSelf === null || saving ? "not-allowed" : "pointer",
-          justifySelf: "end",
-        }}
-      >
-        {saving ? "Saving…" : "Continue"}
-      </button>
+      <div style={actionsStyle}>
+        <button
+          type="button"
+          disabled={saving}
+          onClick={() => setUiStep("service_state")}
+          style={secondaryButtonStyle}
+        >
+          Back
+        </button>
+        <button
+          type="submit"
+          disabled={forSelf === null || saving}
+          style={{
+            ...primaryButtonStyle,
+            background: forSelf === null || saving ? "#94a3b8" : "#172033",
+            cursor: forSelf === null || saving ? "not-allowed" : "pointer",
+          }}
+        >
+          {saving ? "Saving…" : "Continue"}
+        </button>
+      </div>
     </form>
   );
 }
