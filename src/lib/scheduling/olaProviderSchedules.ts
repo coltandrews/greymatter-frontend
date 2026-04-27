@@ -72,7 +72,7 @@ export function slotsFromOlaScheduleResponse(
 ): SlotDisplay[] {
   const dayPrefix = dateIso.slice(0, 10);
   const out: SlotDisplay[] = [];
-  for (const r of scheduleRows(json)) {
+  for (const [index, r] of scheduleRows(json).entries()) {
     const start = typeof r.start_datetime === "string" ? r.start_datetime : null;
     if (!start) {
       continue;
@@ -95,7 +95,7 @@ export function slotsFromOlaScheduleResponse(
     const providerGuid =
       typeof r.provider_guid === "string" ? r.provider_guid : undefined;
     out.push({
-      id: [start, end, providerGuid ?? provider ?? ""].join("|"),
+      id: [start, end, providerGuid ?? provider ?? "", index].join("|"),
       start,
       end,
       label: d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }),
