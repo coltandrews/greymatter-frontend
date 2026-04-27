@@ -45,7 +45,7 @@ export default async function HubPage() {
               Appointments
             </h2>
             <Link href="/schedule" className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}>
-              + Schedule Appointment
+              Schedule Appointment
             </Link>
           </div>
 

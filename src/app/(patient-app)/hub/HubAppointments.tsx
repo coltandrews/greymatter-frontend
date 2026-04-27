@@ -188,8 +188,7 @@ export function HubAppointments({
 
       {visitCount === 0 ? (
         <p className={styles.emptyState}>
-          You don&apos;t have any appointments here yet. Use{" "}
-          <strong>+ Schedule Appointment</strong> to book one—they&apos;ll show up here.
+          No appointments yet.
         </p>
       ) : (
         <ul className={styles.visitList}>
@@ -208,8 +207,13 @@ export function HubAppointments({
                       <span className={styles.statusPill}>
                         {r.status === "booked" ? "Confirmed" : r.status}
                       </span>
-                      <span className={styles.visitDoctor}>
-                        {r.provider_name?.trim() || "Provider not set"}
+                      <span className={styles.visitProviderBlock}>
+                        <span className={styles.visitDoctor}>
+                          {r.provider_name?.trim() || "Provider not set"}
+                        </span>
+                        <span className={styles.visitSubtitle}>
+                          Initial semaglutide consultation
+                        </span>
                       </span>
                     </div>
                   </div>
