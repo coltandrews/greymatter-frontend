@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { IntakeWizard } from "@/app/intake/IntakeWizard";
 import { isIntakeComplete } from "@/lib/intakeComplete";
-import { SignOutButton } from "@/components/SignOutButton";
 import { redirect } from "next/navigation";
 
 export default async function IntakePage() {
@@ -40,29 +39,30 @@ export default async function IntakePage() {
       style={{
         minHeight: "100vh",
         display: "grid",
-        placeItems: "center",
-        padding: "32px 20px",
+        alignItems: "center",
+        padding: "42px 24px 56px",
         background: "#f8fafc",
       }}
     >
       <section
         style={{
           width: "100%",
-          maxWidth: 420,
-          padding: 28,
+          maxWidth: 860,
+          margin: "0 auto",
+          padding: "34px 38px",
           background: "#fff",
-          borderRadius: 12,
+          borderRadius: 14,
           border: "1px solid #e5ebf5",
+          boxShadow: "0 18px 50px rgba(23, 32, 51, 0.08)",
         }}
       >
-        <h1 style={{ margin: "0 0 8px", fontSize: 22, color: "#172033" }}>
+        <h1 style={{ margin: "0 0 8px", fontSize: 26, color: "#172033" }}>
           Health intake & eligibility
         </h1>
-        <p style={{ margin: "0 0 20px", fontSize: 14, color: "#64748b" }}>
+        <p style={{ margin: "0 0 26px", fontSize: 14, color: "#64748b" }}>
           {user.email ?? user.id}
         </p>
         <IntakeWizard />
-        <SignOutButton />
       </section>
     </main>
   );

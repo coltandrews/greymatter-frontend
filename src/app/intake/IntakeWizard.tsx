@@ -9,6 +9,7 @@ import {
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
 import { US_STATES } from "@/app/intake/usStates";
+import type { CSSProperties } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -527,7 +528,7 @@ export function IntakeWizard() {
   }
 
   const btnBase = {
-    padding: "10px 18px",
+    padding: "12px 18px",
     borderRadius: 8,
     fontSize: 14,
     fontWeight: 600,
@@ -537,17 +538,94 @@ export function IntakeWizard() {
     color: "#172033",
   };
 
-  const labelStyle = {
-    display: "grid" as const,
-    gap: 6,
-    fontSize: 14,
+  const formStyle: CSSProperties = {
+    display: "grid",
+    gap: 22,
   };
 
-  const inputStyle = {
-    padding: "10px 12px",
+  const stepStyle: CSSProperties = {
+    margin: 0,
+    fontSize: 13,
+    color: "#64748b",
+    fontWeight: 700,
+    letterSpacing: 0,
+  };
+
+  const introStyle: CSSProperties = {
+    margin: 0,
+    maxWidth: 680,
+    fontSize: 15,
+    lineHeight: 1.55,
+    color: "#344256",
+  };
+
+  const fieldGroupStyle: CSSProperties = {
+    display: "grid",
+    gap: 14,
+    padding: "18px 0 4px",
+    borderTop: "1px solid #eef2f7",
+  };
+
+  const groupTitleStyle: CSSProperties = {
+    margin: 0,
+    fontSize: 13,
+    fontWeight: 700,
+    color: "#475569",
+  };
+
+  const gridStyle: CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+    gap: 14,
+  };
+
+  const labelStyle: CSSProperties = {
+    display: "grid" as const,
+    gap: 7,
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#172033",
+  };
+
+  const inputStyle: CSSProperties = {
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "12px 13px",
+    borderRadius: 8,
+    border: "1px solid #d8e0ec",
+    fontSize: 16,
+    color: "#172033",
+    background: "#fff",
+  };
+
+  const primaryButtonStyle: CSSProperties = {
+    padding: "12px 18px",
+    borderRadius: 8,
+    border: "none",
+    background: saving ? "#94a3b8" : "#172033",
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: 700,
+    cursor: saving ? "not-allowed" : "pointer",
+  };
+
+  const secondaryButtonStyle: CSSProperties = {
+    padding: "12px 18px",
     borderRadius: 8,
     border: "1px solid #cbd5e1",
+    background: "#fff",
+    color: "#475569",
     fontSize: 16,
+    fontWeight: 700,
+    cursor: saving ? "not-allowed" : "pointer",
+  };
+
+  const actionsStyle: CSSProperties = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 12,
+    alignItems: "center",
+    justifyContent: "flex-end",
   };
 
   const maxDob = new Date().toISOString().slice(0, 10);
@@ -557,94 +635,94 @@ export function IntakeWizard() {
 
   if (uiStep === "basic_identity") {
     return (
-      <form onSubmit={saveBasicIdentity} style={{ display: "grid", gap: 14 }}>
-        <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
-          Step 1 of 4 — About you
-        </p>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
+      <form onSubmit={saveBasicIdentity} style={formStyle}>
+        <p style={stepStyle}>Step 1 of 4 - About you</p>
+        <p style={introStyle}>
           Legal name and demographics for your chart and eligibility. Next you&apos;ll add where we
           can reach you.
         </p>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#64748b" }}>Legal name</p>
-          <label style={labelStyle}>
-            First name *
-            <input
-              required
-              autoComplete="given-name"
-              value={basic.legal_first_name}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, legal_first_name: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            Last name *
-            <input
-              required
-              autoComplete="family-name"
-              value={basic.legal_last_name}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, legal_last_name: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            Preferred name (optional)
-            <input
-              autoComplete="nickname"
-              value={basic.preferred_name}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, preferred_name: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
+        <div style={fieldGroupStyle}>
+          <p style={groupTitleStyle}>Legal name</p>
+          <div style={gridStyle}>
+            <label style={labelStyle}>
+              First name *
+              <input
+                required
+                autoComplete="given-name"
+                value={basic.legal_first_name}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, legal_first_name: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              Last name *
+              <input
+                required
+                autoComplete="family-name"
+                value={basic.legal_last_name}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, legal_last_name: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              Preferred name
+              <input
+                autoComplete="nickname"
+                value={basic.preferred_name}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, preferred_name: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+          </div>
         </div>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#64748b" }}>
-            Date of birth &amp; gender
-          </p>
-          <label style={labelStyle}>
-            Date of birth *
-            <input
-              type="date"
-              required
-              min={minDob}
-              max={maxDob}
-              value={basic.date_of_birth}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, date_of_birth: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            Gender *
-            <select
-              required
-              value={basic.gender}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, gender: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            >
-              <option value="">Select…</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="non_binary">Non-binary</option>
-              <option value="prefer_not">Prefer not to say</option>
-            </select>
-          </label>
+        <div style={fieldGroupStyle}>
+          <p style={groupTitleStyle}>Date of birth &amp; gender</p>
+          <div style={gridStyle}>
+            <label style={labelStyle}>
+              Date of birth *
+              <input
+                type="date"
+                required
+                min={minDob}
+                max={maxDob}
+                value={basic.date_of_birth}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, date_of_birth: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              Gender *
+              <select
+                required
+                value={basic.gender}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, gender: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              >
+                <option value="">Select...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="non_binary">Non-binary</option>
+                <option value="prefer_not">Prefer not to say</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         {error ? (
@@ -655,16 +733,7 @@ export function IntakeWizard() {
         <button
           type="submit"
           disabled={saving}
-          style={{
-            padding: "12px 16px",
-            borderRadius: 8,
-            border: "none",
-            background: saving ? "#94a3b8" : "#172033",
-            color: "#fff",
-            fontSize: 16,
-            fontWeight: 600,
-            cursor: saving ? "not-allowed" : "pointer",
-          }}
+          style={{ ...primaryButtonStyle, justifySelf: "end" }}
         >
           {saving ? "Saving…" : "Continue"}
         </button>
@@ -674,133 +743,135 @@ export function IntakeWizard() {
 
   if (uiStep === "basic_contact") {
     return (
-      <form onSubmit={saveBasicContact} style={{ display: "grid", gap: 14 }}>
-        <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
-          Step 2 of 4 — Contact &amp; address
-        </p>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
+      <form onSubmit={saveBasicContact} style={formStyle}>
+        <p style={stepStyle}>Step 2 of 4 - Contact &amp; address</p>
+        <p style={introStyle}>
           How we reach you and where you live. Then we&apos;ll continue with a few eligibility
           questions.
         </p>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#64748b" }}>Phone</p>
-          <label style={labelStyle}>
-            Primary phone *
-            <input
-              type="tel"
-              required
-              autoComplete="tel"
-              placeholder="(555) 555-5555"
-              value={basic.phone}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, phone: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            Secondary phone (optional)
-            <input
-              type="tel"
-              autoComplete="tel"
-              value={basic.phone_secondary}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, phone_secondary: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
+        <div style={fieldGroupStyle}>
+          <p style={groupTitleStyle}>Phone</p>
+          <div style={gridStyle}>
+            <label style={labelStyle}>
+              Primary phone *
+              <input
+                type="tel"
+                required
+                autoComplete="tel"
+                placeholder="(555) 555-5555"
+                value={basic.phone}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, phone: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              Secondary phone
+              <input
+                type="tel"
+                autoComplete="tel"
+                value={basic.phone_secondary}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, phone_secondary: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+          </div>
         </div>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#64748b" }}>Address</p>
-          <label style={labelStyle}>
-            Street address *
-            <input
-              required
-              autoComplete="street-address"
-              value={basic.street_address}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, street_address: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            Apt / suite (optional)
-            <input
-              autoComplete="address-line2"
-              value={basic.address_line2}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, address_line2: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            City *
-            <input
-              required
-              autoComplete="address-level2"
-              value={basic.city}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, city: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            State *
-            <select
-              required
-              autoComplete="address-level1"
-              value={basic.address_state}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, address_state: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            >
-              <option value="">Select…</option>
-              {US_STATES.map((s) => (
-                <option key={s.code} value={s.code}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label style={labelStyle}>
-            ZIP code *
-            <input
-              required
-              autoComplete="postal-code"
-              value={basic.zip}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, zip: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            />
-          </label>
-          <label style={labelStyle}>
-            Country
-            <select
-              value={basic.country}
-              onChange={(e) => {
-                setBasic((p) => ({ ...p, country: e.target.value }));
-                setSaved(false);
-              }}
-              style={inputStyle}
-            >
-              <option value="US">United States</option>
-            </select>
-          </label>
+        <div style={fieldGroupStyle}>
+          <p style={groupTitleStyle}>Address</p>
+          <div style={gridStyle}>
+            <label style={{ ...labelStyle, gridColumn: "1 / -1" }}>
+              Street address *
+              <input
+                required
+                autoComplete="street-address"
+                value={basic.street_address}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, street_address: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              Apt / suite
+              <input
+                autoComplete="address-line2"
+                value={basic.address_line2}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, address_line2: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              City *
+              <input
+                required
+                autoComplete="address-level2"
+                value={basic.city}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, city: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              State *
+              <select
+                required
+                autoComplete="address-level1"
+                value={basic.address_state}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, address_state: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              >
+                <option value="">Select...</option>
+                {US_STATES.map((s) => (
+                  <option key={s.code} value={s.code}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label style={labelStyle}>
+              ZIP code *
+              <input
+                required
+                autoComplete="postal-code"
+                value={basic.zip}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, zip: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              />
+            </label>
+            <label style={labelStyle}>
+              Country
+              <select
+                value={basic.country}
+                onChange={(e) => {
+                  setBasic((p) => ({ ...p, country: e.target.value }));
+                  setSaved(false);
+                }}
+                style={inputStyle}
+              >
+                <option value="US">United States</option>
+              </select>
+            </label>
+          </div>
         </div>
 
         {error ? (
@@ -808,39 +879,21 @@ export function IntakeWizard() {
             {error}
           </p>
         ) : null}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+        <div style={actionsStyle}>
           <button
             type="button"
             disabled={saving}
             onClick={() => {
               void backToIdentity();
             }}
-            style={{
-              padding: "12px 16px",
-              borderRadius: 8,
-              border: "1px solid #cbd5e1",
-              background: "#fff",
-              color: "#475569",
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: saving ? "not-allowed" : "pointer",
-            }}
+            style={secondaryButtonStyle}
           >
             Back
           </button>
           <button
             type="submit"
             disabled={saving}
-            style={{
-              padding: "12px 16px",
-              borderRadius: 8,
-              border: "none",
-              background: saving ? "#94a3b8" : "#172033",
-              color: "#fff",
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: saving ? "not-allowed" : "pointer",
-            }}
+            style={primaryButtonStyle}
           >
             {saving ? "Saving…" : "Continue"}
           </button>
@@ -851,33 +904,33 @@ export function IntakeWizard() {
 
   if (uiStep === "service_state") {
     return (
-      <form onSubmit={saveServiceState} style={{ display: "grid", gap: 16 }}>
-        <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
-          Step 4 of 4 — Care location
-        </p>
-        <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
+      <form onSubmit={saveServiceState} style={formStyle}>
+        <p style={stepStyle}>Step 4 of 4 - Care location</p>
+        <p style={introStyle}>
           Confirm the state we should use for telehealth eligibility and scheduling. This is usually
           the same as your home address ({basic.address_state || "—"}).
         </p>
-        <label style={labelStyle}>
-          State for care &amp; scheduling *
-          <select
-            required
-            value={serviceState}
-            onChange={(e) => {
-              setServiceState(e.target.value);
-              setSaved(false);
-            }}
-            style={inputStyle}
-          >
-            <option value="">Select…</option>
-            {US_STATES.map((s) => (
-              <option key={s.code} value={s.code}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div style={fieldGroupStyle}>
+          <label style={{ ...labelStyle, maxWidth: 360 }}>
+            State for care &amp; scheduling *
+            <select
+              required
+              value={serviceState}
+              onChange={(e) => {
+                setServiceState(e.target.value);
+                setSaved(false);
+              }}
+              style={inputStyle}
+            >
+              <option value="">Select...</option>
+              {US_STATES.map((s) => (
+                <option key={s.code} value={s.code}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         {error ? (
           <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
             {error}
@@ -890,14 +943,10 @@ export function IntakeWizard() {
           type="submit"
           disabled={!serviceState || saving}
           style={{
-            padding: "12px 16px",
-            borderRadius: 8,
-            border: "none",
+            ...primaryButtonStyle,
             background: !serviceState || saving ? "#94a3b8" : "#172033",
-            color: "#fff",
-            fontSize: 16,
-            fontWeight: 600,
             cursor: !serviceState || saving ? "not-allowed" : "pointer",
+            justifySelf: "end",
           }}
         >
           {saving ? "Saving…" : "Continue to hub"}
@@ -907,42 +956,46 @@ export function IntakeWizard() {
   }
 
   return (
-    <form onSubmit={saveEligibility} style={{ display: "grid", gap: 16 }}>
-      <p style={{ margin: 0, fontSize: 13, color: "#64748b", fontWeight: 600 }}>
-        Step 3 of 4 — Eligibility
-      </p>
-      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.5, color: "#172033" }}>
+    <form onSubmit={saveEligibility} style={formStyle}>
+      <p style={stepStyle}>Step 3 of 4 - Eligibility</p>
+      <p style={introStyle}>
         Are you providing this health and eligibility information for yourself?
       </p>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <button
-          type="button"
-          onClick={() => {
-            setForSelf(true);
-            setSaved(false);
-          }}
-          style={{
-            ...btnBase,
-            borderColor: forSelf === true ? "#172033" : "#cbd5e1",
-            boxShadow: forSelf === true ? "0 0 0 2px #172033" : undefined,
-          }}
-        >
-          Yes
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setForSelf(false);
-            setSaved(false);
-          }}
-          style={{
-            ...btnBase,
-            borderColor: forSelf === false ? "#172033" : "#cbd5e1",
-            boxShadow: forSelf === false ? "0 0 0 2px #172033" : undefined,
-          }}
-        >
-          No
-        </button>
+      <div style={fieldGroupStyle}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <button
+            type="button"
+            onClick={() => {
+              setForSelf(true);
+              setSaved(false);
+            }}
+            style={{
+              ...btnBase,
+              minWidth: 110,
+              borderColor: forSelf === true ? "#172033" : "#cbd5e1",
+              background: forSelf === true ? "#172033" : "#fff",
+              color: forSelf === true ? "#fff" : "#172033",
+            }}
+          >
+            Yes
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setForSelf(false);
+              setSaved(false);
+            }}
+            style={{
+              ...btnBase,
+              minWidth: 110,
+              borderColor: forSelf === false ? "#172033" : "#cbd5e1",
+              background: forSelf === false ? "#172033" : "#fff",
+              color: forSelf === false ? "#fff" : "#172033",
+            }}
+          >
+            No
+          </button>
+        </div>
       </div>
       {error ? (
         <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
@@ -953,14 +1006,10 @@ export function IntakeWizard() {
         type="submit"
         disabled={forSelf === null || saving}
         style={{
-          padding: "12px 16px",
-          borderRadius: 8,
-          border: "none",
+          ...primaryButtonStyle,
           background: forSelf === null || saving ? "#94a3b8" : "#172033",
-          color: "#fff",
-          fontSize: 16,
-          fontWeight: 600,
           cursor: forSelf === null || saving ? "not-allowed" : "pointer",
+          justifySelf: "end",
         }}
       >
         {saving ? "Saving…" : "Continue"}
