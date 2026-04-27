@@ -75,3 +75,26 @@ export async function fetchVendorOlaOrderDetails(
     },
   });
 }
+
+export async function fetchVendorOlaPharmacies(
+  supabaseAccessToken: string,
+  params: {
+    pharmacyName?: string;
+    zipCode?: string;
+    pharmacyNcpdpId?: string;
+  },
+) {
+  const search = new URLSearchParams();
+  if (params.pharmacyNcpdpId?.trim()) {
+    search.set("pharmacy_ncpdp_id", params.pharmacyNcpdpId.trim());
+  } else {
+    search.set("pharmacy_name", params.pharmacyName?.trim() ?? "");
+    search.set("zip_code", params.zipCode?.trim() ?? "");
+  }
+  return fetch(`${apiBase()}/api/vendor/ola/pharmacies?${search.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+    },
+  });
+}

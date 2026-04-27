@@ -56,11 +56,6 @@ export default async function HubPage() {
         </section>
 
         <section className={styles.panel} aria-labelledby="medications-title">
-          <div className={styles.panelHeader}>
-            <h2 id="medications-title" className={styles.panelTitle}>
-              Medications
-            </h2>
-          </div>
           <HubMedications appointments={appointments} serverLoadError={error?.message ?? null} />
         </section>
       </div>
