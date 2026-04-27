@@ -3,6 +3,7 @@
 import { fetchVendorOlaSchedules } from "@/lib/api/vendorOla";
 import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
 import {
+  availableDatesFromOlaScheduleResponse,
   slotsFromOlaScheduleResponse,
   type SlotDisplay,
 } from "@/lib/scheduling/olaProviderSchedules";
@@ -90,8 +91,10 @@ export function ScheduleFlow({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [monthCursor, setMonthCursor] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [scheduleResponse, setScheduleResponse] = useState<unknown | null>(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
   const [slots, setSlots] = useState<SlotDisplay[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [confirmSaving, setConfirmSaving] = useState(false);
@@ -119,6 +122,11 @@ export function ScheduleFlow({
     return cur > startThisMonth;
   }, [year, month]);
 
+  const availableDates = useMemo(
+    () => availableDatesFromOlaScheduleResponse(scheduleResponse),
+    [scheduleResponse],
+  );
+
   const intakeValid = useMemo(() => {
     for (const q of APPOINTMENT_QUESTIONS) {
       if (q.required && !(answers[q.id] ?? "").trim()) {
@@ -140,18 +148,18 @@ export function ScheduleFlow({
   );
 
   useEffect(() => {
-    if (!selectedDate) {
-      setSlots([]);
-      setSelectedSlot(null);
-      setSlotsError(null);
+    if (step !== "calendar") {
       return;
     }
+
     let cancelled = false;
     (async () => {
-      setLoadingSlots(true);
+      setLoadingAvailability(true);
+      setAvailabilityError(null);
+      setScheduleResponse(null);
       setSlots([]);
-      setSlotsError(null);
       setSelectedSlot(null);
+      setSlotsError(null);
 
       try {
         if (scheduleBlockedReason) {
@@ -175,14 +183,12 @@ export function ScheduleFlow({
         }
 
         const json: unknown = await res.json();
-        const parsed = slotsFromOlaScheduleResponse(json, selectedDate);
         if (!cancelled) {
-          setSlots(parsed);
+          setScheduleResponse(json);
         }
       } catch (err) {
         if (!cancelled) {
-          setSlots([]);
-          setSlotsError(
+          setAvailabilityError(
             err instanceof Error
               ? err.message
               : "Could not load availability from Ola.",
@@ -190,17 +196,41 @@ export function ScheduleFlow({
         }
       } finally {
         if (!cancelled) {
-          setLoadingSlots(false);
+          setLoadingAvailability(false);
         }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [selectedDate, scheduleBlockedReason, serviceStateValue]);
+  }, [scheduleBlockedReason, serviceStateValue, step]);
+
+  useEffect(() => {
+    if (!selectedDate) {
+      setSlots([]);
+      setSelectedSlot(null);
+      setSlotsError(null);
+      return;
+    }
+    if (availabilityError) {
+      setSlots([]);
+      setSelectedSlot(null);
+      setSlotsError(availabilityError);
+      return;
+    }
+    if (loadingAvailability || !scheduleResponse) {
+      setSlots([]);
+      setSelectedSlot(null);
+      setSlotsError(null);
+      return;
+    }
+    setSlots(slotsFromOlaScheduleResponse(scheduleResponse, selectedDate));
+    setSelectedSlot(null);
+    setSlotsError(null);
+  }, [availabilityError, loadingAvailability, scheduleResponse, selectedDate]);
 
   const canConfirm =
-    Boolean(selectedDate && selectedSlot && !loadingSlots);
+    Boolean(selectedDate && selectedSlot && !loadingAvailability);
 
   const onConfirmAppointment = useCallback(async () => {
     if (!selectedDate || !selectedSlot || confirmSaving) {
@@ -358,13 +388,15 @@ export function ScheduleFlow({
               );
             }
             const selected = selectedDate === cell.iso;
+            const hasAvailability = availableDates.has(cell.iso);
             return (
               <button
                 key={cell.iso}
                 type="button"
-                className={`${styles.dayCell} ${cell.disabled ? styles.dayCellDisabled : ""} ${selected ? styles.dayCellSelected : ""}`}
+                className={`${styles.dayCell} ${hasAvailability ? styles.dayCellAvailable : ""} ${cell.disabled ? styles.dayCellDisabled : ""} ${selected ? styles.dayCellSelected : ""}`}
                 disabled={cell.disabled}
                 onClick={() => setSelectedDate(cell.iso)}
+                title={hasAvailability ? "Available times" : undefined}
               >
                 {cell.day}
               </button>
@@ -375,7 +407,7 @@ export function ScheduleFlow({
         {selectedDate ? (
           <div className={styles.slotsSection}>
             <p className={styles.slotsTitle}>
-              {loadingSlots
+              {loadingAvailability
                 ? "Loading times…"
                 : `Times for ${new Date(selectedDate + "T12:00:00").toLocaleDateString(undefined, {
                     weekday: "long",
@@ -383,12 +415,12 @@ export function ScheduleFlow({
                     day: "numeric",
                   })}`}
             </p>
-            {!loadingSlots && slots.length === 0 ? (
+            {!loadingAvailability && slots.length === 0 ? (
               <p className={styles.stepHint}>
                 {slotsError ?? "No open slots that day. Try another date."}
               </p>
             ) : null}
-            {!loadingSlots && slots.length > 0 ? (
+            {!loadingAvailability && slots.length > 0 ? (
               <ul className={styles.slotList}>
                 {slots.map((s) => (
                   <li key={s.start}>

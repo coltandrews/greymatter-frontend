@@ -28,6 +28,34 @@ export type OlaProviderSchedulesResponse = {
 
 export type SlotDisplay = { start: string; label: string; provider?: string };
 
+function scheduleRows(json: unknown): Record<string, unknown>[] {
+  if (!json || typeof json !== "object") {
+    return [];
+  }
+  const data = (json as Record<string, unknown>).data;
+  if (!Array.isArray(data)) {
+    return [];
+  }
+  return data.filter(
+    (row): row is Record<string, unknown> =>
+      Boolean(row && typeof row === "object"),
+  );
+}
+
+export function availableDatesFromOlaScheduleResponse(json: unknown): Set<string> {
+  const dates = new Set<string>();
+  for (const row of scheduleRows(json)) {
+    const start = typeof row.start_datetime === "string" ? row.start_datetime : "";
+    const scheduleDate =
+      typeof row.schedule_date === "string" ? row.schedule_date : "";
+    const date = scheduleDate.slice(0, 10) || start.slice(0, 10);
+    if (date) {
+      dates.add(date);
+    }
+  }
+  return dates;
+}
+
 /**
  * Parse Ola schedule JSON into UI slot rows for a single calendar day.
  */
@@ -35,21 +63,9 @@ export function slotsFromOlaScheduleResponse(
   json: unknown,
   dateIso: string,
 ): SlotDisplay[] {
-  if (!json || typeof json !== "object") {
-    return [];
-  }
-  const o = json as Record<string, unknown>;
-  const data = o.data;
-  if (!Array.isArray(data)) {
-    return [];
-  }
   const dayPrefix = dateIso.slice(0, 10);
   const out: SlotDisplay[] = [];
-  for (const row of data) {
-    if (!row || typeof row !== "object") {
-      continue;
-    }
-    const r = row as Record<string, unknown>;
+  for (const r of scheduleRows(json)) {
     const start = typeof r.start_datetime === "string" ? r.start_datetime : null;
     if (!start) {
       continue;

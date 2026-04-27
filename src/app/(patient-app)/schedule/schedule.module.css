@@ -184,7 +184,7 @@ a.btnGhost {
 .dayCell {
   aspect-ratio: 1;
   min-height: 40px;
-  border: none;
+  border: 1px solid transparent;
   border-radius: 10px;
   background: #f8fafc;
   font-size: 14px;
@@ -196,6 +196,17 @@ a.btnGhost {
 
 .dayCell:hover:not(:disabled) {
   background: #e8ecf4;
+}
+
+.dayCellAvailable {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #14532d;
+  font-weight: 700;
+}
+
+.dayCellAvailable:hover:not(:disabled) {
+  background: #bbf7d0;
 }
 
 .dayCellSelected {
