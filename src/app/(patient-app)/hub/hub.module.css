@@ -315,10 +315,6 @@
   animation: hubFadeIn 0.15s ease;
 }
 
-.modalBackdropConfirm {
-  z-index: 1010;
-}
-
 @keyframes hubFadeIn {
   from {
     opacity: 0;
@@ -330,9 +326,8 @@
 
 .modalCard {
   width: 100%;
-  max-width: 420px;
-  max-height: min(90vh, 640px);
-  overflow-y: auto;
+  max-width: 520px;
+  overflow: visible;
   background: #fff;
   border-radius: 16px;
   padding: 24px 22px 22px;
@@ -404,39 +399,12 @@
   background: #bbf7d0;
 }
 
-.modalNote {
-  margin: 18px 0 0;
-  padding: 12px 14px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #64748b;
-  background: #f8fafc;
-  border-radius: 10px;
-  border: 1px solid #eef2f6;
-}
-
 .inlineCode {
   font-size: 11px;
   font-family: ui-monospace, monospace;
   background: #e2e8f0;
   padding: 1px 6px;
   border-radius: 4px;
-}
-
-.confirmBody {
-  margin: 0 0 18px;
-  font-size: 14px;
-  color: #475569;
-  line-height: 1.55;
-}
-
-.modalError {
-  margin: 12px 0 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #fef2f2;
-  color: #b91c1c;
-  font-size: 14px;
 }
 
 .modalActions {
@@ -468,25 +436,44 @@
   cursor: not-allowed;
 }
 
-.btnDanger {
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: none;
-  background: #b91c1c;
-  color: #fff;
+.medList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.medItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+}
+
+.medName {
+  margin: 0;
   font-size: 14px;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
+  font-weight: 700;
+  color: #172033;
 }
 
-.btnDanger:hover:not(:disabled) {
-  background: #991b1b;
+.medDetails {
+  margin: 5px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
 }
 
-.btnDanger:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+.medSource {
+  flex-shrink: 0;
+  align-self: flex-start;
+  font-size: 12px;
+  color: #64748b;
 }
 
 .emptyState {

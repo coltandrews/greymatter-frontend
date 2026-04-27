@@ -63,3 +63,15 @@ export async function updateVendorOlaProfile(
     body: JSON.stringify(payload),
   });
 }
+
+export async function fetchVendorOlaOrderDetails(
+  supabaseAccessToken: string,
+  orderGuid: string,
+) {
+  return fetch(`${apiBase()}/api/vendor/ola/orders/${encodeURIComponent(orderGuid)}`, {
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+    },
+  });
+}

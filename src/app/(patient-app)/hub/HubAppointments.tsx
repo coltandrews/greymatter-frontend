@@ -1,7 +1,6 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import styles from "./hub.module.css";
 
@@ -14,6 +13,7 @@ export type HubAppointmentRow = {
   provider_name: string | null;
   ola_redirect_url: string | null;
   ola_popup_message: string | null;
+  ola_order_guid: string | null;
 };
 
 function mapRows(data: unknown[]): HubAppointmentRow[] {
@@ -31,6 +31,8 @@ function mapRows(data: unknown[]): HubAppointmentRow[] {
         o.ola_redirect_url == null ? null : String(o.ola_redirect_url),
       ola_popup_message:
         o.ola_popup_message == null ? null : String(o.ola_popup_message),
+      ola_order_guid:
+        o.ola_order_guid == null ? null : String(o.ola_order_guid),
     };
   });
 }
@@ -48,7 +50,7 @@ async function loadAppointmentsFromSupabase(): Promise<{
   }
   const { data, error } = await supabase
     .from("appointments")
-    .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message")
+    .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message, ola_order_guid")
     .eq("user_id", user.id)
     .order("starts_at", { ascending: true });
 
@@ -125,13 +127,9 @@ export function HubAppointments({
   initial: HubAppointmentRow[];
   serverLoadError: string | null;
 }) {
-  const router = useRouter();
   const [items, setItems] = useState(initial);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<HubAppointmentRow | null>(null);
-  const [confirmRemove, setConfirmRemove] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -154,61 +152,20 @@ export function HubAppointments({
 
   const closeDetail = useCallback(() => {
     setSelected(null);
-    setConfirmRemove(false);
-    setError(null);
   }, []);
 
   useEffect(() => {
-    if (!selected && !confirmRemove) {
+    if (!selected) {
       return;
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
-        if (confirmRemove) {
-          setConfirmRemove(false);
-        } else {
-          closeDetail();
-        }
+        closeDetail();
       }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [selected, confirmRemove, closeDetail]);
-
-  async function confirmRemoveAppointment() {
-    if (!selected || selected.status !== "booked") {
-      return;
-    }
-    setError(null);
-    setRemoving(true);
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setRemoving(false);
-      setError("Not signed in.");
-      return;
-    }
-
-    const { error: delErr } = await supabase
-      .from("appointments")
-      .delete()
-      .eq("id", selected.id)
-      .eq("user_id", user.id);
-
-    setRemoving(false);
-    if (delErr) {
-      setError(delErr.message);
-      return;
-    }
-
-    const removedId = selected.id;
-    setItems((prev) => prev.filter((r) => r.id !== removedId));
-    setSelected(null);
-    setConfirmRemove(false);
-    router.refresh();
-  }
+  }, [selected, closeDetail]);
 
   const displayError = serverLoadError ?? loadError;
 
@@ -242,8 +199,6 @@ export function HubAppointments({
                 type="button"
                 className={`${styles.visitItem} ${styles.visitItemButton}`}
                 onClick={() => {
-                  setError(null);
-                  setConfirmRemove(false);
                   setSelected(r);
                 }}
               >
@@ -276,10 +231,7 @@ export function HubAppointments({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  <span className={styles.nextStepsCheck} aria-hidden="true">
-                    &#10003;
-                  </span>
-                  <span className={styles.nextStepsText}>Next Steps -&gt;</span>
+                  <span className={styles.nextStepsText}>Next Steps</span>
                 </a>
               ) : null}
             </li>
@@ -356,87 +308,9 @@ export function HubAppointments({
               </div>
             </dl>
 
-            <p className={styles.modalNote}>
-              Removing an appointment deletes it from your Greymatter hub only.
-            </p>
-
-            {error ? (
-              <p className={styles.modalError} role="alert">
-                {error}
-              </p>
-            ) : null}
-
             <div className={styles.modalActions}>
-              {selected.status === "booked" ? (
-                <button
-                  type="button"
-                  className={styles.btnDanger}
-                  onClick={() => {
-                    setError(null);
-                    setConfirmRemove(true);
-                  }}
-                >
-                  Remove appointment
-                </button>
-              ) : null}
               <button type="button" className={styles.btnSecondary} onClick={closeDetail}>
                 Close
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {confirmRemove && selected?.status === "booked" ? (
-        <div
-          className={`${styles.modalBackdrop} ${styles.modalBackdropConfirm}`}
-          role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setConfirmRemove(false);
-            }
-          }}
-        >
-          <div
-            className={styles.modalCard}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="remove-confirm-title"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 id="remove-confirm-title" className={styles.modalTitle}>
-              Remove this appointment?
-            </h3>
-            <p className={styles.confirmBody}>
-              {formatWhenShort(selected.starts_at)}
-              {selected.provider_name?.trim()
-                ? ` · ${selected.provider_name.trim()}`
-                : ""}{" "}
-              — it will be deleted from your list. You can schedule again anytime.
-            </p>
-            {error ? (
-              <p className={styles.modalError} role="alert">
-                {error}
-              </p>
-            ) : null}
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.btnDanger}
-                disabled={removing}
-                onClick={() => {
-                  void confirmRemoveAppointment();
-                }}
-              >
-                {removing ? "Removing…" : "Yes, remove appointment"}
-              </button>
-              <button
-                type="button"
-                className={styles.btnSecondary}
-                disabled={removing}
-                onClick={() => setConfirmRemove(false)}
-              >
-                Keep appointment
               </button>
             </div>
           </div>
