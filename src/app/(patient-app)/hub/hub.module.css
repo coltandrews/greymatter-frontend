@@ -230,22 +230,29 @@
   text-overflow: ellipsis;
 }
 
-.visitHint {
-  display: block;
+.consultMessage {
   margin: 8px 0 0;
   font-size: 12px;
-  font-weight: 500;
+  font-style: italic;
+  font-weight: 400;
   color: #94a3b8;
-  line-height: 1.35;
+  line-height: 1.45;
+}
+
+.visitTimeBlock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  min-width: 148px;
 }
 
 .visitTime {
-  flex-shrink: 0;
   font-size: 14px;
   font-weight: 600;
   color: #475569;
   font-variant-numeric: tabular-nums;
-  padding-top: 2px;
 }
 
 .visitMeta {
@@ -271,6 +278,8 @@
 .visitDate {
   font-size: 12px;
   color: #64748b;
+  text-align: right;
+  line-height: 1.3;
 }
 
 .visitFoot {

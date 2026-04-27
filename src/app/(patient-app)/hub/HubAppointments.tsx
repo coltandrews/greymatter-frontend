@@ -91,6 +91,33 @@ function formatListTime(iso: string) {
   }
 }
 
+function ordinalDay(day: number) {
+  if (day > 3 && day < 21) {
+    return `${day}th`;
+  }
+  switch (day % 10) {
+    case 1:
+      return `${day}st`;
+    case 2:
+      return `${day}nd`;
+    case 3:
+      return `${day}rd`;
+    default:
+      return `${day}th`;
+  }
+}
+
+function formatListDate(iso: string) {
+  try {
+    const date = new Date(iso);
+    const weekday = date.toLocaleDateString(undefined, { weekday: "long" });
+    const month = date.toLocaleDateString(undefined, { month: "long" });
+    return `${weekday}, ${month} ${ordinalDay(date.getDate())}`;
+  } catch {
+    return iso;
+  }
+}
+
 export function HubAppointments({
   initial,
   serverLoadError,
@@ -228,9 +255,16 @@ export function HubAppointments({
                         {r.provider_name?.trim() || "Provider not set"}
                       </span>
                     </div>
-                    <span className={styles.visitHint}>Click to view details</span>
+                    {r.ola_popup_message ? (
+                      <p className={styles.consultMessage}>
+                        &ldquo;{r.ola_popup_message}&rdquo;
+                      </p>
+                    ) : null}
                   </div>
-                  <span className={styles.visitTime}>{formatListTime(r.starts_at)}</span>
+                  <div className={styles.visitTimeBlock}>
+                    <span className={styles.visitTime}>{formatListTime(r.starts_at)}</span>
+                    <span className={styles.visitDate}>{formatListDate(r.starts_at)}</span>
+                  </div>
                 </div>
               </button>
               {r.ola_redirect_url ? (
