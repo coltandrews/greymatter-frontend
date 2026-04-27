@@ -1,0 +1,143 @@
+.page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 52px 28px 64px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e8ecf4;
+  border-radius: 16px;
+  padding: 34px 34px 38px;
+  box-shadow: 0 1px 3px rgba(23, 32, 51, 0.06);
+}
+
+.icon {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 22px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #172033;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 52px;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0 0 12px;
+  color: #172033;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.lead {
+  margin: 0 0 14px;
+  color: #334155;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.body {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.details {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.details div {
+  display: grid;
+  gap: 4px;
+}
+
+.details dt {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.details dd {
+  margin: 0;
+  color: #172033;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primary {
+  border: 1px solid #172033;
+  background: #172033;
+  color: #fff;
+}
+
+.secondary {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #475569;
+}
+
+.primary:hover,
+.secondary:hover {
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 32px 18px 48px;
+  }
+
+  .card {
+    padding: 28px 22px 30px;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .primary,
+  .secondary {
+    flex: 1 1 160px;
+  }
+}

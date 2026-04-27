@@ -501,7 +501,8 @@ export function HubMedications({
           aria-label="Find a pharmacy"
           onClick={openPharmacyFinder}
         >
-          <span aria-hidden="true" />
+          <span className={styles.mapPinIcon} aria-hidden="true" />
+          <span className={styles.mapIconLabel}>Find pharmacy</span>
         </button>
       </div>
 

@@ -227,9 +227,7 @@ export function HubAppointments({
               {r.ola_redirect_url ? (
                 <a
                   className={styles.nextStepsLink}
-                  href={r.ola_redirect_url}
-                  target="_blank"
-                  rel="noreferrer"
+                  href={`/ola-handoff/${encodeURIComponent(r.id)}`}
                 >
                   <span className={styles.nextStepsText}>Next Steps</span>
                   <span className={styles.nextStepsChevron} aria-hidden="true" />
@@ -280,9 +278,7 @@ export function HubAppointments({
                   <dd>
                     <a
                       className={styles.detailLink}
-                      href={selected.ola_redirect_url}
-                      target="_blank"
-                      rel="noreferrer"
+                      href={`/ola-handoff/${encodeURIComponent(selected.id)}`}
                     >
                       Open next steps
                     </a>
