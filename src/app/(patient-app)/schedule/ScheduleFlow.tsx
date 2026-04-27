@@ -77,7 +77,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 async function availabilityErrorMessage(res: Response): Promise<string> {
   const raw = await res.text().catch(() => "");
   if (!raw.trim()) {
-    return `Ola availability request failed (${res.status}).`;
+    return `Availability request failed (${res.status}).`;
   }
 
   try {
@@ -90,19 +90,19 @@ async function availabilityErrorMessage(res: Response): Promise<string> {
           : typeof obj.error === "string"
             ? obj.error
             : raw;
-      return `Ola availability request failed (${res.status}): ${message}`;
+      return `Availability request failed (${res.status}): ${message}`;
     }
   } catch {
     /* use raw response text */
   }
 
-  return `Ola availability request failed (${res.status}): ${raw}`;
+  return `Availability request failed (${res.status}): ${raw}`;
 }
 
 async function vendorResponseErrorMessage(res: Response): Promise<string> {
   const raw = await res.text().catch(() => "");
   if (!raw.trim()) {
-    return `Ola appointment request failed (${res.status}).`;
+    return `Appointment request failed (${res.status}).`;
   }
   try {
     const parsed = JSON.parse(raw) as unknown;
@@ -114,12 +114,12 @@ async function vendorResponseErrorMessage(res: Response): Promise<string> {
           : typeof obj.error === "string"
             ? obj.error
             : raw;
-      return `Ola appointment request failed (${res.status}): ${message}`;
+      return `Appointment request failed (${res.status}): ${message}`;
     }
   } catch {
     /* use raw response text */
   }
-  return `Ola appointment request failed (${res.status}): ${raw}`;
+  return `Appointment request failed (${res.status}): ${raw}`;
 }
 
 function answerLabel(id: string, value: string): string {
@@ -324,7 +324,7 @@ export function ScheduleFlow({
           setAvailabilityError(
             err instanceof Error
               ? err.message
-              : "Could not load availability from Ola.",
+              : "Could not load availability from our service provider.",
           );
         }
       } finally {
@@ -693,7 +693,7 @@ export function ScheduleFlow({
           >
             <h2 className={styles.modalTitle}>Insurance details</h2>
             <p className={styles.modalLead}>
-              Ola requires these details before booking. You can find them on your insurance card.
+              Our service provider requires these details before booking. You can find them on your insurance card.
             </p>
             {selectedSlotSummary ? (
               <p className={styles.selectedSummary}>

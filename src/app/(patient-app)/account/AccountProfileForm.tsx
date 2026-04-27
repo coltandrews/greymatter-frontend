@@ -36,7 +36,7 @@ function toDraftPatch(f: FormState): IntakeDraftData {
 async function vendorResponseErrorMessage(res: Response): Promise<string> {
   const raw = await res.text().catch(() => "");
   if (!raw.trim()) {
-    return `Ola profile update failed (${res.status}).`;
+    return `Service provider profile update failed (${res.status}).`;
   }
   try {
     const parsed = JSON.parse(raw) as unknown;
@@ -48,12 +48,12 @@ async function vendorResponseErrorMessage(res: Response): Promise<string> {
           : typeof obj.error === "string"
             ? obj.error
             : raw;
-      return `Ola profile update failed (${res.status}): ${message}`;
+      return `Service provider profile update failed (${res.status}): ${message}`;
     }
   } catch {
     /* use raw response text */
   }
-  return `Ola profile update failed (${res.status}): ${raw}`;
+  return `Service provider profile update failed (${res.status}): ${raw}`;
 }
 
 function buildOlaProfilePayload(email: string, data: IntakeDraftData) {
@@ -165,7 +165,7 @@ export function AccountProfileForm({
       if (olaUserGuid) {
         if (!session?.access_token) {
           setSaving(false);
-          setError("Sign in again to update Ola profile.");
+          setError("Sign in again to update your service provider profile.");
           return;
         }
         const olaRes = await updateVendorOlaProfile(

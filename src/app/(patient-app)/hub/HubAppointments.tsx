@@ -299,7 +299,7 @@ export function HubAppointments({
               ) : null}
               {selected.ola_popup_message ? (
                 <div className={styles.detailRow}>
-                  <dt>Ola message</dt>
+                  <dt>Service provider message</dt>
                   <dd>{selected.ola_popup_message}</dd>
                 </div>
               ) : null}
@@ -318,8 +318,7 @@ export function HubAppointments({
             </dl>
 
             <p className={styles.modalNote}>
-              Removing an appointment deletes it from your Greymatter hub. Ola sync is not wired yet
-              for this action.
+              Removing an appointment deletes it from your Greymatter hub only.
             </p>
 
             {error ? (
