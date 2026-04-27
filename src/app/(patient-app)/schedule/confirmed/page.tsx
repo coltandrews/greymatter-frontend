@@ -2,13 +2,14 @@ import Link from "next/link";
 import styles from "./confirmed.module.css";
 
 type Props = {
-  searchParams: Promise<{ date?: string; t?: string }>;
+  searchParams: Promise<{ date?: string; t?: string; time?: string }>;
 };
 
 export default async function ScheduleConfirmedPage({ searchParams }: Props) {
   const sp = await searchParams;
   const dateStr = typeof sp.date === "string" ? sp.date : null;
   const slotIso = typeof sp.t === "string" ? sp.t : null;
+  const selectedTime = typeof sp.time === "string" ? sp.time : null;
 
   let summary = "Your appointment details are saved.";
   if (dateStr && slotIso) {
@@ -19,10 +20,12 @@ export default async function ScheduleConfirmedPage({ searchParams }: Props) {
         day: "numeric",
         year: "numeric",
       });
-      const timePart = new Date(slotIso).toLocaleTimeString(undefined, {
-        hour: "numeric",
-        minute: "2-digit",
-      });
+      const timePart =
+        selectedTime ||
+        new Date(slotIso).toLocaleTimeString(undefined, {
+          hour: "numeric",
+          minute: "2-digit",
+        });
       summary = `${datePart} at ${timePart}`;
     } catch {
       /* keep default */

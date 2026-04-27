@@ -269,6 +269,9 @@ export function ScheduleFlow({
         date: selectedDate,
         t: selectedSlot,
       });
+      if (slotRow?.label) {
+        q.set("time", slotRow.label);
+      }
       router.push(`/schedule/confirmed?${q.toString()}`);
     } finally {
       setConfirmSaving(false);
@@ -353,61 +356,65 @@ export function ScheduleFlow({
         Step 2 of 2 — pick a day, then a time.
       </p>
       <div className={styles.calendarCard}>
-        <div className={styles.monthNav}>
-          <button
-            type="button"
-            className={styles.navBtn}
-            disabled={!canPrevMonth}
-            onClick={() =>
-              setMonthCursor(new Date(year, month - 1, 1))
-            }
-            aria-label="Previous month"
-          >
-            ←
-          </button>
-          <p className={styles.monthLabel}>{monthLabel}</p>
-          <button
-            type="button"
-            className={styles.navBtn}
-            onClick={() => setMonthCursor(new Date(year, month + 1, 1))}
-            aria-label="Next month"
-          >
-            →
-          </button>
-        </div>
-        <div className={styles.weekdays}>
-          {WEEKDAYS.map((d) => (
-            <span key={d}>{d}</span>
-          ))}
-        </div>
-        <div className={styles.grid}>
-          {cells.map((cell, i) => {
-            if (!cell.inMonth || cell.day == null || !cell.iso) {
-              return (
-                <div key={`pad-${i}`} className={styles.dayCellEmpty} aria-hidden />
-              );
-            }
-            const selected = selectedDate === cell.iso;
-            const hasAvailability = availableDates.has(cell.iso);
-            return (
+        <div className={styles.calendarLayout}>
+          <div className={styles.calendarPane}>
+            <div className={styles.monthNav}>
               <button
-                key={cell.iso}
                 type="button"
-                className={`${styles.dayCell} ${hasAvailability ? styles.dayCellAvailable : ""} ${cell.disabled ? styles.dayCellDisabled : ""} ${selected ? styles.dayCellSelected : ""}`}
-                disabled={cell.disabled}
-                onClick={() => setSelectedDate(cell.iso)}
-                title={hasAvailability ? "Available times" : undefined}
+                className={styles.navBtn}
+                disabled={!canPrevMonth}
+                onClick={() =>
+                  setMonthCursor(new Date(year, month - 1, 1))
+                }
+                aria-label="Previous month"
               >
-                {cell.day}
+                ←
               </button>
-            );
-          })}
-        </div>
+              <p className={styles.monthLabel}>{monthLabel}</p>
+              <button
+                type="button"
+                className={styles.navBtn}
+                onClick={() => setMonthCursor(new Date(year, month + 1, 1))}
+                aria-label="Next month"
+              >
+                →
+              </button>
+            </div>
+            <div className={styles.weekdays}>
+              {WEEKDAYS.map((d) => (
+                <span key={d}>{d}</span>
+              ))}
+            </div>
+            <div className={styles.grid}>
+              {cells.map((cell, i) => {
+                if (!cell.inMonth || cell.day == null || !cell.iso) {
+                  return (
+                    <div key={`pad-${i}`} className={styles.dayCellEmpty} aria-hidden />
+                  );
+                }
+                const selected = selectedDate === cell.iso;
+                const hasAvailability = availableDates.has(cell.iso);
+                return (
+                  <button
+                    key={cell.iso}
+                    type="button"
+                    className={`${styles.dayCell} ${hasAvailability ? styles.dayCellAvailable : ""} ${cell.disabled ? styles.dayCellDisabled : ""} ${selected ? styles.dayCellSelected : ""}`}
+                    disabled={cell.disabled}
+                    onClick={() => setSelectedDate(cell.iso)}
+                    title={hasAvailability ? "Available times" : undefined}
+                  >
+                    {cell.day}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-        {selectedDate ? (
           <div className={styles.slotsSection}>
             <p className={styles.slotsTitle}>
-              {loadingAvailability
+              {!selectedDate
+                ? "Select an available day"
+                : loadingAvailability
                 ? "Loading times…"
                 : `Times for ${new Date(selectedDate + "T12:00:00").toLocaleDateString(undefined, {
                     weekday: "long",
@@ -415,12 +422,17 @@ export function ScheduleFlow({
                     day: "numeric",
                   })}`}
             </p>
-            {!loadingAvailability && slots.length === 0 ? (
+            {!selectedDate ? (
+              <p className={styles.stepHint}>
+                Green days have available appointment times.
+              </p>
+            ) : null}
+            {selectedDate && !loadingAvailability && slots.length === 0 ? (
               <p className={styles.stepHint}>
                 {slotsError ?? "No open slots that day. Try another date."}
               </p>
             ) : null}
-            {!loadingAvailability && slots.length > 0 ? (
+            {selectedDate && !loadingAvailability && slots.length > 0 ? (
               <ul className={styles.slotList}>
                 {slots.map((s) => (
                   <li key={s.start}>
@@ -428,6 +440,7 @@ export function ScheduleFlow({
                       type="button"
                       className={`${styles.slotBtn} ${selectedSlot === s.start ? styles.slotBtnSelected : ""}`}
                       onClick={() => setSelectedSlot(s.start)}
+                      aria-pressed={selectedSlot === s.start}
                     >
                       {s.label}
                       {s.provider ? ` · ${s.provider}` : ""}
@@ -437,7 +450,7 @@ export function ScheduleFlow({
               </ul>
             ) : null}
           </div>
-        ) : null}
+        </div>
       </div>
       {confirmError ? (
         <p className={styles.confirmError} role="alert">
@@ -466,7 +479,7 @@ export function ScheduleFlow({
             void onConfirmAppointment();
           }}
         >
-          {confirmSaving ? "Saving…" : "Confirm appointment"}
+          {confirmSaving ? "Saving…" : selectedSlot ? "Continue" : "Select a time"}
         </button>
       </div>
     </>

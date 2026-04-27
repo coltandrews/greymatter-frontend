@@ -132,6 +132,17 @@ a.btnGhost {
   box-shadow: 0 1px 3px rgba(23, 32, 51, 0.06);
 }
 
+.calendarLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(220px, 0.8fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.calendarPane {
+  min-width: 0;
+}
+
 .monthNav {
   display: flex;
   align-items: center;
@@ -220,9 +231,11 @@ a.btnGhost {
 }
 
 .slotsSection {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #f1f5f9;
+  min-width: 0;
+  max-height: 424px;
+  padding-left: 24px;
+  border-left: 1px solid #f1f5f9;
+  overflow: hidden;
 }
 
 .slotsTitle {
@@ -236,12 +249,15 @@ a.btnGhost {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 8px;
+  max-height: 372px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .slotBtn {
+  width: 100%;
   padding: 10px 16px;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
@@ -251,6 +267,7 @@ a.btnGhost {
   color: #172033;
   cursor: pointer;
   font-family: inherit;
+  text-align: left;
 }
 
 .slotBtn:hover {
@@ -308,4 +325,22 @@ a.btnGhost {
 
 .btnConfirm:not(:disabled):hover {
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
+}
+
+@media (max-width: 720px) {
+  .calendarLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .slotsSection {
+    max-height: none;
+    padding-left: 0;
+    padding-top: 20px;
+    border-left: none;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .slotList {
+    max-height: 320px;
+  }
 }
