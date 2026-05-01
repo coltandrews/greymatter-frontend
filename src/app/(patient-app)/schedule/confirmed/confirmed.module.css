@@ -18,11 +18,25 @@
   height: 56px;
   margin: 0 auto 20px;
   border-radius: 50%;
-  background: #ecfdf5;
-  color: #15803d;
   font-size: 28px;
   font-weight: 700;
   line-height: 56px;
+}
+
+.success {
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+.pending {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 20px;
+}
+
+.review {
+  background: #fff7ed;
+  color: #c2410c;
 }
 
 .title {

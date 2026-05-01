@@ -5,7 +5,13 @@ import Link from "next/link";
 import { ScheduleFlow } from "./ScheduleFlow";
 import styles from "./schedule.module.css";
 
-export default async function SchedulePage() {
+type Props = {
+  searchParams: Promise<{ payment?: string }>;
+};
+
+export default async function SchedulePage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const paymentCancelled = sp.payment === "cancelled";
   const supabase = await createClient();
   const {
     data: { user },
@@ -31,6 +37,11 @@ export default async function SchedulePage() {
       <Link href="/hub" className={styles.back}>
         ← Patient Hub
       </Link>
+      {paymentCancelled ? (
+        <p className={styles.stateNote}>
+          Checkout was cancelled. Your appointment was not booked.
+        </p>
+      ) : null}
       <ScheduleFlow
         patient={merged}
         serviceState={serviceState}
