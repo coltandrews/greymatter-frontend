@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   canRetryOlaBooking,
+  recoveryDiagnosticDetails,
   recoveryBookingTime,
   recoveryBookingTitle,
+  recoveryPharmacySummary,
+  recoveryStateSummary,
   type StaffRecoveryBooking,
 } from "./recovery";
 
@@ -12,10 +15,22 @@ const row: StaffRecoveryBooking = {
   payment_status: "paid",
   booking_status: "needs_review",
   ola_status: "failed",
+  service_state: "SC",
   selected_slot: {
     start: "2026-05-04T14:00:00.000Z",
     providerName: "Dr Provider",
   },
+  selected_pharmacy: {
+    name: "Test Pharmacy",
+    ncpdpId: "1234567",
+    phone: "555-555-5555",
+  },
+  vendor_metadata: {
+    message: "Provider schedule is no longer available.",
+    status: 409,
+  },
+  ola_order_guid: null,
+  ola_redirect_url: null,
   failure_reason: "Slot unavailable",
   created_at: "2026-05-01T12:00:00.000Z",
   updated_at: "2026-05-01T12:15:00.000Z",
@@ -36,5 +51,20 @@ describe("staff recovery booking helpers", () => {
   it("falls back cleanly when slot details are missing", () => {
     expect(recoveryBookingTitle({ ...row, selected_slot: null })).toBe("Provider pending");
     expect(recoveryBookingTime({ ...row, selected_slot: null })).toContain("2026");
+  });
+
+  it("summarizes pharmacy and status context", () => {
+    expect(recoveryPharmacySummary(row)).toBe("Test Pharmacy · NCPDP 1234567 · Phone 555-555-5555");
+    expect(recoveryStateSummary(row)).toBe("Payment paid · Booking needs_review · Ola failed · State SC");
+  });
+
+  it("formats diagnostic details without raw JSON", () => {
+    expect(recoveryDiagnosticDetails(row)).toEqual([
+      { label: "Failure reason", value: "Slot unavailable" },
+      { label: "Ola message", value: "Provider schedule is no longer available." },
+      { label: "Ola status", value: "409" },
+      { label: "Booking ID", value: "booking-1", mono: true },
+      { label: "Patient ID", value: "user-1", mono: true },
+    ]);
   });
 });
