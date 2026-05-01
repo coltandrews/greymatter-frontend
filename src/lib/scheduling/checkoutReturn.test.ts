@@ -37,6 +37,24 @@ describe("checkoutReturnView", () => {
     });
   });
 
+  it("shows action-required copy when Ola returns patient handoff steps", () => {
+    expect(
+      checkoutReturnView({
+        booking_status: "action_required",
+        payment_status: "paid",
+        ola_status: "booked",
+        selected_slot: {
+          start: "2026-05-04T14:00:00.000Z",
+          providerName: "Dr Provider",
+        },
+      }),
+    ).toMatchObject({
+      tone: "action",
+      title: "Next steps ready",
+      lead: "Your payment was received and your provider booking is ready.",
+    });
+  });
+
   it("shows review copy when payment succeeded but booking needs manual follow-up", () => {
     expect(
       checkoutReturnView({
@@ -72,6 +90,14 @@ describe("checkoutReturnView", () => {
     expect(
       shouldPollCheckoutReturn({
         booking_status: "booked",
+        payment_status: "paid",
+        ola_status: "booked",
+        selected_slot: null,
+      }),
+    ).toBe(false);
+    expect(
+      shouldPollCheckoutReturn({
+        booking_status: "action_required",
         payment_status: "paid",
         ola_status: "booked",
         selected_slot: null,

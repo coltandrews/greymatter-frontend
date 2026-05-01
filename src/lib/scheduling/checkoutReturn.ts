@@ -6,7 +6,7 @@ export type BookingIntentReturnRow = {
 };
 
 export type CheckoutReturnView = {
-  tone: "success" | "pending" | "review";
+  tone: "success" | "pending" | "action" | "review";
   icon: string;
   title: string;
   lead: string;
@@ -80,6 +80,17 @@ export function checkoutReturnView(
     };
   }
 
+  if (bookingIntent.booking_status === "action_required") {
+    return {
+      tone: "action",
+      icon: "!",
+      title: "Next steps ready",
+      lead: "Your payment was received and your provider booking is ready.",
+      summary,
+      hint: "Return to your hub to review the provider next steps before continuing.",
+    };
+  }
+
   if (bookingIntent.booking_status === "needs_review") {
     return {
       tone: "review",
@@ -111,6 +122,7 @@ export function shouldPollCheckoutReturn(
     (bookingIntent.booking_status === "booked" &&
       bookingIntent.payment_status === "paid" &&
       bookingIntent.ola_status === "booked") ||
+    bookingIntent.booking_status === "action_required" ||
     bookingIntent.booking_status === "needs_review"
   );
 }

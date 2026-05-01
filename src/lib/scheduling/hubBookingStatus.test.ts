@@ -29,6 +29,20 @@ describe("hubBookingIntentStatusView", () => {
     });
   });
 
+  it("shows next steps when the provider booking requires patient action", () => {
+    expect(
+      hubBookingIntentStatusView({
+        booking_status: "action_required",
+        payment_status: "paid",
+        ola_status: "booked",
+      }),
+    ).toEqual({
+      label: "Next steps",
+      subtitle: "Provider booking is ready. Review the next steps.",
+      tone: "action",
+    });
+  });
+
   it("shows review when paid booking needs manual follow-up", () => {
     expect(
       hubBookingIntentStatusView({

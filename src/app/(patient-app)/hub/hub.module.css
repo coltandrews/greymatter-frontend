@@ -327,6 +327,12 @@
   border-color: #fed7aa;
 }
 
+.statusPillaction {
+  color: #92400e;
+  background: #fef3c7;
+  border-color: #fde68a;
+}
+
 .statusPillcancelled {
   color: #475569;
   background: #f1f5f9;

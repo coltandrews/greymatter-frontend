@@ -39,6 +39,11 @@
   color: #c2410c;
 }
 
+.action {
+  background: #fef3c7;
+  color: #b45309;
+}
+
 .title {
   margin: 0 0 10px;
   font-size: 1.65rem;

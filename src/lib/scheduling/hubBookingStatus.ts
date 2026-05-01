@@ -7,7 +7,7 @@ export type HubBookingIntentStatusInput = {
 export type HubBookingIntentStatusView = {
   label: string;
   subtitle: string;
-  tone: "confirmed" | "pending" | "review" | "cancelled";
+  tone: "confirmed" | "pending" | "action" | "review" | "cancelled";
 };
 
 export function hubBookingIntentStatusView(
@@ -22,6 +22,14 @@ export function hubBookingIntentStatusView(
       label: "Confirmed",
       subtitle: "Initial semaglutide consultation",
       tone: "confirmed",
+    };
+  }
+
+  if (input.booking_status === "action_required") {
+    return {
+      label: "Next steps",
+      subtitle: "Provider booking is ready. Review the next steps.",
+      tone: "action",
     };
   }
 
