@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
 import { bookingOperationsSummary } from "@/lib/dashboard/operationsSummary";
 import { redirect } from "next/navigation";
+import { BookingQueuePanel } from "./BookingQueuePanel";
 import { ConfigHealthPanel } from "./ConfigHealthPanel";
 import { OperationsSummaryCards } from "./OperationsSummaryCards";
 import { StaffRecoveryPanel } from "./StaffRecoveryPanel";
@@ -78,7 +79,7 @@ export default async function DashboardPage() {
           border: "1px solid #e5ebf5",
         }}
       >
-        <h1 style={{ margin: "0 0 8px", fontSize: 22 }}>Submissions</h1>
+        <h1 style={{ margin: "0 0 8px", fontSize: 22 }}>Staff dashboard</h1>
         <p style={{ margin: "0 0 20px", fontSize: 14, color: "#64748b" }}>
           {user.email ?? user.id}
         </p>
@@ -102,6 +103,8 @@ export default async function DashboardPage() {
         <ConfigHealthPanel />
 
         <OperationsSummaryCards summary={operationsSummary} />
+
+        <BookingQueuePanel />
 
         {!subErr && submissions && submissions.length > 0 ? (
           <div style={{ overflowX: "auto", marginBottom: 20 }}>
