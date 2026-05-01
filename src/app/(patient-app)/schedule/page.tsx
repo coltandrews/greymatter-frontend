@@ -32,7 +32,6 @@ export default async function SchedulePage() {
         ← Patient Hub
       </Link>
       <ScheduleFlow
-        email={user.email ?? ""}
         patient={merged}
         serviceState={serviceState}
       />

@@ -1,12 +1,16 @@
 "use client";
 
 import {
-  createVendorOlaScheduleRequest,
   fetchVendorOlaPharmacies,
   fetchVendorOlaSchedules,
 } from "@/lib/api/vendorOla";
+import {
+  createBookingIntent,
+  createBookingIntentCheckout,
+} from "@/lib/api/bookingIntents";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
+import { buildBookingIntentPayload } from "@/lib/scheduling/bookingIntentPayload";
 import {
   availableDatesFromOlaScheduleResponse,
   slotsFromOlaScheduleResponse,
@@ -14,7 +18,6 @@ import {
 } from "@/lib/scheduling/olaProviderSchedules";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./schedule.module.css";
 
@@ -132,14 +135,6 @@ async function vendorResponseErrorMessage(res: Response): Promise<string> {
   return `Appointment request failed (${res.status}): ${raw}`;
 }
 
-function answerLabel(id: string, value: string): string {
-  const q = APPOINTMENT_QUESTIONS.find((item) => item.id === id);
-  if (!q || q.type !== "select") {
-    return value;
-  }
-  return q.options.find((opt) => opt.value === value)?.label ?? value;
-}
-
 function stringValue(record: Record<string, unknown>, keys: string[]): string {
   for (const key of keys) {
     const value = record[key];
@@ -223,102 +218,13 @@ async function pharmacyErrorMessage(res: Response): Promise<string> {
   return `Pharmacy search failed (${res.status}): ${raw}`;
 }
 
-function buildOlaAppointmentPayload({
-  answers,
-  email,
-  patient,
-  pharmacy,
-  selectedSlot,
-  slot,
-  userInsurance,
-}: {
-  answers: Record<string, string>;
-  email: string;
-  patient: IntakeDraftData;
-  pharmacy: PharmacyChoice;
-  selectedSlot: string;
-  slot: SlotDisplay;
-  userInsurance: InsuranceForm;
-}) {
-  const state = patient.service_state?.trim() || patient.address_state?.trim() || "";
-  const street = patient.street_address?.trim() || "";
-  const city = patient.city?.trim() || "";
-  const zip = patient.zip?.trim() || "";
-  return {
-    user_data: {
-      first_name: patient.legal_first_name?.trim() || "Patient",
-      last_name: patient.legal_last_name?.trim() || "",
-      gender: patient.gender?.trim() || "",
-      dob: patient.date_of_birth?.trim() || "",
-      email,
-      phone: patient.phone?.trim() || "",
-      role: "USER",
-      sub_role: "",
-      release_medical: false,
-      tennant: "grey_matter",
-    },
-    address: [
-      {
-        use: "home",
-        text: [street, city, state, zip].filter(Boolean).join(" "),
-        street1: street,
-        city,
-        state,
-        postalCode: zip,
-        line: [street, city, state, zip].filter(Boolean),
-        type: "both",
-      },
-    ],
-    service_data: {
-      question_answer: Object.entries(answers)
-        .filter(([, value]) => value.trim())
-        .map(([id, value]) => {
-          const question = APPOINTMENT_QUESTIONS.find((q) => q.id === id);
-          return {
-            question_text: question?.label ?? id,
-            answer: answerLabel(id, value),
-            other_text: "",
-          };
-        }),
-    },
-    identifier: {
-      service: "grey-matter-semaglutide-injection-one-month",
-      sessionType: "initial",
-      tennant: "grey_matter",
-      scheduleType: "one-time",
-    },
-    transaction_id: crypto.randomUUID(),
-    pharmacyDetails: {
-      pharmacy_name: pharmacy.name,
-      pharmacy_address: pharmacy.address,
-      pharmacy_phone: pharmacy.phone,
-      pharmacy_fax: pharmacy.fax,
-      pharmacy_ncpdp_id: pharmacy.ncpdpId,
-    },
-    schedule: {
-      schedule_start_date: selectedSlot,
-      schedule_end_date: slot.end,
-      provider_guid: slot.providerGuid ?? "",
-    },
-    user_insurance: {
-      insurance_member_id: userInsurance.insurance_member_id.trim(),
-      insurance_plan_name: userInsurance.insurance_plan_name.trim(),
-      payer_identification: userInsurance.payer_identification.trim(),
-      cover_type: userInsurance.cover_type.trim(),
-    },
-  };
-}
-
 export function ScheduleFlow({
-  email,
   patient,
   serviceState,
 }: {
-  email: string;
   patient: IntakeDraftData;
   serviceState: string | null;
 }) {
-  const router = useRouter();
   const [step, setStep] = useState<Step>("intake");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [pharmacyName, setPharmacyName] = useState("");
@@ -552,73 +458,66 @@ export function ScheduleFlow({
     try {
       const supabase = createClient();
       const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-      if (authError || !user) {
-        setConfirmError("You must be signed in to book.");
-        return;
-      }
-      const {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        setConfirmError("Sign in again to book.");
+        setConfirmError("Sign in again to continue to payment.");
         return;
       }
-      const starts = new Date(selectedSlot.start);
-      if (Number.isNaN(starts.getTime())) {
-        setConfirmError("That time slot is invalid. Pick another time.");
+
+      if (!selectedSlot.providerGuid?.trim()) {
+        setConfirmError("That time slot is missing provider details. Pick another time.");
         return;
       }
-      const vendorRes = await createVendorOlaScheduleRequest(
+
+      const bookingRes = await createBookingIntent(
         session.access_token,
-        buildOlaAppointmentPayload({
+        buildBookingIntentPayload({
           answers,
-          email,
+          insurance,
           patient,
           pharmacy: selectedPharmacy,
-          selectedSlot: selectedSlot.start,
-          slot: selectedSlot,
-          userInsurance: insurance,
+          selectedSlot,
+          serviceState: serviceStateValue,
         }),
       );
-      if (!vendorRes.ok) {
-        setConfirmError(await vendorResponseErrorMessage(vendorRes));
+      if (!bookingRes.ok) {
+        setConfirmError(await vendorResponseErrorMessage(bookingRes));
         return;
       }
-      const vendorJson = (await vendorRes.json().catch(() => ({}))) as Record<string, unknown>;
-      const providerName = selectedSlot.provider?.trim() || null;
-      const { error: insertError } = await supabase.from("appointments").insert({
-        user_id: user.id,
-        starts_at: starts.toISOString(),
-        status: "booked",
-        provider_name: providerName,
-        ola_redirect_url:
-          typeof vendorJson.redirectUrl === "string" ? vendorJson.redirectUrl : null,
-        ola_popup_message:
-          typeof vendorJson.popupMsg === "string" ? vendorJson.popupMsg : null,
-        ola_user_guid:
-          typeof vendorJson.user_guid === "string" ? vendorJson.user_guid : null,
-        ola_order_guid:
-          typeof vendorJson.data === "string" ? vendorJson.data : null,
-      });
-      if (insertError) {
-        setConfirmError(insertError.message);
+      const bookingJson = (await bookingRes.json().catch(() => ({}))) as Record<string, unknown>;
+      const bookingIntent =
+        bookingJson.bookingIntent && typeof bookingJson.bookingIntent === "object"
+          ? (bookingJson.bookingIntent as Record<string, unknown>)
+          : null;
+      const bookingIntentId =
+        typeof bookingIntent?.id === "string" ? bookingIntent.id : "";
+      if (!bookingIntentId) {
+        setConfirmError("Could not prepare this appointment for payment.");
         return;
       }
-      const q = new URLSearchParams({
-        date: selectedDate,
-        t: selectedSlot.start,
-      });
-      if (selectedSlot.label) {
-        q.set("time", selectedSlot.label);
+
+      const checkoutRes = await createBookingIntentCheckout(
+        session.access_token,
+        bookingIntentId,
+      );
+      if (!checkoutRes.ok) {
+        setConfirmError(await vendorResponseErrorMessage(checkoutRes));
+        return;
       }
-      router.push(`/schedule/confirmed?${q.toString()}`);
+      const checkoutJson = (await checkoutRes.json().catch(() => ({}))) as Record<string, unknown>;
+      const checkoutUrl =
+        typeof checkoutJson.checkoutUrl === "string" ? checkoutJson.checkoutUrl : "";
+      if (!checkoutUrl) {
+        setConfirmError("Could not start checkout. Please try again.");
+        return;
+      }
+
+      window.location.assign(checkoutUrl);
     } finally {
       setConfirmSaving(false);
     }
-  }, [answers, email, insurance, patient, router, selectedDate, selectedPharmacy, selectedSlot, confirmSaving]);
+  }, [answers, insurance, patient, selectedDate, selectedPharmacy, selectedSlot, confirmSaving, serviceStateValue]);
 
   if (step === "intake") {
     return (
@@ -1075,7 +974,7 @@ export function ScheduleFlow({
                 className={styles.btnConfirm}
                 disabled={!insuranceComplete || confirmSaving}
               >
-                {confirmSaving ? "Booking…" : "Book appointment"}
+                {confirmSaving ? "Preparing checkout…" : "Continue to payment"}
               </button>
             </div>
           </form>
