@@ -27,6 +27,11 @@ describe("bookingOperationsSummary", () => {
         },
         {
           payment_status: "paid",
+          booking_status: "action_required",
+          ola_status: "booked",
+        },
+        {
+          payment_status: "paid",
           booking_status: "needs_review",
           ola_status: "failed",
         },
@@ -34,7 +39,7 @@ describe("bookingOperationsSummary", () => {
     ).toEqual({
       paymentPending: 1,
       olaPending: 2,
-      booked: 1,
+      booked: 2,
       needsReview: 1,
     });
   });

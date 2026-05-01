@@ -20,7 +20,11 @@ export function bookingOperationsSummary(
         summary.needsReview += 1;
         return summary;
       }
-      if (row.booking_status === "booked" && row.ola_status === "booked") {
+      if (
+        (row.booking_status === "booked" ||
+          row.booking_status === "action_required") &&
+        row.ola_status === "booked"
+      ) {
         summary.booked += 1;
         return summary;
       }
