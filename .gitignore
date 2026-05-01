@@ -7,4 +7,6 @@ node_modules
 .env.production.local
 coverage
 dist
+playwright-report
+test-results
 *.tsbuildinfo
