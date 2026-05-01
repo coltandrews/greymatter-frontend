@@ -1,10 +1,10 @@
 import { Suspense } from "react";
-import { AuthEntry } from "./AuthEntry";
+import { PreAuthEligibility } from "./PreAuthEligibility";
 
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <AuthEntry />
+      <PreAuthEligibility />
     </Suspense>
   );
 }

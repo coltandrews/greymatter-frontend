@@ -5,6 +5,10 @@ import {
   type IntakeDraftData,
 } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
+import {
+  PRE_AUTH_INTAKE_STORAGE_KEY,
+  parsePreAuthIntake,
+} from "@/lib/intake/preAuthIntake";
 import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
 import { US_STATES } from "@/app/intake/usStates";
 import type { CSSProperties } from "react";
@@ -163,6 +167,50 @@ export function IntakeWizard() {
     if (qErr) {
       setError(qErr.message);
       setLoading(false);
+      return;
+    }
+
+    const preAuthIntake = !row
+      ? parsePreAuthIntake(window.localStorage.getItem(PRE_AUTH_INTAKE_STORAGE_KEY))
+      : null;
+
+    if (preAuthIntake) {
+      const { error: upErr } = await supabase.from("intake_drafts").upsert(
+        {
+          user_id: user.id,
+          step: "paused_before_scheduling",
+          data: preAuthIntake,
+        },
+        { onConflict: "user_id" },
+      );
+      if (upErr) {
+        setError(upErr.message);
+        setLoading(false);
+        return;
+      }
+
+      const { error: syncErr } = await syncProfileDemographics(
+        supabase,
+        user.id,
+        preAuthIntake,
+      );
+      if (syncErr) {
+        setError(`Could not save profile: ${syncErr}`);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        await ensureSubmission(supabase, user.id);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not start submission.");
+        setLoading(false);
+        return;
+      }
+
+      window.localStorage.removeItem(PRE_AUTH_INTAKE_STORAGE_KEY);
+      setLoading(false);
+      router.replace("/hub");
       return;
     }
 

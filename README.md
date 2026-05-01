@@ -30,9 +30,9 @@ Confirmation and next-step copy should stay conservative until Ola confirms the 
 - `NEXT_PUBLIC_SUPABASE_URL` — project URL from Supabase **Settings → API**
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **publishable** key (safe in the browser with RLS)
 
-Current auth entry is `/` (signup default; `/login` redirects to sign-in). Email confirmation uses `/auth/callback`. After login, `/post-login` sends **patient** → `/intake`, **staff/admin** → `/dashboard`.
+Current patient entry is `/` for pre-account eligibility. Eligible patients continue to account creation from there; `/login` redirects to sign-in. Email confirmation uses `/auth/callback`. After login, `/post-login` sends **patient** → `/intake`, **staff/admin** → `/dashboard`.
 
-Target flow change: move account creation after eligibility and before pharmacy selection. Anonymous/pre-auth intake must be attached to the Supabase user after signup/signin.
+Pre-auth eligibility is stored locally in the browser and attached to the Supabase user on the first authenticated `/intake` load.
 
 `GET /api/me` returns the signed-in user from the Supabase cookie session (same origin).
 
