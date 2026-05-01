@@ -8,6 +8,7 @@ import {
   shouldPollCheckoutReturn,
   type BookingIntentReturnRow,
 } from "@/lib/scheduling/checkoutReturn";
+import { patientBookingTimeline } from "@/lib/scheduling/patientTimeline";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./confirmed.module.css";
 
@@ -28,6 +29,18 @@ export function CheckoutReturnCard({
   const view = useMemo(() => checkoutReturnView(bookingIntent), [bookingIntent]);
   const action = useMemo(() => checkoutReturnAction(bookingIntent), [bookingIntent]);
   const polling = Boolean(checkoutSessionId) && shouldPollCheckoutReturn(bookingIntent);
+  const timeline = useMemo(
+    () =>
+      bookingIntent
+        ? patientBookingTimeline({
+            booking_status: bookingIntent.booking_status,
+            payment_status: bookingIntent.payment_status,
+            ola_status: bookingIntent.ola_status,
+            has_next_steps: Boolean(bookingIntent.ola_redirect_url),
+          })
+        : [],
+    [bookingIntent],
+  );
 
   useEffect(() => {
     if (!polling || pollCount >= MAX_POLLS) {
@@ -74,6 +87,40 @@ export function CheckoutReturnCard({
         <p className={styles.statusNote} role="status">
           Checking for booking updates...
         </p>
+      ) : null}
+      {bookingIntent ? (
+        <>
+          <ol className={styles.timeline} aria-label="Booking progress">
+            {timeline.map((step) => (
+              <li
+                key={step.key}
+                className={`${styles.timelineItem} ${styles[`timeline${step.state}`]}`}
+              >
+                <span className={styles.timelineMarker} aria-hidden="true" />
+                <span className={styles.timelineText}>
+                  <span className={styles.timelineLabel}>{step.label}</span>
+                  <span className={styles.timelineDescription}>
+                    {step.description}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ol>
+          <dl className={styles.requestDetails}>
+            <div>
+              <dt>Request ID</dt>
+              <dd className={styles.mono}>{bookingIntent.id}</dd>
+            </div>
+            <div>
+              <dt>Payment</dt>
+              <dd>{bookingIntent.payment_status ?? "Pending"}</dd>
+            </div>
+            <div>
+              <dt>Provider booking</dt>
+              <dd>{bookingIntent.ola_status ?? "Pending"}</dd>
+            </div>
+          </dl>
+        </>
       ) : null}
       <div className={styles.actions}>
         {action ? (

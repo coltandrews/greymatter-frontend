@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
+import { patientBookingTimeline } from "@/lib/scheduling/patientTimeline";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./hub.module.css";
 
@@ -342,6 +343,15 @@ function bookingIntentProvider(row: HubBookingIntentRow): string {
   return typeof provider === "string" && provider.trim()
     ? provider.trim()
     : "Provider pending";
+}
+
+function bookingIntentTimeline(row: HubBookingIntentRow) {
+  return patientBookingTimeline({
+    booking_status: row.booking_status,
+    payment_status: row.payment_status,
+    ola_status: row.ola_status,
+    has_next_steps: Boolean(row.ola_redirect_url),
+  });
 }
 
 function visitSortTime(row: HubVisitRow): number {
@@ -733,6 +743,28 @@ export function HubAppointments({
                 </>
               )}
             </dl>
+
+            {selected.kind === "bookingIntent" ? (
+              <div className={styles.detailSection}>
+                <h4 className={styles.detailSectionTitle}>Progress</h4>
+                <ol className={styles.timeline} aria-label="Booking progress">
+                  {bookingIntentTimeline(selected.bookingIntent).map((step) => (
+                    <li
+                      key={step.key}
+                      className={`${styles.timelineItem} ${styles[`timeline${step.state}`]}`}
+                    >
+                      <span className={styles.timelineMarker} aria-hidden="true" />
+                      <span className={styles.timelineText}>
+                        <span className={styles.timelineLabel}>{step.label}</span>
+                        <span className={styles.timelineDescription}>
+                          {step.description}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
 
             {selectedOrderGuid ? (
               <div className={styles.detailSection}>

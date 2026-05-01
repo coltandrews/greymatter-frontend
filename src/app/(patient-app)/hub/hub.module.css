@@ -466,6 +466,69 @@
   color: #172033;
 }
 
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #eef2f6;
+  border-radius: 12px;
+}
+
+.timelineItem {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  color: #64748b;
+}
+
+.timelineMarker {
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #cbd5e1;
+}
+
+.timelinecomplete .timelineMarker {
+  background: #16a34a;
+  box-shadow: 0 0 0 1px #16a34a;
+}
+
+.timelinecurrent .timelineMarker {
+  background: #2563eb;
+  box-shadow: 0 0 0 1px #2563eb;
+}
+
+.timelineattention .timelineMarker {
+  background: #f97316;
+  box-shadow: 0 0 0 1px #f97316;
+}
+
+.timelineText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.timelineLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #172033;
+}
+
+.timelineDescription {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #64748b;
+}
+
 .detailMuted,
 .detailError {
   margin: 0;
