@@ -1,7 +1,9 @@
 export type BookingIntentReturnRow = {
+  id: string | null;
   booking_status: string | null;
   payment_status: string | null;
   ola_status: string | null;
+  ola_redirect_url: string | null;
   selected_slot: unknown;
 };
 
@@ -13,6 +15,11 @@ export type CheckoutReturnView = {
   summary: string;
   hint: string;
 };
+
+export type CheckoutReturnAction = {
+  href: string;
+  label: string;
+} | null;
 
 function selectedSlotSummary(selectedSlot: unknown): string {
   if (!selectedSlot || typeof selectedSlot !== "object") {
@@ -87,7 +94,7 @@ export function checkoutReturnView(
       title: "Next steps ready",
       lead: "Your payment was received and your provider booking is ready.",
       summary,
-      hint: "Return to your hub to review the provider next steps before continuing.",
+      hint: "Review the provider next steps before continuing outside Greymatter.",
     };
   }
 
@@ -109,6 +116,23 @@ export function checkoutReturnView(
     lead: "We are finishing your appointment request.",
     summary,
     hint: "This can take a moment after checkout. Refresh this page or return to your hub for the latest status.",
+  };
+}
+
+export function checkoutReturnAction(
+  bookingIntent: BookingIntentReturnRow | null,
+): CheckoutReturnAction {
+  if (
+    bookingIntent?.booking_status !== "action_required" ||
+    !bookingIntent.id ||
+    !bookingIntent.ola_redirect_url
+  ) {
+    return null;
+  }
+
+  return {
+    href: `/ola-handoff/booking/${encodeURIComponent(bookingIntent.id)}`,
+    label: "Review next steps",
   };
 }
 

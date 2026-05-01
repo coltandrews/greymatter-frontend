@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  checkoutReturnAction,
   checkoutReturnView,
   shouldPollCheckoutReturn,
   type BookingIntentReturnRow,
@@ -25,6 +26,7 @@ export function CheckoutReturnCard({
   const [pollCount, setPollCount] = useState(0);
   const [pollError, setPollError] = useState<string | null>(null);
   const view = useMemo(() => checkoutReturnView(bookingIntent), [bookingIntent]);
+  const action = useMemo(() => checkoutReturnAction(bookingIntent), [bookingIntent]);
   const polling = Boolean(checkoutSessionId) && shouldPollCheckoutReturn(bookingIntent);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export function CheckoutReturnCard({
           const supabase = createClient();
           const { data, error } = await supabase
             .from("booking_intents")
-            .select("booking_status, payment_status, ola_status, selected_slot")
+            .select("id, booking_status, payment_status, ola_status, ola_redirect_url, selected_slot")
             .eq("stripe_checkout_session_id", checkoutSessionId)
             .maybeSingle();
 
@@ -73,9 +75,19 @@ export function CheckoutReturnCard({
           Checking for booking updates...
         </p>
       ) : null}
-      <Link href="/hub" className={styles.btn}>
-        Back to Patient Hub
-      </Link>
+      <div className={styles.actions}>
+        {action ? (
+          <Link href={action.href} className={styles.btn}>
+            {action.label}
+          </Link>
+        ) : null}
+        <Link
+          href="/hub"
+          className={`${styles.btn} ${action ? styles.secondaryBtn : ""}`}
+        >
+          Back to Patient Hub
+        </Link>
+      </div>
     </div>
   );
 }

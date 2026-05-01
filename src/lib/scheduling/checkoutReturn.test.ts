@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { checkoutReturnView, shouldPollCheckoutReturn } from "./checkoutReturn";
+import {
+  checkoutReturnAction,
+  checkoutReturnView,
+  shouldPollCheckoutReturn,
+} from "./checkoutReturn";
 
 describe("checkoutReturnView", () => {
   it("shows booked copy only after payment and Ola booking are complete", () => {
@@ -8,6 +12,8 @@ describe("checkoutReturnView", () => {
         booking_status: "booked",
         payment_status: "paid",
         ola_status: "booked",
+        id: "booking-1",
+        ola_redirect_url: null,
         selected_slot: {
           start: "2026-05-04T14:00:00.000Z",
           providerName: "Dr Provider",
@@ -26,6 +32,8 @@ describe("checkoutReturnView", () => {
         booking_status: "payment_pending",
         payment_status: "pending",
         ola_status: "not_started",
+        id: "booking-1",
+        ola_redirect_url: null,
         selected_slot: {
           start: "2026-05-04T14:00:00.000Z",
         },
@@ -43,6 +51,8 @@ describe("checkoutReturnView", () => {
         booking_status: "action_required",
         payment_status: "paid",
         ola_status: "booked",
+        id: "booking-1",
+        ola_redirect_url: "https://ola.example/next",
         selected_slot: {
           start: "2026-05-04T14:00:00.000Z",
           providerName: "Dr Provider",
@@ -61,6 +71,8 @@ describe("checkoutReturnView", () => {
         booking_status: "needs_review",
         payment_status: "paid",
         ola_status: "failed",
+        id: "booking-1",
+        ola_redirect_url: null,
         selected_slot: null,
       }),
     ).toMatchObject({
@@ -84,6 +96,8 @@ describe("checkoutReturnView", () => {
         booking_status: "payment_pending",
         payment_status: "pending",
         ola_status: "not_started",
+        id: "booking-1",
+        ola_redirect_url: null,
         selected_slot: null,
       }),
     ).toBe(true);
@@ -92,6 +106,8 @@ describe("checkoutReturnView", () => {
         booking_status: "booked",
         payment_status: "paid",
         ola_status: "booked",
+        id: "booking-1",
+        ola_redirect_url: null,
         selected_slot: null,
       }),
     ).toBe(false);
@@ -100,6 +116,8 @@ describe("checkoutReturnView", () => {
         booking_status: "action_required",
         payment_status: "paid",
         ola_status: "booked",
+        id: "booking-1",
+        ola_redirect_url: "https://ola.example/next",
         selected_slot: null,
       }),
     ).toBe(false);
@@ -108,8 +126,41 @@ describe("checkoutReturnView", () => {
         booking_status: "needs_review",
         payment_status: "paid",
         ola_status: "failed",
+        id: "booking-1",
+        ola_redirect_url: null,
         selected_slot: null,
       }),
     ).toBe(false);
+  });
+});
+
+describe("checkoutReturnAction", () => {
+  it("links action-required bookings to the Greymatter handoff page", () => {
+    expect(
+      checkoutReturnAction({
+        id: "booking/1",
+        booking_status: "action_required",
+        payment_status: "paid",
+        ola_status: "booked",
+        ola_redirect_url: "https://ola.example/next",
+        selected_slot: null,
+      }),
+    ).toEqual({
+      href: "/ola-handoff/booking/booking%2F1",
+      label: "Review next steps",
+    });
+  });
+
+  it("does not link without an Ola handoff URL", () => {
+    expect(
+      checkoutReturnAction({
+        id: "booking-1",
+        booking_status: "action_required",
+        payment_status: "paid",
+        ola_status: "booked",
+        ola_redirect_url: null,
+        selected_slot: null,
+      }),
+    ).toBeNull();
   });
 });
