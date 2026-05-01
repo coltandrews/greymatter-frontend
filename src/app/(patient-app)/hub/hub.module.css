@@ -309,6 +309,30 @@
   border: 1px solid #bbf7d0;
 }
 
+.statusPillconfirmed {
+  color: #14532d;
+  background: #dcfce7;
+  border-color: #bbf7d0;
+}
+
+.statusPillpending {
+  color: #1d4ed8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+.statusPillreview {
+  color: #9a3412;
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
+
+.statusPillcancelled {
+  color: #475569;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
 .visitDate {
   font-size: 12px;
   color: #64748b;

@@ -14,11 +14,20 @@ export default async function HubPage() {
     return null;
   }
 
-  const { data: rows, error } = await supabase
-    .from("appointments")
-    .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message, ola_order_guid")
-    .eq("user_id", user.id)
-    .order("starts_at", { ascending: true });
+  const [{ data: rows, error }, { data: bookingRows, error: bookingError }] =
+    await Promise.all([
+      supabase
+        .from("appointments")
+        .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message, ola_order_guid")
+        .eq("user_id", user.id)
+        .order("starts_at", { ascending: true }),
+      supabase
+        .from("booking_intents")
+        .select("id, booking_status, payment_status, ola_status, selected_slot, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
+        .eq("user_id", user.id)
+        .neq("booking_status", "draft")
+        .order("created_at", { ascending: false }),
+    ]);
 
   const appointments = (rows ?? []).map((r) => ({
     id: r.id,
@@ -51,7 +60,19 @@ export default async function HubPage() {
 
           <HubAppointments
             initial={appointments}
-            serverLoadError={error?.message ?? null}
+            initialBookingIntents={(bookingRows ?? []).map((r) => ({
+              id: r.id,
+              booking_status: r.booking_status,
+              payment_status: r.payment_status,
+              ola_status: r.ola_status,
+              selected_slot: r.selected_slot,
+              created_at: r.created_at,
+              updated_at: r.updated_at,
+              ola_redirect_url: r.ola_redirect_url,
+              ola_popup_message: r.ola_popup_message,
+              ola_order_guid: r.ola_order_guid,
+            }))}
+            serverLoadError={error?.message ?? bookingError?.message ?? null}
           />
         </section>
 
