@@ -18,6 +18,7 @@ import {
 } from "@/lib/dashboard/patientLookup";
 import { createClient } from "@/lib/supabase/client";
 import { useState } from "react";
+import { AuditTrailPanel } from "./AuditTrailPanel";
 
 async function readBackendMessage(res: Response): Promise<string> {
   const body = await res.json().catch(() => null) as { message?: unknown } | null;
@@ -144,6 +145,11 @@ function PatientResult({ patient }: { patient: PatientLookupPatient }) {
           </ul>
         </div>
       ) : null}
+
+      <AuditTrailPanel
+        title="Patient audit trail"
+        target={{ patientUserId: patient.userId }}
+      />
     </article>
   );
 }

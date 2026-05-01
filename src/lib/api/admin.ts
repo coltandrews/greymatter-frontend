@@ -74,6 +74,29 @@ export type PatientLookupResponse = {
   patients: PatientLookupPatient[];
 };
 
+export type AuditEvent = {
+  id: string;
+  actorUserId: string | null;
+  patientUserId: string | null;
+  bookingIntentId: string | null;
+  appointmentId: string | null;
+  action: string;
+  note: string | null;
+  metadata: unknown;
+  createdAt: string;
+};
+
+export type AuditEventsResponse = {
+  events: AuditEvent[];
+};
+
+export type CreateAuditNoteInput = {
+  patientUserId?: string | null;
+  bookingIntentId?: string | null;
+  appointmentId?: string | null;
+  note: string;
+};
+
 export async function fetchConfigHealth(supabaseAccessToken: string) {
   return fetch(`${apiBase()}/api/admin/config-health`, {
     headers: {
@@ -106,5 +129,47 @@ export async function fetchPatientLookup(
       Authorization: `Bearer ${supabaseAccessToken}`,
       Accept: "application/json",
     },
+  });
+}
+
+export async function fetchAuditEvents(
+  supabaseAccessToken: string,
+  params: {
+    patientUserId?: string | null;
+    bookingIntentId?: string | null;
+    appointmentId?: string | null;
+    limit?: number;
+  },
+) {
+  const search = new URLSearchParams();
+  if (params.bookingIntentId) {
+    search.set("booking_intent_id", params.bookingIntentId);
+  } else if (params.appointmentId) {
+    search.set("appointment_id", params.appointmentId);
+  } else if (params.patientUserId) {
+    search.set("patient_user_id", params.patientUserId);
+  }
+  search.set("limit", String(params.limit ?? 25));
+
+  return fetch(`${apiBase()}/api/admin/audit-events?${search.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+    },
+  });
+}
+
+export async function createAuditNote(
+  supabaseAccessToken: string,
+  input: CreateAuditNoteInput,
+) {
+  return fetch(`${apiBase()}/api/admin/audit-events`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(input),
   });
 }

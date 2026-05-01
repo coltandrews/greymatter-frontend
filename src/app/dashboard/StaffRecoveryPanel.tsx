@@ -13,6 +13,7 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AuditTrailPanel } from "./AuditTrailPanel";
 
 type RetryAttempt = {
   at: string;
@@ -252,6 +253,14 @@ export function StaffRecoveryPanel({
                     </ul>
                   </div>
                 ) : null}
+
+                <AuditTrailPanel
+                  title="Booking audit trail"
+                  target={{
+                    patientUserId: row.user_id,
+                    bookingIntentId: row.id,
+                  }}
+                />
               </li>
             );
           })}

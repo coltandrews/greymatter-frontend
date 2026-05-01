@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchBookingQueue, fetchConfigHealth, fetchPatientLookup } from "./admin";
+import {
+  createAuditNote,
+  fetchAuditEvents,
+  fetchBookingQueue,
+  fetchConfigHealth,
+  fetchPatientLookup,
+} from "./admin";
 
 describe("admin API helpers", () => {
   const originalBase = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -59,6 +65,51 @@ describe("admin API helpers", () => {
           Authorization: "Bearer access-token",
           Accept: "application/json",
         },
+      },
+    );
+  });
+
+  it("fetches audit events by booking intent", async () => {
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.com";
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchAuditEvents("access-token", { bookingIntentId: "booking-1", limit: 10 });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/admin/audit-events?booking_intent_id=booking-1&limit=10",
+      {
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+        },
+      },
+    );
+  });
+
+  it("creates staff audit notes through the backend", async () => {
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.com";
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createAuditNote("access-token", {
+      patientUserId: "patient-1",
+      note: "Called patient",
+    });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/admin/audit-events",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          patientUserId: "patient-1",
+          note: "Called patient",
+        }),
       },
     );
   });
