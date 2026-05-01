@@ -551,6 +551,15 @@ export function HubAppointments({
                       </div>
                     </div>
                   </button>
+                  {r.ola_redirect_url ? (
+                    <a
+                      className={styles.nextStepsLink}
+                      href={`/ola-handoff/booking/${encodeURIComponent(r.id)}`}
+                    >
+                      <span className={styles.nextStepsText}>Next Steps</span>
+                      <span className={styles.nextStepsChevron} aria-hidden="true" />
+                    </a>
+                  ) : null}
                 </li>
               );
             }
@@ -644,6 +653,25 @@ export function HubAppointments({
                     <dt>Payment</dt>
                     <dd className={styles.detailCap}>{selected.bookingIntent.payment_status}</dd>
                   </div>
+                  {selected.bookingIntent.ola_redirect_url ? (
+                    <div className={styles.detailRow}>
+                      <dt>Next steps</dt>
+                      <dd>
+                        <a
+                          className={styles.detailLink}
+                          href={`/ola-handoff/booking/${encodeURIComponent(selected.bookingIntent.id)}`}
+                        >
+                          Open next steps
+                        </a>
+                      </dd>
+                    </div>
+                  ) : null}
+                  {selected.bookingIntent.ola_popup_message ? (
+                    <div className={styles.detailRow}>
+                      <dt>Service provider message</dt>
+                      <dd>{selected.bookingIntent.ola_popup_message}</dd>
+                    </div>
+                  ) : null}
                   <div className={styles.detailRow}>
                     <dt>Reference ID</dt>
                     <dd className={styles.detailMono}>{selected.bookingIntent.id}</dd>
