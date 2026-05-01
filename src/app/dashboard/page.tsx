@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
 import { bookingOperationsSummary } from "@/lib/dashboard/operationsSummary";
 import { redirect } from "next/navigation";
+import { ConfigHealthPanel } from "./ConfigHealthPanel";
 import { OperationsSummaryCards } from "./OperationsSummaryCards";
 import { StaffRecoveryPanel } from "./StaffRecoveryPanel";
 
@@ -97,6 +98,8 @@ export default async function DashboardPage() {
             {operationsErr.message}
           </p>
         ) : null}
+
+        <ConfigHealthPanel />
 
         <OperationsSummaryCards summary={operationsSummary} />
 
