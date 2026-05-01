@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { checkoutReturnView, type BookingIntentReturnRow } from "@/lib/scheduling/checkoutReturn";
+import type { BookingIntentReturnRow } from "@/lib/scheduling/checkoutReturn";
 import { createClient } from "@/lib/supabase/server";
+import { CheckoutReturnCard } from "./CheckoutReturnCard";
 import styles from "./confirmed.module.css";
 
 type Props = {
@@ -23,22 +23,12 @@ export default async function ScheduleConfirmedPage({ searchParams }: Props) {
     bookingIntent = data as BookingIntentReturnRow | null;
   }
 
-  const view = checkoutReturnView(bookingIntent);
-
   return (
     <main className={styles.page}>
-      <div className={styles.card}>
-        <div className={`${styles.icon} ${styles[view.tone]}`} aria-hidden>
-          {view.icon}
-        </div>
-        <h1 className={styles.title}>{view.title}</h1>
-        <p className={styles.lead}>{view.lead}</p>
-        <p className={styles.summary}>{view.summary}</p>
-        <p className={styles.hint}>{view.hint}</p>
-        <Link href="/hub" className={styles.btn}>
-          Back to Patient Hub
-        </Link>
-      </div>
+      <CheckoutReturnCard
+        checkoutSessionId={checkoutSessionId}
+        initialBookingIntent={bookingIntent}
+      />
     </main>
   );
 }

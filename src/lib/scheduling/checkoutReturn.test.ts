@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkoutReturnView } from "./checkoutReturn";
+import { checkoutReturnView, shouldPollCheckoutReturn } from "./checkoutReturn";
 
 describe("checkoutReturnView", () => {
   it("shows booked copy only after payment and Ola booking are complete", () => {
@@ -57,5 +57,33 @@ describe("checkoutReturnView", () => {
       tone: "review",
       title: "We could not find that checkout",
     });
+  });
+
+  it("polls only while checkout booking is unresolved", () => {
+    expect(shouldPollCheckoutReturn(null)).toBe(false);
+    expect(
+      shouldPollCheckoutReturn({
+        booking_status: "payment_pending",
+        payment_status: "pending",
+        ola_status: "not_started",
+        selected_slot: null,
+      }),
+    ).toBe(true);
+    expect(
+      shouldPollCheckoutReturn({
+        booking_status: "booked",
+        payment_status: "paid",
+        ola_status: "booked",
+        selected_slot: null,
+      }),
+    ).toBe(false);
+    expect(
+      shouldPollCheckoutReturn({
+        booking_status: "needs_review",
+        payment_status: "paid",
+        ola_status: "failed",
+        selected_slot: null,
+      }),
+    ).toBe(false);
   });
 });

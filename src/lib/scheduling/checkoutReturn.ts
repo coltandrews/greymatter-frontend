@@ -100,3 +100,17 @@ export function checkoutReturnView(
     hint: "This can take a moment after checkout. Refresh this page or return to your hub for the latest status.",
   };
 }
+
+export function shouldPollCheckoutReturn(
+  bookingIntent: BookingIntentReturnRow | null,
+): boolean {
+  if (!bookingIntent) {
+    return false;
+  }
+  return !(
+    (bookingIntent.booking_status === "booked" &&
+      bookingIntent.payment_status === "paid" &&
+      bookingIntent.ola_status === "booked") ||
+    bookingIntent.booking_status === "needs_review"
+  );
+}
