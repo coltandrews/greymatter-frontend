@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { BookingQueuePanel } from "./BookingQueuePanel";
 import { ConfigHealthPanel } from "./ConfigHealthPanel";
 import { OperationsSummaryCards } from "./OperationsSummaryCards";
+import { PatientLookupPanel } from "./PatientLookupPanel";
 import { StaffRecoveryPanel } from "./StaffRecoveryPanel";
 
 function formatWhen(iso: string) {
@@ -103,6 +104,8 @@ export default async function DashboardPage() {
         <ConfigHealthPanel />
 
         <OperationsSummaryCards summary={operationsSummary} />
+
+        <PatientLookupPanel />
 
         <BookingQueuePanel />
 

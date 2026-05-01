@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchBookingQueue, fetchConfigHealth } from "./admin";
+import { fetchBookingQueue, fetchConfigHealth, fetchPatientLookup } from "./admin";
 
 describe("admin API helpers", () => {
   const originalBase = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -36,6 +36,24 @@ describe("admin API helpers", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.com/api/admin/booking-queue?limit=50",
+      {
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+        },
+      },
+    );
+  });
+
+  it("searches patients through the backend", async () => {
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.com";
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchPatientLookup("access-token", "pat@example.com");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/admin/patient-lookup?q=pat%40example.com",
       {
         headers: {
           Authorization: "Bearer access-token",

@@ -46,6 +46,34 @@ export type BookingQueueResponse = {
   rows: BookingQueueRow[];
 };
 
+export type PatientLookupAppointment = {
+  id: string;
+  status: string | null;
+  startsAt: string;
+  providerName: string | null;
+  olaOrderGuid: string | null;
+  hasNextSteps: boolean;
+  updatedAt: string;
+};
+
+export type PatientLookupPatient = {
+  userId: string;
+  email: string | null;
+  name: string;
+  serviceState: string | null;
+  latestSubmission: {
+    id: string;
+    status: string | null;
+    updatedAt: string;
+  } | null;
+  bookings: BookingQueueRow[];
+  appointments: PatientLookupAppointment[];
+};
+
+export type PatientLookupResponse = {
+  patients: PatientLookupPatient[];
+};
+
 export async function fetchConfigHealth(supabaseAccessToken: string) {
   return fetch(`${apiBase()}/api/admin/config-health`, {
     headers: {
@@ -61,6 +89,19 @@ export async function fetchBookingQueue(
 ) {
   const search = new URLSearchParams({ limit: String(limit) });
   return fetch(`${apiBase()}/api/admin/booking-queue?${search.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+    },
+  });
+}
+
+export async function fetchPatientLookup(
+  supabaseAccessToken: string,
+  query: string,
+) {
+  const search = new URLSearchParams({ q: query });
+  return fetch(`${apiBase()}/api/admin/patient-lookup?${search.toString()}`, {
     headers: {
       Authorization: `Bearer ${supabaseAccessToken}`,
       Accept: "application/json",
