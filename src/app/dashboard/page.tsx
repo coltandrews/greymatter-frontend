@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
+import { bookingOperationsSummary } from "@/lib/dashboard/operationsSummary";
 import { redirect } from "next/navigation";
+import { OperationsSummaryCards } from "./OperationsSummaryCards";
 import { StaffRecoveryPanel } from "./StaffRecoveryPanel";
 
 function formatWhen(iso: string) {
@@ -38,6 +40,7 @@ export default async function DashboardPage() {
   const [
     { data: submissions, error: subErr },
     { data: recoveryRows, error: recoveryErr },
+    { data: operationsRows, error: operationsErr },
   ] = await Promise.all([
     supabase
       .from("submissions")
@@ -49,7 +52,11 @@ export default async function DashboardPage() {
       .eq("payment_status", "paid")
       .eq("booking_status", "needs_review")
       .order("updated_at", { ascending: false }),
+    supabase
+      .from("booking_intents")
+      .select("payment_status, booking_status, ola_status"),
   ]);
+  const operationsSummary = bookingOperationsSummary(operationsRows ?? []);
 
   return (
     <main
@@ -85,6 +92,13 @@ export default async function DashboardPage() {
             {recoveryErr.message}
           </p>
         ) : null}
+        {operationsErr ? (
+          <p role="alert" style={{ margin: "0 0 16px", color: "#b91c1c", fontSize: 14 }}>
+            {operationsErr.message}
+          </p>
+        ) : null}
+
+        <OperationsSummaryCards summary={operationsSummary} />
 
         {!subErr && submissions && submissions.length > 0 ? (
           <div style={{ overflowX: "auto", marginBottom: 20 }}>
