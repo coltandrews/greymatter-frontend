@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
 import { redirect } from "next/navigation";
+import { StaffRecoveryPanel } from "./StaffRecoveryPanel";
 
 function formatWhen(iso: string) {
   try {
@@ -34,10 +35,21 @@ export default async function DashboardPage() {
     redirect("/hub");
   }
 
-  const { data: submissions, error: subErr } = await supabase
-    .from("submissions")
-    .select("id, user_id, status, created_at, updated_at")
-    .order("updated_at", { ascending: false });
+  const [
+    { data: submissions, error: subErr },
+    { data: recoveryRows, error: recoveryErr },
+  ] = await Promise.all([
+    supabase
+      .from("submissions")
+      .select("id, user_id, status, created_at, updated_at")
+      .order("updated_at", { ascending: false }),
+    supabase
+      .from("booking_intents")
+      .select("id, user_id, payment_status, booking_status, ola_status, selected_slot, failure_reason, created_at, updated_at")
+      .eq("payment_status", "paid")
+      .eq("booking_status", "needs_review")
+      .order("updated_at", { ascending: false }),
+  ]);
 
   return (
     <main
@@ -66,6 +78,11 @@ export default async function DashboardPage() {
         {subErr ? (
           <p role="alert" style={{ margin: "0 0 16px", color: "#b91c1c", fontSize: 14 }}>
             {subErr.message}
+          </p>
+        ) : null}
+        {recoveryErr ? (
+          <p role="alert" style={{ margin: "0 0 16px", color: "#b91c1c", fontSize: 14 }}>
+            {recoveryErr.message}
           </p>
         ) : null}
 
@@ -128,7 +145,23 @@ export default async function DashboardPage() {
           </p>
         ) : null}
 
-        <SignOutButton />
+        <StaffRecoveryPanel
+          initialBookings={(recoveryRows ?? []).map((row) => ({
+            id: row.id,
+            user_id: row.user_id,
+            payment_status: row.payment_status,
+            booking_status: row.booking_status,
+            ola_status: row.ola_status,
+            selected_slot: row.selected_slot,
+            failure_reason: row.failure_reason,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+          }))}
+        />
+
+        <div style={{ marginTop: 24 }}>
+          <SignOutButton />
+        </div>
       </section>
     </main>
   );

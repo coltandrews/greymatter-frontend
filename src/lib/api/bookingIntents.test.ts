@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createBookingIntent, createBookingIntentCheckout } from "./bookingIntents";
+import {
+  createBookingIntent,
+  createBookingIntentCheckout,
+  retryBookingIntentOla,
+} from "./bookingIntents";
 
 describe("booking intent API helpers", () => {
   afterEach(() => {
@@ -34,6 +38,25 @@ describe("booking intent API helpers", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.com/api/booking-intents/booking%20intent%2Fid/checkout",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+        },
+      },
+    );
+  });
+
+  it("retries Ola booking for a booking intent through the backend", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.com");
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await retryBookingIntentOla("access-token", "booking-id");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/booking-intents/booking-id/retry-ola",
       {
         method: "POST",
         headers: {

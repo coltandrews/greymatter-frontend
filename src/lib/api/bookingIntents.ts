@@ -36,3 +36,19 @@ export async function createBookingIntentCheckout(
     },
   );
 }
+
+export async function retryBookingIntentOla(
+  supabaseAccessToken: string,
+  bookingIntentId: string,
+) {
+  return fetch(
+    `${apiBase()}/api/booking-intents/${encodeURIComponent(bookingIntentId)}/retry-ola`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${supabaseAccessToken}`,
+        Accept: "application/json",
+      },
+    },
+  );
+}
