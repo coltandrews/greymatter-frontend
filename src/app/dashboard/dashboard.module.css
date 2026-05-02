@@ -449,7 +449,7 @@
 
 .adminTable {
   width: 100%;
-  min-width: 720px;
+  min-width: 780px;
   border-collapse: collapse;
   font-size: 13px;
 }
@@ -471,6 +471,92 @@
 
 .adminTable tr:last-child td {
   border-bottom: 0;
+}
+
+.actionColumn {
+  width: 76px;
+}
+
+.actionCell {
+  position: relative;
+  width: 76px;
+}
+
+.contextMenu {
+  position: relative;
+  width: 44px;
+}
+
+.contextMenuButton {
+  width: 36px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.contextMenuButton:hover,
+.contextMenuButton[aria-expanded="true"] {
+  background: #f8fafc;
+  border-color: #bfdbfe;
+}
+
+.contextMenuPanel {
+  position: absolute;
+  z-index: 20;
+  top: 38px;
+  left: 0;
+  width: 172px;
+  padding: 6px;
+  display: grid;
+  gap: 3px;
+  border: 1px solid #dbe3ef;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(23, 32, 51, 0.18);
+}
+
+.contextMenuItem {
+  width: 100%;
+  min-height: 34px;
+  padding: 0 9px;
+  display: flex;
+  align-items: center;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #172033;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.contextMenuItem:hover {
+  background: #f1f5f9;
+}
+
+.contextMenuItem:disabled {
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.contextMenuEmpty {
+  padding: 8px 9px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .monoCell {
@@ -543,7 +629,8 @@
 
 .actionMessage,
 .actionError {
-  flex-basis: 100%;
+  display: block;
+  margin-top: 6px;
   font-size: 12px;
   font-weight: 700;
 }

@@ -21,6 +21,11 @@ export function formatTransactionAmount(row: TransactionRow): string {
   }).format(row.amountCents / 100);
 }
 
+export function transactionReceiptFileName(row: TransactionRow): string {
+  const safeId = row.id.replace(/[^a-zA-Z0-9_-]/g, "-");
+  return `greymatter-receipt-${safeId}.pdf`;
+}
+
 export function transactionStatusView(status: string | null): TransactionStatusView {
   switch (status) {
     case "paid":

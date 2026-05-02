@@ -153,6 +153,18 @@ export async function fetchTransactions(
   });
 }
 
+export async function fetchTransactionReceipt(
+  supabaseAccessToken: string,
+  transactionId: string,
+) {
+  return fetch(`${apiBase()}/api/admin/transactions/${encodeURIComponent(transactionId)}/receipt`, {
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/pdf",
+    },
+  });
+}
+
 export async function fetchPatientLookup(
   supabaseAccessToken: string,
   query: string,

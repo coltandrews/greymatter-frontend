@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  fetchTransactionReceipt,
   fetchTransactions,
   type TransactionRow,
   type TransactionsResponse,
@@ -11,6 +12,7 @@ import {
   formatTransactionAmount,
   stripeDashboardUrl,
   transactionPatientLabel,
+  transactionReceiptFileName,
   transactionStatusView,
   transactionWebhookStatusView,
 } from "@/lib/dashboard/transactions";
@@ -44,6 +46,8 @@ export function TransactionsPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reconcilingId, setReconcilingId] = useState<string | null>(null);
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
   const [rowMessageById, setRowMessageById] = useState<Record<string, string>>({});
 
   async function loadTransactions() {
@@ -77,6 +81,7 @@ export function TransactionsPanel() {
   }, []);
 
   async function reconcileStripe(row: TransactionRow) {
+    setOpenActionMenuId(null);
     setReconcilingId(row.id);
     setRowMessageById((messages) => ({ ...messages, [row.id]: "" }));
     try {
@@ -105,6 +110,48 @@ export function TransactionsPanel() {
       }));
     } finally {
       setReconcilingId(null);
+    }
+  }
+
+  async function downloadReceipt(row: TransactionRow) {
+    setOpenActionMenuId(null);
+    setDownloadingReceiptId(row.id);
+    setRowMessageById((messages) => ({ ...messages, [row.id]: "" }));
+    try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Sign in again to download receipts.");
+      }
+
+      const response = await fetchTransactionReceipt(session.access_token, row.id);
+      if (!response.ok) {
+        throw new Error(await readBackendMessage(response));
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = transactionReceiptFileName(row);
+      document.body.append(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      setRowMessageById((messages) => ({
+        ...messages,
+        [row.id]: "Receipt downloaded.",
+      }));
+    } catch (err) {
+      setRowMessageById((messages) => ({
+        ...messages,
+        [row.id]: err instanceof Error ? err.message : "Could not download receipt.",
+      }));
+    } finally {
+      setDownloadingReceiptId(null);
     }
   }
 
@@ -146,6 +193,7 @@ export function TransactionsPanel() {
           <table className={styles.adminTable}>
             <thead>
               <tr>
+                <th scope="col" className={styles.actionColumn}>Actions</th>
                 <th scope="col">Patient</th>
                 <th scope="col">Status</th>
                 <th scope="col">Amount</th>
@@ -153,7 +201,6 @@ export function TransactionsPanel() {
                 <th scope="col">Webhook</th>
                 <th scope="col">Booking</th>
                 <th scope="col">Stripe</th>
-                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -166,6 +213,67 @@ export function TransactionsPanel() {
 
                 return (
                   <tr key={row.id}>
+                    <td className={styles.actionCell}>
+                      <div className={styles.contextMenu}>
+                        <button
+                          type="button"
+                          className={styles.contextMenuButton}
+                          aria-haspopup="menu"
+                          aria-expanded={openActionMenuId === row.id}
+                          aria-label={`Open actions for ${transactionPatientLabel(row)}`}
+                          onClick={() => {
+                            setOpenActionMenuId((current) => current === row.id ? null : row.id);
+                          }}
+                        >
+                          ...
+                        </button>
+                        {openActionMenuId === row.id ? (
+                          <div className={styles.contextMenuPanel} role="menu">
+                            {stripeUrl ? (
+                              <a
+                                role="menuitem"
+                                className={styles.contextMenuItem}
+                                href={stripeUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                }}
+                              >
+                                View In Stripe
+                              </a>
+                            ) : null}
+                            <button
+                              type="button"
+                              role="menuitem"
+                              className={styles.contextMenuItem}
+                              onClick={() => {
+                                void downloadReceipt(row);
+                              }}
+                              disabled={downloadingReceiptId === row.id}
+                            >
+                              {downloadingReceiptId === row.id ? "Downloading..." : "Print Receipt"}
+                            </button>
+                            {canReconcile ? (
+                              <button
+                                type="button"
+                                role="menuitem"
+                                className={styles.contextMenuItem}
+                                onClick={() => {
+                                  void reconcileStripe(row);
+                                }}
+                                disabled={reconcilingId === row.id}
+                              >
+                                {reconcilingId === row.id ? "Checking..." : "Reconcile"}
+                              </button>
+                            ) : null}
+                            {!stripeUrl && !canReconcile ? (
+                              <span className={styles.contextMenuEmpty}>No Stripe action</span>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    </td>
                     <td>
                       <strong className={styles.tableStrong}>
                         {transactionPatientLabel(row)}
@@ -201,46 +309,17 @@ export function TransactionsPanel() {
                       >
                         {row.stripeCheckoutSessionId ?? row.stripePaymentIntentId ?? "No Stripe ID"}
                       </span>
-                    </td>
-                    <td>
-                      <div className={styles.tableActions}>
-                        {stripeUrl ? (
-                          <a
-                            className={styles.smallAction}
-                            href={stripeUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            View In Stripe
-                          </a>
-                        ) : null}
-                        {canReconcile ? (
-                          <button
-                            type="button"
-                            className={styles.smallAction}
-                            onClick={() => {
-                              void reconcileStripe(row);
-                            }}
-                            disabled={reconcilingId === row.id}
-                          >
-                            {reconcilingId === row.id ? "Checking..." : "Reconcile"}
-                          </button>
-                        ) : null}
-                        {!stripeUrl && !canReconcile ? (
-                          <span className={styles.emptyText}>Not available</span>
-                        ) : null}
-                        {rowMessage ? (
-                          <span
-                            className={
-                              rowMessage.includes("reconciled")
-                                ? styles.actionMessage
-                                : styles.actionError
-                            }
-                          >
-                            {rowMessage}
-                          </span>
-                        ) : null}
-                      </div>
+                      {rowMessage ? (
+                        <span
+                          className={
+                            rowMessage.includes("reconciled") || rowMessage.includes("downloaded")
+                              ? styles.actionMessage
+                              : styles.actionError
+                          }
+                        >
+                          {rowMessage}
+                        </span>
+                      ) : null}
                     </td>
                   </tr>
                 );

@@ -4,6 +4,7 @@ import {
   formatTransactionAmount,
   stripeDashboardUrl,
   transactionPatientLabel,
+  transactionReceiptFileName,
   transactionStatusView,
   transactionWebhookStatusView,
 } from "./transactions";
@@ -30,6 +31,9 @@ describe("transaction dashboard helpers", () => {
     expect(transactionPatientLabel(row)).toBe("Pat Patient · pat@example.com");
     expect(formatTransactionAmount(row)).toBe("$199.00");
     expect(formatTransactionAmount({ ...row, amountCents: null })).toBe("Not recorded");
+    expect(transactionReceiptFileName({ ...row, id: "booking/1" })).toBe(
+      "greymatter-receipt-booking-1.pdf",
+    );
   });
 
   it("maps payment status to compact badges", () => {

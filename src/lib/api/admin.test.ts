@@ -5,6 +5,7 @@ import {
   fetchBookingQueue,
   fetchConfigHealth,
   fetchPatientLookup,
+  fetchTransactionReceipt,
   fetchTransactions,
 } from "./admin";
 
@@ -65,6 +66,24 @@ describe("admin API helpers", () => {
         headers: {
           Authorization: "Bearer access-token",
           Accept: "application/json",
+        },
+      },
+    );
+  });
+
+  it("fetches transaction receipt PDFs through the backend", async () => {
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.com";
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchTransactionReceipt("access-token", "booking/1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/admin/transactions/booking%2F1/receipt",
+      {
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/pdf",
         },
       },
     );
