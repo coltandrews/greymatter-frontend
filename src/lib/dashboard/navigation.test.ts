@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { dashboardNavItems } from "./navigation";
 
 describe("dashboardNavItems", () => {
-  it("hides deployment health from staff users", () => {
+  it("hides app health from staff users", () => {
     expect(dashboardNavItems("staff", "overview").map((item) => item.label))
-      .not.toContain("Deployment health");
+      .not.toContain("App health");
   });
 
   it("uses page links for dashboard sections", () => {
@@ -15,22 +15,22 @@ describe("dashboardNavItems", () => {
     ]);
   });
 
-  it("shows deployment health to admins", () => {
+  it("shows app health to admins", () => {
     expect(dashboardNavItems("admin", "overview")).toContainEqual({
-      label: "Deployment health",
-      href: "/dashboard/deployment-health",
+      label: "App health",
+      href: "/dashboard/app-health",
       active: false,
     });
   });
 
-  it("marks deployment health active on the deployment health page", () => {
-    expect(dashboardNavItems("admin", "deployment-health").slice(0, 2)).toEqual([
+  it("marks app health active on the app health page", () => {
+    expect(dashboardNavItems("admin", "app-health").slice(0, 2)).toEqual([
       { label: "Overview", href: "/dashboard", active: false },
       { label: "Patients", href: "/dashboard/patients", active: false },
     ]);
-    expect(dashboardNavItems("admin", "deployment-health").at(-1)).toEqual({
-      label: "Deployment health",
-      href: "/dashboard/deployment-health",
+    expect(dashboardNavItems("admin", "app-health").at(-1)).toEqual({
+      label: "App health",
+      href: "/dashboard/app-health",
       active: true,
     });
   });

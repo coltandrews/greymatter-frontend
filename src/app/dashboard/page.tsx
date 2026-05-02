@@ -15,7 +15,7 @@ export default async function DashboardPage() {
       role={role}
       currentPage="overview"
       title="Admin portal"
-      subtitle="Booking operations overview"
+      subtitle="A focused view of booking status, payment progress, and staff follow-up needs."
       email={user.email ?? user.id}
     >
       {error ? (

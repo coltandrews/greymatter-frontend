@@ -44,7 +44,7 @@ export function ConfigHealthPanel() {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        throw new Error("Sign in again to check deployment health.");
+        throw new Error("Sign in again to check app health.");
       }
 
       const response = await fetchConfigHealth(session.access_token);
@@ -82,7 +82,7 @@ export function ConfigHealthPanel() {
       >
         <div>
           <h2 id="config-health-title" style={{ margin: "0 0 6px", fontSize: 18 }}>
-            Deployment health
+            App health
           </h2>
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
             {loading ? "Checking backend configuration..." : configHealthSummary(health)}

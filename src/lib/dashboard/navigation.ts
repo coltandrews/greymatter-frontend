@@ -4,8 +4,8 @@ export type DashboardPageKey =
   | "patients"
   | "booking-queue"
   | "submissions"
-  | "recovery"
-  | "deployment-health";
+  | "booking-issues"
+  | "app-health";
 
 export type DashboardNavItem = {
   label: string;
@@ -18,7 +18,7 @@ const dashboardSections = [
   { key: "patients", label: "Patients", href: "/dashboard/patients" },
   { key: "booking-queue", label: "Booking queue", href: "/dashboard/booking-queue" },
   { key: "submissions", label: "Submissions", href: "/dashboard/submissions" },
-  { key: "recovery", label: "Recovery", href: "/dashboard/recovery" },
+  { key: "booking-issues", label: "Booking issues", href: "/dashboard/booking-issues" },
 ] as const;
 
 export function dashboardNavItems(
@@ -33,9 +33,9 @@ export function dashboardNavItems(
 
   if (role === "admin") {
     items.push({
-      label: "Deployment health",
-      href: "/dashboard/deployment-health",
-      active: currentPage === "deployment-health",
+      label: "App health",
+      href: "/dashboard/app-health",
+      active: currentPage === "app-health",
     });
   }
 

@@ -109,14 +109,14 @@ export function StaffRecoveryPanel({
 
   return (
     <section style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid #e5ebf5" }}>
-      <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Booking recovery</h2>
+      <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Bookings that need help</h2>
       <p style={{ margin: "0 0 16px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
-        Paid bookings that need staff review before Ola confirmation.
+        Paid bookings that need staff review before provider confirmation.
       </p>
 
       {initialBookings.length === 0 ? (
         <p style={{ margin: 0, fontSize: 15, color: "#64748b" }}>
-          No booking recoveries right now.
+          No booking issues right now.
         </p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 12 }}>

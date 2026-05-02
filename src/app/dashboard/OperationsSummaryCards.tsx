@@ -1,4 +1,5 @@
 import type { BookingOperationsSummary } from "@/lib/dashboard/operationsSummary";
+import styles from "./dashboard.module.css";
 
 const cards: {
   key: keyof BookingOperationsSummary;
@@ -14,7 +15,7 @@ const cards: {
   },
   {
     key: "olaPending",
-    label: "Paid / Ola pending",
+    label: "Provider pending",
     hint: "Payment complete, provider booking in progress",
     accent: "#7c3aed",
   },
@@ -26,7 +27,7 @@ const cards: {
   },
   {
     key: "needsReview",
-    label: "Needs review",
+    label: "Needs help",
     hint: "Paid but not automatically booked",
     accent: "#c2410c",
   },
@@ -37,38 +38,55 @@ export function OperationsSummaryCards({
 }: {
   summary: BookingOperationsSummary;
 }) {
+  const total =
+    summary.paymentPending +
+    summary.olaPending +
+    summary.booked +
+    summary.needsReview;
+  const open = summary.paymentPending + summary.olaPending + summary.needsReview;
+
   return (
-    <section style={{ margin: "0 0 24px" }} aria-labelledby="operations-title">
-      <h2 id="operations-title" style={{ margin: "0 0 12px", fontSize: 18 }}>
-        Booking operations
-      </h2>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
-          gap: 12,
-        }}
-      >
+    <section aria-labelledby="operations-title">
+      <div className={styles.overviewHero}>
+        <div className={styles.overviewPrimary}>
+          <p className={styles.overviewEyebrow}>Operations snapshot</p>
+          <h2 id="operations-title" className={styles.overviewTitle}>
+            {open} active booking {open === 1 ? "request" : "requests"}
+          </h2>
+          <p className={styles.overviewText}>
+            Track where each paid consultation is in the payment, provider booking,
+            and staff follow-up flow.
+          </p>
+        </div>
+        <div className={styles.overviewSide}>
+          <div className={styles.overviewStat}>
+            <p className={styles.overviewStatLabel}>Total tracked</p>
+            <p className={styles.overviewStatValue}>{total}</p>
+          </div>
+          <div className={styles.overviewStat}>
+            <p className={styles.overviewStatLabel}>Needs staff help</p>
+            <p className={styles.overviewStatValue}>{summary.needsReview}</p>
+          </div>
+        </div>
+      </div>
+      <div className={styles.cardGrid}>
         {cards.map((card) => (
           <div
             key={card.key}
-            style={{
-              padding: 16,
-              border: "1px solid #e5ebf5",
-              borderRadius: 12,
-              background: "#f8fafc",
-              borderLeft: `4px solid ${card.accent}`,
-            }}
+            className={styles.metricCard}
           >
-            <p style={{ margin: "0 0 8px", fontSize: 13, color: "#64748b", fontWeight: 700 }}>
-              {card.label}
-            </p>
-            <p style={{ margin: "0 0 6px", fontSize: 26, color: "#172033", fontWeight: 800 }}>
+            <div className={styles.metricTop}>
+              <p className={styles.metricLabel}>{card.label}</p>
+              <span
+                className={styles.metricDot}
+                style={{ background: card.accent }}
+                aria-hidden="true"
+              />
+            </div>
+            <p className={styles.metricValue}>
               {summary[card.key]}
             </p>
-            <p style={{ margin: 0, fontSize: 12, color: "#64748b", lineHeight: 1.4 }}>
-              {card.hint}
-            </p>
+            <p className={styles.metricHint}>{card.hint}</p>
           </div>
         ))}
       </div>
