@@ -1,6 +1,5 @@
 import { bookingOperationsSummary } from "@/lib/dashboard/operationsSummary";
 import { DashboardShell } from "./DashboardShell";
-import { IntakeQuestionsPanel } from "./IntakeQuestionsPanel";
 import { OperationsSummaryCards } from "./OperationsSummaryCards";
 import { requireDashboardAccess } from "./dashboardAccess";
 
@@ -25,7 +24,6 @@ export default async function DashboardPage() {
         </p>
       ) : null}
       <OperationsSummaryCards summary={operationsSummary} />
-      <IntakeQuestionsPanel />
     </DashboardShell>
   );
 }
