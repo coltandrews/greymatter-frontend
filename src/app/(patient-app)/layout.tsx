@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
-import { isIntakeComplete } from "@/lib/intakeComplete";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
+import { PreAuthIntakeSync } from "./PreAuthIntakeSync";
 import { PatientTopBar } from "./PatientTopBar";
 import { redirect } from "next/navigation";
 
@@ -37,10 +37,6 @@ export default async function PatientAppLayout({
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (!isIntakeComplete(draftRow?.step)) {
-    redirect("/intake");
-  }
-
   const draftData = draftRow?.data as IntakeDraftData | undefined;
   const profileDemo = profile?.demographics as IntakeDraftData | undefined;
   const forWelcome = mergeIntakeAndProfileDemographics(draftData, profileDemo);
@@ -58,6 +54,7 @@ export default async function PatientAppLayout({
         welcomeName={patientWelcomeName(user, forWelcome)}
         email={user.email ?? user.id}
       />
+      <PreAuthIntakeSync />
       <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
     </div>
   );
