@@ -15,6 +15,9 @@ describe("pre-auth intake", () => {
       service_state: "SC",
       address_state: "SC",
       for_self: true,
+      pre_signup_answers: {
+        glp_1_history: "no",
+      },
     });
 
     expect(parsePreAuthIntake(raw)).toEqual({
@@ -25,6 +28,9 @@ describe("pre-auth intake", () => {
       service_state: "SC",
       address_state: "SC",
       for_self: true,
+      pre_signup_answers: {
+        glp_1_history: "no",
+      },
     });
   });
 

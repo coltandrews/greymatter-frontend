@@ -3,12 +3,20 @@
 import { AuthEntry } from "./AuthEntry";
 import { US_STATES } from "./intake/usStates";
 import {
+  intakeAnswerComplete,
+  normalizeIntakeAnswers,
+  type IntakeQuestion,
+  type IntakeQuestionAnswer,
+  type IntakeQuestionAnswers,
+} from "@/lib/intake/intakeQuestions";
+import {
   PRE_AUTH_INTAKE_STORAGE_KEY,
   serializePreAuthIntake,
   type PreAuthIntakeData,
 } from "@/lib/intake/preAuthIntake";
+import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const card = {
   width: "100%" as const,
@@ -44,13 +52,164 @@ const initial: PreAuthIntakeData = {
   for_self: undefined,
 };
 
+function stringAnswer(value: IntakeQuestionAnswer | undefined): string {
+  return typeof value === "string" ? value : "";
+}
+
+function arrayAnswer(value: IntakeQuestionAnswer | undefined): string[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function QuestionField({
+  answer,
+  onChange,
+  question,
+}: {
+  answer: IntakeQuestionAnswer | undefined;
+  onChange: (value: IntakeQuestionAnswer) => void;
+  question: IntakeQuestion;
+}) {
+  const label = (
+    <>
+      {question.prompt}
+      {question.required ? " *" : ""}
+    </>
+  );
+
+  if (question.question_type === "textarea") {
+    return (
+      <label style={field}>
+        {label}
+        <textarea
+          value={stringAnswer(answer)}
+          onChange={(e) => onChange(e.target.value)}
+          style={{ ...input, minHeight: 86, resize: "vertical" }}
+        />
+        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+      </label>
+    );
+  }
+
+  if (question.question_type === "select") {
+    return (
+      <label style={field}>
+        {label}
+        <select
+          value={stringAnswer(answer)}
+          onChange={(e) => onChange(e.target.value)}
+          style={input}
+        >
+          <option value="">Select...</option>
+          {question.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+      </label>
+    );
+  }
+
+  if (question.question_type === "multi_select") {
+    const selected = arrayAnswer(answer);
+    return (
+      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 10, padding: 12 }}>
+        <legend style={{ padding: "0 4px" }}>{label}</legend>
+        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+        {question.options.map((option) => (
+          <label key={option.value} style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 500 }}>
+            <input
+              type="checkbox"
+              checked={selected.includes(option.value)}
+              onChange={(e) => {
+                onChange(
+                  e.target.checked
+                    ? [...selected, option.value]
+                    : selected.filter((item) => item !== option.value),
+                );
+              }}
+            />
+            {option.label}
+          </label>
+        ))}
+      </fieldset>
+    );
+  }
+
+  if (question.question_type === "yes_no") {
+    return (
+      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 10, padding: 12 }}>
+        <legend style={{ padding: "0 4px" }}>{label}</legend>
+        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+        {[
+          ["yes", "Yes"],
+          ["no", "No"],
+        ].map(([value, text]) => (
+          <label key={value} style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 500 }}>
+            <input
+              type="radio"
+              name={question.question_key}
+              value={value}
+              checked={answer === value}
+              onChange={() => onChange(value)}
+            />
+            {text}
+          </label>
+        ))}
+      </fieldset>
+    );
+  }
+
+  return (
+    <label style={field}>
+      {label}
+      <input
+        type={question.question_type === "date" ? "date" : question.question_type === "number" ? "number" : "text"}
+        value={stringAnswer(answer)}
+        onChange={(e) => onChange(e.target.value)}
+        style={input}
+      />
+      {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+    </label>
+  );
+}
+
 export function PreAuthEligibility() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState<"eligibility" | "account">(
     searchParams.get("signin") ? "account" : "eligibility",
   );
   const [form, setForm] = useState(initial);
+  const [questions, setQuestions] = useState<IntakeQuestion[]>([]);
+  const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
+  const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data, error: loadError } = await supabase
+        .from("intake_questions")
+        .select("id, question_key, prompt, help_text, question_type, required, options, position, is_active")
+        .eq("audience", "pre_signup")
+        .eq("is_active", true)
+        .order("position", { ascending: true });
+
+      if (cancelled) {
+        return;
+      }
+      if (loadError) {
+        setQuestionLoadError(loadError.message);
+        return;
+      }
+      setQuestions((data ?? []) as IntakeQuestion[]);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (step === "account") {
     return <AuthEntry />;
@@ -88,12 +247,20 @@ export function PreAuthEligibility() {
               setError("Select the state where you will receive care.");
               return;
             }
+            const unanswered = questions.find(
+              (question) => !intakeAnswerComplete(question, answers[question.question_key]),
+            );
+            if (unanswered) {
+              setError(`Answer: ${unanswered.prompt}`);
+              return;
+            }
             window.localStorage.setItem(
               PRE_AUTH_INTAKE_STORAGE_KEY,
               serializePreAuthIntake({
                 ...form,
                 service_state: state,
                 address_state: state,
+                pre_signup_answers: normalizeIntakeAnswers(questions, answers),
               }),
             );
             setStep("account");
@@ -180,6 +347,26 @@ export function PreAuthEligibility() {
             />
             I am booking care for myself
           </label>
+
+          {questionLoadError ? (
+            <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+              Intake questions could not load: {questionLoadError}
+            </p>
+          ) : null}
+
+          {questions.map((question) => (
+            <QuestionField
+              key={question.id}
+              question={question}
+              answer={answers[question.question_key]}
+              onChange={(value) =>
+                setAnswers((current) => ({
+                  ...current,
+                  [question.question_key]: value,
+                }))
+              }
+            />
+          ))}
 
           {error ? (
             <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>

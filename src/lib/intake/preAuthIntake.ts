@@ -1,4 +1,5 @@
 import type { IntakeDraftData } from "./draftData";
+import type { IntakeQuestionAnswers } from "./intakeQuestions";
 
 export const PRE_AUTH_INTAKE_STORAGE_KEY = "greymatter_pre_auth_intake";
 
@@ -11,7 +12,9 @@ export type PreAuthIntakeData = Pick<
   | "service_state"
   | "address_state"
   | "for_self"
->;
+> & {
+  pre_signup_answers?: IntakeQuestionAnswers;
+};
 
 function stringValue(record: Record<string, unknown>, key: keyof PreAuthIntakeData): string {
   const value = record[key];
@@ -30,6 +33,12 @@ export function parsePreAuthIntake(raw: string | null): PreAuthIntakeData | null
     }
     const record = parsed as Record<string, unknown>;
     const forSelf = record.for_self;
+    const answers =
+      record.pre_signup_answers &&
+      typeof record.pre_signup_answers === "object" &&
+      !Array.isArray(record.pre_signup_answers)
+        ? (record.pre_signup_answers as IntakeQuestionAnswers)
+        : undefined;
     const data: PreAuthIntakeData = {
       legal_first_name: stringValue(record, "legal_first_name"),
       legal_last_name: stringValue(record, "legal_last_name"),
@@ -38,6 +47,7 @@ export function parsePreAuthIntake(raw: string | null): PreAuthIntakeData | null
       service_state: stringValue(record, "service_state"),
       address_state: stringValue(record, "address_state"),
       for_self: typeof forSelf === "boolean" ? forSelf : undefined,
+      pre_signup_answers: answers,
     };
 
     return isPreAuthIntakeComplete(data) ? data : null;
@@ -67,5 +77,6 @@ export function serializePreAuthIntake(data: PreAuthIntakeData): string {
     service_state: state,
     address_state: state,
     for_self: data.for_self,
+    pre_signup_answers: data.pre_signup_answers ?? {},
   });
 }
