@@ -20,12 +20,14 @@ export function DashboardNav({
       style={{
         display: "flex",
         flexWrap: "wrap",
+        justifyContent: "center",
         gap: 8,
-        margin: "0 0 24px",
-        padding: "10px",
+        margin: "0 auto 28px",
+        padding: 8,
         border: "1px solid #e5ebf5",
-        borderRadius: 12,
+        borderRadius: 999,
         background: "#f8fafc",
+        boxShadow: "inset 0 1px 2px rgba(15, 23, 42, 0.04)",
       }}
     >
       {items.map((item) => (
@@ -36,15 +38,17 @@ export function DashboardNav({
           style={{
             display: "inline-flex",
             alignItems: "center",
-            minHeight: 36,
-            padding: "0 12px",
-            borderRadius: 9,
-            border: item.active ? "1px solid #172033" : "1px solid #e5ebf5",
-            background: item.active ? "#172033" : "#fff",
+            justifyContent: "center",
+            minHeight: 38,
+            padding: "0 16px",
+            borderRadius: 999,
+            border: item.active ? "1px solid #172033" : "1px solid transparent",
+            background: item.active ? "#172033" : "transparent",
             color: item.active ? "#fff" : "#172033",
             fontSize: 13,
             fontWeight: 800,
             textDecoration: "none",
+            boxShadow: item.active ? "0 6px 18px rgba(23, 32, 51, 0.16)" : "none",
           }}
         >
           {item.label}
