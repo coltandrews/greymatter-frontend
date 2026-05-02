@@ -180,9 +180,14 @@
 
 .actions {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.actions > :last-child {
+  margin-left: auto;
 }
 
 .btn {

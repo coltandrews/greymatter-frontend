@@ -575,9 +575,6 @@ export function ScheduleFlow({
   if (embeddedCheckout) {
     return (
       <>
-        <Link href="/hub" className={styles.back}>
-          ← Patient Hub
-        </Link>
         <h1 className={styles.title}>Complete payment</h1>
         <p className={styles.stepHint}>
           Your appointment request is ready. Complete payment here to continue booking.
@@ -592,16 +589,6 @@ export function ScheduleFlow({
                 Booking {embeddedCheckout.bookingIntentId.slice(0, 8)}
               </p>
             </div>
-            <button
-              type="button"
-              className={styles.btnGhost}
-              onClick={() => {
-                setEmbeddedCheckout(null);
-                setConfirmError(null);
-              }}
-            >
-              Back to appointment
-            </button>
           </div>
           <EmbeddedCheckoutProvider
             stripe={stripePromise}
@@ -612,6 +599,18 @@ export function ScheduleFlow({
           >
             <EmbeddedCheckout />
           </EmbeddedCheckoutProvider>
+          <div className={styles.paymentActions}>
+            <button
+              type="button"
+              className={styles.btnGhost}
+              onClick={() => {
+                setEmbeddedCheckout(null);
+                setConfirmError(null);
+              }}
+            >
+              ← Back to appointment
+            </button>
+          </div>
         </section>
       </>
     );
@@ -672,6 +671,9 @@ export function ScheduleFlow({
             </div>
           ))}
           <div className={styles.actions}>
+            <Link href="/hub" className={styles.btnGhost}>
+              ← Back to Patient Hub
+            </Link>
             <button
               type="submit"
               className={styles.btnPrimary}
@@ -679,9 +681,6 @@ export function ScheduleFlow({
             >
               Continue to pharmacy
             </button>
-            <Link href="/hub" className={styles.btnGhost}>
-              Cancel
-            </Link>
           </div>
         </form>
       </>
@@ -751,39 +750,45 @@ export function ScheduleFlow({
             </p>
           ) : null}
 
-          {pharmacyResults.length > 0 ? (
-            <ul className={styles.pharmacyList}>
-              {pharmacyResults.map((pharmacy) => {
-                const selected = selectedPharmacy?.key === pharmacy.key;
-                return (
-                  <li key={pharmacy.key}>
-                    <button
-                      type="button"
-                      className={`${styles.pharmacyOption} ${selected ? styles.pharmacyOptionSelected : ""}`}
-                      onClick={() => setSelectedPharmacy(pharmacy)}
-                      aria-pressed={selected}
-                    >
-                      <span className={styles.pharmacyOptionName}>
-                        {pharmacy.name}
-                      </span>
-                      <span className={styles.pharmacyOptionAddress}>
-                        {pharmacy.address}
-                      </span>
-                      <span className={styles.pharmacyOptionMeta}>
-                        {[
-                          pharmacy.phone ? `Phone ${pharmacy.phone}` : null,
-                          pharmacy.fax ? `Fax ${pharmacy.fax}` : null,
-                          pharmacy.ncpdpId ? `NCPDP ${pharmacy.ncpdpId}` : null,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : null}
+          <div className={styles.pharmacyResultsPanel}>
+            {pharmacyResults.length > 0 ? (
+              <ul className={styles.pharmacyList}>
+                {pharmacyResults.map((pharmacy) => {
+                  const selected = selectedPharmacy?.key === pharmacy.key;
+                  return (
+                    <li key={pharmacy.key}>
+                      <button
+                        type="button"
+                        className={`${styles.pharmacyOption} ${selected ? styles.pharmacyOptionSelected : ""}`}
+                        onClick={() => setSelectedPharmacy(pharmacy)}
+                        aria-pressed={selected}
+                      >
+                        <span className={styles.pharmacyOptionName}>
+                          {pharmacy.name}
+                        </span>
+                        <span className={styles.pharmacyOptionAddress}>
+                          {pharmacy.address}
+                        </span>
+                        <span className={styles.pharmacyOptionMeta}>
+                          {[
+                            pharmacy.phone ? `Phone ${pharmacy.phone}` : null,
+                            pharmacy.fax ? `Fax ${pharmacy.fax}` : null,
+                            pharmacy.ncpdpId ? `NCPDP ${pharmacy.ncpdpId}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className={styles.pharmacyResultsEmpty}>
+                Search by pharmacy name and ZIP code to choose a location.
+              </p>
+            )}
+          </div>
         </div>
 
         <div className={styles.confirmBar}>
@@ -948,7 +953,7 @@ export function ScheduleFlow({
             setInsuranceModalOpen(true);
           }}
         >
-          {confirmSaving ? "Saving…" : selectedSlotId ? "Continue" : "Select a time"}
+          {confirmSaving ? "Saving…" : "Continue"}
         </button>
       </div>
 

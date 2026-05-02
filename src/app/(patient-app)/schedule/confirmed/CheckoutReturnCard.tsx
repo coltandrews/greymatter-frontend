@@ -166,17 +166,17 @@ export function CheckoutReturnCard({
         </>
       ) : null}
       <div className={styles.actions}>
+        <Link
+          href="/hub"
+          className={`${styles.btn} ${action ? styles.secondaryBtn : ""}`}
+        >
+          ← Back to Patient Hub
+        </Link>
         {action ? (
           <Link href={action.href} className={styles.btn}>
             {action.label}
           </Link>
         ) : null}
-        <Link
-          href="/hub"
-          className={`${styles.btn} ${action ? styles.secondaryBtn : ""}`}
-        >
-          Back to Patient Hub
-        </Link>
       </div>
     </div>
   );

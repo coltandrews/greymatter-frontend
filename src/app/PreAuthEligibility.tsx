@@ -42,6 +42,35 @@ const input = {
   fontSize: 16,
 };
 
+const flowActions = {
+  display: "flex" as const,
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 16,
+  flexWrap: "wrap" as const,
+  marginTop: 4,
+};
+
+const primaryAction = {
+  padding: "12px 16px",
+  borderRadius: 8,
+  border: "none",
+  background: "#172033",
+  color: "#fff",
+  fontSize: 16,
+  fontWeight: 700,
+};
+
+const linkButton = {
+  padding: 0,
+  border: "none",
+  background: "transparent",
+  color: "#2563eb",
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: "pointer",
+};
+
 const optionGrid = {
   display: "grid" as const,
   gap: 10,
@@ -293,6 +322,9 @@ export function PreAuthEligibility() {
   const questionPages = groupQuestionsByPage(questions);
   const currentQuestions = questionPages[intakePageIndex] ?? questionPages[0] ?? [];
   const hasNextQuestionPage = intakePageIndex < questionPages.length - 1;
+  const currentPageComplete = currentQuestions.every((question) =>
+    intakeAnswerComplete(question, answers[question.question_key]),
+  );
 
   if (step === "account") {
     return <AuthEntry initialMode={accountMode} />;
@@ -401,57 +433,41 @@ export function PreAuthEligibility() {
             </p>
           ) : null}
 
-          <button
-            type="submit"
-            style={{
-              marginTop: 4,
-              padding: "12px 16px",
-              borderRadius: 8,
-              border: "none",
-              background: "#172033",
-              color: "#fff",
-              fontSize: 16,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {hasNextQuestionPage ? "Next step" : "Continue"}
-          </button>
-          {intakePageIndex > 0 ? (
+          <div style={flowActions}>
+            {intakePageIndex > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setIntakePageIndex((current) => Math.max(0, current - 1));
+                }}
+                style={linkButton}
+              >
+                ← Back to previous step
+              </button>
+            ) : (
+              <span aria-hidden="true" />
+            )}
             <button
-              type="button"
-              onClick={() => {
-                setError(null);
-                setIntakePageIndex((current) => Math.max(0, current - 1));
-              }}
+              type="submit"
+              disabled={!currentPageComplete}
               style={{
-                padding: 0,
-                border: "none",
-                background: "transparent",
-                color: "#2563eb",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
+                ...primaryAction,
+                marginLeft: "auto",
+                cursor: currentPageComplete ? "pointer" : "not-allowed",
+                opacity: currentPageComplete ? 1 : 0.55,
               }}
             >
-              Back to previous step
+              {hasNextQuestionPage ? "Next step" : "Continue"}
             </button>
-          ) : null}
+          </div>
           <button
             type="button"
             onClick={() => {
               setAccountMode("signin");
               setStep("account");
             }}
-            style={{
-              padding: 0,
-              border: "none",
-              background: "transparent",
-              color: "#2563eb",
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
+            style={linkButton}
           >
             Already have an account? Sign in
           </button>

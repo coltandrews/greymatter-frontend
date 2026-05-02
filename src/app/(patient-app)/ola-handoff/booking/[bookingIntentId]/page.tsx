@@ -95,7 +95,7 @@ export default async function OlaBookingHandoffPage({ params }: Props) {
         </dl>
         <div className={styles.actions}>
           <Link href="/hub" className={styles.secondary}>
-            Back to hub
+            ← Back to hub
           </Link>
           <a
             href={bookingIntent.ola_redirect_url}

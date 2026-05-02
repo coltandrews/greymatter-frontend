@@ -87,10 +87,15 @@
 
 .actions {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
-  justify-content: flex-end;
+  gap: 16px;
+  justify-content: space-between;
   margin-top: 28px;
+}
+
+.actions > :last-child {
+  margin-left: auto;
 }
 
 .primary,
@@ -134,6 +139,10 @@
 
   .actions {
     justify-content: stretch;
+  }
+
+  .actions > :last-child {
+    margin-left: 0;
   }
 
   .primary,
