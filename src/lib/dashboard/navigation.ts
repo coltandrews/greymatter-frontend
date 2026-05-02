@@ -16,9 +16,9 @@ export type DashboardNavItem = {
 const dashboardSections = [
   { key: "overview", label: "Overview", href: "/dashboard" },
   { key: "patients", label: "Patients", href: "/dashboard/patients" },
-  { key: "booking-queue", label: "Booking queue", href: "/dashboard/booking-queue" },
+  { key: "booking-queue", label: "Booking Queue", href: "/dashboard/booking-queue" },
   { key: "submissions", label: "Submissions", href: "/dashboard/submissions" },
-  { key: "booking-issues", label: "Booking issues", href: "/dashboard/booking-issues" },
+  { key: "booking-issues", label: "Booking Issues", href: "/dashboard/booking-issues" },
 ] as const;
 
 export function dashboardNavItems(
@@ -33,7 +33,7 @@ export function dashboardNavItems(
 
   if (role === "admin") {
     items.push({
-      label: "App health",
+      label: "App Health",
       href: "/dashboard/app-health",
       active: currentPage === "app-health",
     });

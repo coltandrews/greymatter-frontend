@@ -9,7 +9,7 @@ export default async function BookingQueuePage() {
     <DashboardShell
       role={role}
       currentPage="booking-queue"
-      title="Booking queue"
+      title="Booking Queue"
       subtitle="Active payment and provider booking requests."
       email={user.email ?? user.id}
     >

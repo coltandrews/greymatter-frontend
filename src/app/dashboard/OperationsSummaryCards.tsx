@@ -9,13 +9,13 @@ const cards: {
 }[] = [
   {
     key: "paymentPending",
-    label: "Payment pending",
+    label: "Payment Pending",
     hint: "Checkout started, not paid yet",
     accent: "#2563eb",
   },
   {
     key: "olaPending",
-    label: "Provider pending",
+    label: "Provider Pending",
     hint: "Payment complete, provider booking in progress",
     accent: "#7c3aed",
   },
@@ -27,7 +27,7 @@ const cards: {
   },
   {
     key: "needsReview",
-    label: "Needs help",
+    label: "Needs Help",
     hint: "Paid but not automatically booked",
     accent: "#c2410c",
   },

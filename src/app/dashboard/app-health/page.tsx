@@ -9,7 +9,7 @@ export default async function AppHealthPage() {
     <DashboardShell
       role={role}
       currentPage="app-health"
-      title="App health"
+      title="App Health"
       subtitle="Admin-only checks for backend configuration and service readiness."
       email={user.email ?? user.id}
     >

@@ -4,20 +4,20 @@ import { dashboardNavItems } from "./navigation";
 describe("dashboardNavItems", () => {
   it("hides app health from staff users", () => {
     expect(dashboardNavItems("staff", "overview").map((item) => item.label))
-      .not.toContain("App health");
+      .not.toContain("App Health");
   });
 
   it("uses page links for dashboard sections", () => {
     expect(dashboardNavItems("admin", "overview").slice(0, 3)).toEqual([
       { label: "Overview", href: "/dashboard", active: true },
       { label: "Patients", href: "/dashboard/patients", active: false },
-      { label: "Booking queue", href: "/dashboard/booking-queue", active: false },
+      { label: "Booking Queue", href: "/dashboard/booking-queue", active: false },
     ]);
   });
 
   it("shows app health to admins", () => {
     expect(dashboardNavItems("admin", "overview")).toContainEqual({
-      label: "App health",
+      label: "App Health",
       href: "/dashboard/app-health",
       active: false,
     });
@@ -29,7 +29,7 @@ describe("dashboardNavItems", () => {
       { label: "Patients", href: "/dashboard/patients", active: false },
     ]);
     expect(dashboardNavItems("admin", "app-health").at(-1)).toEqual({
-      label: "App health",
+      label: "App Health",
       href: "/dashboard/app-health",
       active: true,
     });

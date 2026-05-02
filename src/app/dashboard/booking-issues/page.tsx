@@ -15,7 +15,7 @@ export default async function BookingIssuesPage() {
     <DashboardShell
       role={role}
       currentPage="booking-issues"
-      title="Booking issues"
+      title="Booking Issues"
       subtitle="Paid bookings that need staff help before provider confirmation."
       email={user.email ?? user.id}
     >

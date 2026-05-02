@@ -11,6 +11,7 @@ import {
 } from "@/lib/dashboard/configHealth";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useMemo, useState } from "react";
+import styles from "./dashboard.module.css";
 
 function formatCheckedAt(value: string): string {
   try {
@@ -68,30 +69,21 @@ export function ConfigHealthPanel() {
     () => sortConfigHealthChecks(health?.checks ?? []),
     [health],
   );
+  const errorCount = checks.filter((check) => check.status === "error").length;
+  const warningCount = checks.filter((check) => check.status === "warning").length;
+  const healthyCount = checks.filter((check) => check.status === "ok").length;
 
   return (
-    <section style={{ margin: "0 0 24px" }} aria-labelledby="config-health-title">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 12,
-          marginBottom: 12,
-        }}
-      >
-        <div>
-          <h2 id="config-health-title" style={{ margin: "0 0 6px", fontSize: 18 }}>
-            App health
+    <section className={styles.healthPanel} aria-labelledby="config-health-title">
+      <div className={styles.healthHeader}>
+        <div className={styles.healthIntro}>
+          <p className={styles.healthEyebrow}>Service Readiness</p>
+          <h2 id="config-health-title" className={styles.healthTitle}>
+            App Health
           </h2>
-          <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+          <p className={styles.healthSummary}>
             {loading ? "Checking backend configuration..." : configHealthSummary(health)}
           </p>
-          {health ? (
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#94a3b8" }}>
-              Checked {formatCheckedAt(health.checkedAt)}
-            </p>
-          ) : null}
         </div>
         <button
           type="button"
@@ -99,73 +91,63 @@ export function ConfigHealthPanel() {
             void loadHealth();
           }}
           disabled={loading}
-          style={{
-            padding: "8px 12px",
-            borderRadius: 8,
-            border: "1px solid #dbe3ef",
-            background: loading ? "#f1f5f9" : "#fff",
-            color: "#172033",
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: loading ? "not-allowed" : "pointer",
-          }}
+          className={styles.healthRefresh}
         >
           {loading ? "Checking..." : "Refresh"}
         </button>
       </div>
 
+      <div className={styles.healthStats}>
+        <div className={styles.healthStat}>
+          <p className={styles.healthStatLabel}>Healthy</p>
+          <p className={styles.healthStatValue}>{healthyCount}</p>
+        </div>
+        <div className={styles.healthStat}>
+          <p className={styles.healthStatLabel}>Warnings</p>
+          <p className={styles.healthStatValue}>{warningCount}</p>
+        </div>
+        <div className={styles.healthStat}>
+          <p className={styles.healthStatLabel}>Errors</p>
+          <p className={styles.healthStatValue}>{errorCount}</p>
+        </div>
+      </div>
+
+      {health ? (
+        <p className={styles.healthChecked}>
+          Checked {formatCheckedAt(health.checkedAt)}
+        </p>
+      ) : null}
+
       {error ? (
-        <p role="alert" style={{ margin: "0 0 12px", color: "#b91c1c", fontSize: 14 }}>
+        <p role="alert" className={styles.healthError}>
           {error}
         </p>
       ) : null}
 
       {checks.length > 0 ? (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-            gap: 10,
-          }}
-        >
+        <div className={styles.healthGrid}>
           {checks.map((check) => {
             const view = configHealthStatusView(check.status);
             return (
               <article
                 key={check.key}
-                style={{
-                  padding: 14,
-                  borderRadius: 10,
-                  border: "1px solid #e5ebf5",
-                  background: "#f8fafc",
-                }}
+                className={styles.healthCard}
               >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 8,
-                  }}
-                >
-                  <h3 style={{ margin: 0, fontSize: 14, color: "#172033" }}>
+                <div className={styles.healthCardTop}>
+                  <h3 className={styles.healthCardTitle}>
                     {check.label}
                   </h3>
                   <span
+                    className={styles.healthBadge}
                     style={{
-                      padding: "3px 8px",
-                      borderRadius: 999,
                       background: view.background,
                       color: view.color,
-                      fontSize: 11,
-                      fontWeight: 800,
                     }}
                   >
                     {view.label}
                   </span>
                 </div>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.45, color: "#64748b" }}>
+                <p className={styles.healthCardMessage}>
                   {check.message}
                 </p>
               </article>

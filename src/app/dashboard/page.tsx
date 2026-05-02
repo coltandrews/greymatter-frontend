@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     <DashboardShell
       role={role}
       currentPage="overview"
-      title="Admin portal"
+      title="Admin Portal"
       subtitle="A focused view of booking status, payment progress, and staff follow-up needs."
       email={user.email ?? user.id}
     >
