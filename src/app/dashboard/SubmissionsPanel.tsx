@@ -69,7 +69,7 @@ async function readBackendMessage(res: Response): Promise<string> {
   const body = await res.json().catch(() => null) as { message?: unknown } | null;
   return typeof body?.message === "string" && body.message.trim()
     ? body.message
-    : `Submissions failed (${res.status}).`;
+    : `Care activity failed (${res.status}).`;
 }
 
 function bookingRow(row: BookingQueueRow): UnifiedSubmissionRow {
@@ -127,7 +127,7 @@ export function SubmissionsPanel({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        throw new Error("Sign in again to load submissions.");
+        throw new Error("Sign in again to load care activity.");
       }
 
       const response = await fetchBookingQueue(session.access_token, 100);
@@ -138,7 +138,7 @@ export function SubmissionsPanel({
       const payload = await response.json() as BookingQueueResponse;
       setBookings(payload.rows ?? []);
     } catch (err) {
-      setBookingError(err instanceof Error ? err.message : "Could not load submissions.");
+      setBookingError(err instanceof Error ? err.message : "Could not load care activity.");
     } finally {
       setLoading(false);
     }
@@ -164,10 +164,10 @@ export function SubmissionsPanel({
       <div className={styles.workspaceHeader}>
         <div>
           <h2 id="submissions-title" className={styles.workspaceTitle}>
-            Submissions
+            Care Activity
           </h2>
           <p className={styles.compactText}>
-            {loading ? "Loading submissions..." : `${rows.length} total`}
+            {loading ? "Loading care activity..." : `${rows.length} total`}
           </p>
         </div>
         <button
@@ -187,7 +187,7 @@ export function SubmissionsPanel({
       ) : null}
 
       {!displayError && rows.length === 0 ? (
-        <p className={styles.emptyText}>No submissions yet.</p>
+        <p className={styles.emptyText}>No care activity yet.</p>
       ) : null}
 
       {rows.length > 0 ? (
@@ -207,7 +207,7 @@ export function SubmissionsPanel({
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id}>
-                  <td>{row.kind === "booking" ? "Booking" : "Intake"}</td>
+                  <td>{row.kind === "booking" ? "Booking request" : "Intake form"}</td>
                   <td className={row.kind === "intake" ? styles.monoCell : undefined}>
                     {row.patient}
                   </td>

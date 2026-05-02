@@ -31,8 +31,8 @@ describe("audit trail helpers", () => {
   });
 
   it("labels audit note targets", () => {
-    expect(auditTargetLabel({ bookingIntentId: "booking-1" })).toBe("booking");
-    expect(auditTargetLabel({ appointmentId: "appointment-1" })).toBe("appointment");
+    expect(auditTargetLabel({ bookingIntentId: "booking-1" })).toBe("booking request");
+    expect(auditTargetLabel({ appointmentId: "appointment-1" })).toBe("provider appointment");
     expect(auditTargetLabel({ patientUserId: "patient-1" })).toBe("patient");
   });
 });

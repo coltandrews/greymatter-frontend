@@ -5,15 +5,15 @@ export function patientLookupSummary(patient: PatientLookupPatient): string {
     patient.email,
     patient.serviceState ? `State ${patient.serviceState}` : null,
     patient.latestSubmission?.status
-      ? `Intake ${patient.latestSubmission.status.replace("_", " ")}`
-      : "No submission",
+      ? `Intake form ${patient.latestSubmission.status.replace("_", " ")}`
+      : "No intake form",
   ].filter(Boolean).join(" · ");
 }
 
 export function patientLookupActivitySummary(patient: PatientLookupPatient): string {
   const bookingCount = patient.bookings.length;
   const appointmentCount = patient.appointments.length;
-  return `${bookingCount} booking${bookingCount === 1 ? "" : "s"} · ${appointmentCount} appointment${appointmentCount === 1 ? "" : "s"}`;
+  return `${bookingCount} booking request${bookingCount === 1 ? "" : "s"} · ${appointmentCount} provider appt${appointmentCount === 1 ? "" : "s"}`;
 }
 
 export function patientLookupAppointmentLabel(

@@ -55,14 +55,14 @@ describe("staff recovery booking helpers", () => {
 
   it("summarizes pharmacy and status context", () => {
     expect(recoveryPharmacySummary(row)).toBe("Test Pharmacy · NCPDP 1234567 · Phone 555-555-5555");
-    expect(recoveryStateSummary(row)).toBe("Payment paid · Booking needs_review · Ola failed · State SC");
+    expect(recoveryStateSummary(row)).toBe("Payment paid · Booking request needs_review · Provider handoff failed · State SC");
   });
 
   it("formats diagnostic details without raw JSON", () => {
     expect(recoveryDiagnosticDetails(row)).toEqual([
       { label: "Failure reason", value: "Slot unavailable" },
-      { label: "Ola message", value: "Provider schedule is no longer available." },
-      { label: "Ola status", value: "409" },
+      { label: "Provider message", value: "Provider schedule is no longer available." },
+      { label: "Provider status", value: "409" },
       { label: "Booking ID", value: "booking-1", mono: true },
       { label: "Patient ID", value: "user-1", mono: true },
     ]);

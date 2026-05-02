@@ -30,7 +30,7 @@ async function readBackendMessage(res: Response): Promise<string> {
   const body = await res.json().catch(() => null) as { message?: unknown } | null;
   return typeof body?.message === "string" && body.message.trim()
     ? body.message
-    : `Booking queue failed (${res.status}).`;
+    : `Booking requests failed (${res.status}).`;
 }
 
 export function BookingQueuePanel() {
@@ -47,7 +47,7 @@ export function BookingQueuePanel() {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        throw new Error("Sign in again to load the booking queue.");
+        throw new Error("Sign in again to load booking requests.");
       }
 
       const response = await fetchBookingQueue(session.access_token, 100);
@@ -58,7 +58,7 @@ export function BookingQueuePanel() {
       const payload = await response.json() as BookingQueueResponse;
       setRows(payload.rows ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load booking queue.");
+      setError(err instanceof Error ? err.message : "Could not load booking requests.");
     } finally {
       setLoading(false);
     }
@@ -81,7 +81,7 @@ export function BookingQueuePanel() {
       >
         <div>
           <h2 id="booking-queue-title" style={{ margin: "0 0 6px", fontSize: 18 }}>
-            Queue
+            Booking Requests
           </h2>
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
             {loading ? "Loading booking requests..." : `${rows.length} active request${rows.length === 1 ? "" : "s"}`}

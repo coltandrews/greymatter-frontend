@@ -174,21 +174,21 @@ export default async function DashboardPage() {
   const openBookings = operationsSummary.paymentPending + operationsSummary.olaPending + operationsSummary.needsReview;
   const warningItems = [
     operationsSummary.needsReview > 0
-      ? `${formatCountLabel(operationsSummary.needsReview, "booking")} need staff review`
+      ? `${formatCountLabel(operationsSummary.needsReview, "booking request")} need staff review`
       : null,
     operationsSummary.olaPending > 0
-      ? `${formatCountLabel(operationsSummary.olaPending, "provider booking")} still processing`
+      ? `${formatCountLabel(operationsSummary.olaPending, "provider handoff")} still processing`
       : null,
     failedTransactions > 0
       ? `${formatCountLabel(failedTransactions, "transaction")} failed`
       : null,
     bookings.some((row) => row.failure_reason)
-      ? "Recent booking failures include provider handoff details"
+      ? "Recent booking request failures include provider handoff details"
       : null,
   ].filter((item): item is string => Boolean(item));
 
   const bookingStatusRows = [
-    { label: "Open bookings", value: openBookings, tone: "pending" as const },
+    { label: "Open booking requests", value: openBookings, tone: "pending" as const },
     { label: "Needs review", value: operationsSummary.needsReview, tone: "warning" as const },
     { label: "Booked", value: operationsSummary.booked, tone: "ok" as const },
   ];
@@ -213,7 +213,7 @@ export default async function DashboardPage() {
       role={role}
       currentPage="overview"
       title="Admin Portal"
-      subtitle="Warnings, status numbers, recent transactions, appointments, and intake activity."
+      subtitle="Warnings, status numbers, recent transactions, provider appointments, and intake forms."
       email={user.email ?? user.id}
     >
       {dataError ? (
@@ -234,13 +234,13 @@ export default async function DashboardPage() {
               </p>
             </div>
             <Link href="/dashboard/appointments" className={styles.smallAction}>
-              Appointments
+              Care Activity
             </Link>
           </div>
 
           <div className={styles.overviewStatusSections}>
             <div className={styles.overviewStatusSection}>
-              <p className={styles.overviewMiniTitle}>Booking operations</p>
+              <p className={styles.overviewMiniTitle}>Booking request flow</p>
               <ul className={styles.overviewStatRows}>
                 {bookingStatusRows.map((row) => (
                   <li key={row.label} className={styles.overviewStatRow}>
@@ -338,9 +338,9 @@ export default async function DashboardPage() {
             <div className={styles.overviewSectionHeader}>
               <div>
                 <h2 id="overview-appointments-title" className={styles.workspaceTitle}>
-                  Recent Appointment Status
+                  Recent Provider Appointments
                 </h2>
-                <p className={styles.compactText}>Latest appointment updates.</p>
+                <p className={styles.compactText}>Latest confirmed provider appointment updates.</p>
               </div>
             </div>
 
@@ -361,7 +361,7 @@ export default async function DashboardPage() {
                 ))}
               </ul>
             ) : (
-              <p className={styles.emptyText}>No appointments yet.</p>
+              <p className={styles.emptyText}>No provider appointments yet.</p>
             )}
           </section>
 
@@ -369,9 +369,9 @@ export default async function DashboardPage() {
             <div className={styles.overviewSectionHeader}>
               <div>
                 <h2 id="overview-bookings-title" className={styles.workspaceTitle}>
-                  Recent Booking Activity
+                  Recent Booking Requests
                 </h2>
-                <p className={styles.compactText}>Payment and provider flow.</p>
+                <p className={styles.compactText}>Payment and provider handoff flow.</p>
               </div>
             </div>
 
@@ -397,7 +397,7 @@ export default async function DashboardPage() {
                 })}
               </ul>
             ) : (
-              <p className={styles.emptyText}>No booking activity yet.</p>
+              <p className={styles.emptyText}>No booking requests yet.</p>
             )}
           </section>
 
@@ -405,15 +405,15 @@ export default async function DashboardPage() {
             <div className={styles.overviewSectionHeader}>
               <div>
                 <h2 id="overview-data-title" className={styles.workspaceTitle}>
-                  Other Data
+                  Intake and Geography
                 </h2>
-                <p className={styles.compactText}>Intake and state coverage.</p>
+                <p className={styles.compactText}>Intake forms and state coverage.</p>
               </div>
             </div>
 
             <div className={styles.overviewDataSplit}>
               <div>
-                <p className={styles.overviewMiniTitle}>Recent submissions</p>
+                <p className={styles.overviewMiniTitle}>Recent intake forms</p>
                 {submissions.length > 0 ? (
                   <ul className={styles.overviewMiniList}>
                     {submissions.slice(0, 4).map((submission) => (
@@ -424,7 +424,7 @@ export default async function DashboardPage() {
                     ))}
                   </ul>
                 ) : (
-                  <p className={styles.emptyText}>No submissions yet.</p>
+                  <p className={styles.emptyText}>No intake forms yet.</p>
                 )}
               </div>
 

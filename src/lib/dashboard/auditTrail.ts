@@ -1,12 +1,12 @@
 import type { AuditEvent } from "@/lib/api/admin";
 
 const actionLabels: Record<string, string> = {
-  booking_intent_created: "Booking started",
+  booking_intent_created: "Booking request started",
   stripe_checkout_created: "Checkout created",
-  stripe_payment_ola_booking_completed: "Payment and booking complete",
-  stripe_payment_ola_booking_needs_review: "Payment received, booking needs review",
-  ola_retry_succeeded: "Ola retry succeeded",
-  ola_retry_failed: "Ola retry failed",
+  stripe_payment_ola_booking_completed: "Payment and provider handoff complete",
+  stripe_payment_ola_booking_needs_review: "Payment received, provider handoff needs review",
+  ola_retry_succeeded: "Provider handoff retry succeeded",
+  ola_retry_failed: "Provider handoff retry failed",
   staff_note_added: "Staff note",
 };
 
@@ -41,10 +41,10 @@ export function auditTargetLabel(target: {
   appointmentId?: string | null;
 }): string {
   if (target.bookingIntentId) {
-    return "booking";
+    return "booking request";
   }
   if (target.appointmentId) {
-    return "appointment";
+    return "provider appointment";
   }
   return "patient";
 }

@@ -11,6 +11,8 @@ const patient: PatientLookupPatient = {
   userId: "user-1",
   email: "pat@example.com",
   name: "Pat Patient",
+  dateOfBirth: "1990-01-01",
+  gender: "female",
   serviceState: "SC",
   latestSubmission: {
     id: "submission-1",
@@ -54,8 +56,8 @@ const patient: PatientLookupPatient = {
 
 describe("patient lookup helpers", () => {
   it("summarizes patient identity and activity", () => {
-    expect(patientLookupSummary(patient)).toBe("pat@example.com · State SC · Intake needs review");
-    expect(patientLookupActivitySummary(patient)).toBe("1 booking · 1 appointment");
+    expect(patientLookupSummary(patient)).toBe("pat@example.com · State SC · Intake form needs review");
+    expect(patientLookupActivitySummary(patient)).toBe("1 booking request · 1 provider appt");
     expect(patientLookupReference(patient)).toBe("pat@example.com");
   });
 
@@ -68,7 +70,7 @@ describe("patient lookup helpers", () => {
       ...patient,
       email: null,
       latestSubmission: null,
-    })).toBe("State SC · No submission");
+    })).toBe("State SC · No intake form");
     expect(patientLookupReference({ ...patient, email: null })).toBe("user-1");
   });
 });

@@ -19,7 +19,7 @@ export default async function PatientsPage({ searchParams }: PatientsPageProps) 
       role={role}
       currentPage="patients"
       title="Patients"
-      subtitle="Find patient records, bookings, appointments, and audit notes."
+      subtitle="Find patient records, demographics, booking requests, provider appointments, and audit notes."
       email={user.email ?? user.id}
     >
       <PatientLookupPanel

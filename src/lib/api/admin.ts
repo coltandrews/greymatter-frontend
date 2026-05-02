@@ -81,6 +81,8 @@ export type PatientLookupPatient = {
   userId: string;
   email: string | null;
   name: string;
+  dateOfBirth: string | null;
+  gender: string | null;
   serviceState: string | null;
   latestSubmission: {
     id: string;

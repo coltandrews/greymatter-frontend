@@ -85,8 +85,8 @@ export function recoveryPharmacySummary(row: StaffRecoveryBooking): string {
 export function recoveryStateSummary(row: StaffRecoveryBooking): string {
   return [
     `Payment ${row.payment_status}`,
-    `Booking ${row.booking_status}`,
-    `Ola ${row.ola_status}`,
+    `Booking request ${row.booking_status}`,
+    `Provider handoff ${row.ola_status}`,
     row.service_state ? `State ${row.service_state}` : null,
   ].filter(Boolean).join(" · ");
 }
@@ -99,16 +99,16 @@ export function recoveryDiagnosticDetails(row: StaffRecoveryBooking): RecoveryDe
 
   details.push({
     label: "Failure reason",
-    value: row.failure_reason?.trim() || "Ola booking did not complete.",
+    value: row.failure_reason?.trim() || "Provider handoff did not complete.",
   });
   if (vendorMessage && vendorMessage !== row.failure_reason) {
-    details.push({ label: "Ola message", value: vendorMessage });
+    details.push({ label: "Provider message", value: vendorMessage });
   }
   if (vendorStatus) {
-    details.push({ label: "Ola status", value: vendorStatus });
+    details.push({ label: "Provider status", value: vendorStatus });
   }
   if (row.ola_order_guid) {
-    details.push({ label: "Ola order", value: row.ola_order_guid, mono: true });
+    details.push({ label: "Provider order", value: row.ola_order_guid, mono: true });
   }
   details.push({ label: "Booking ID", value: row.id, mono: true });
   details.push({ label: "Patient ID", value: row.user_id, mono: true });

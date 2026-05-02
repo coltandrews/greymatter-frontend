@@ -16,13 +16,13 @@ const cards: {
   {
     key: "olaPending",
     label: "Provider Pending",
-    hint: "Payment complete, provider booking in progress",
+    hint: "Payment complete, provider handoff in progress",
     accent: "#7c3aed",
   },
   {
     key: "booked",
     label: "Booked",
-    hint: "Payment and Ola booking complete",
+    hint: "Payment and provider handoff complete",
     accent: "#15803d",
   },
   {

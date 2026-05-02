@@ -65,6 +65,9 @@ function patientMatchesFilter(patient: PatientLookupPatient, search: string, sta
     patient.email,
     patient.userId,
     patient.serviceState,
+    patient.gender,
+    genderLabel(patient.gender),
+    ageRangeForPatient(patient),
     patient.latestSubmission?.status,
     patientLookupActivitySummary(patient),
   ].some((value) => value?.toLowerCase().includes(normalized));
@@ -82,16 +85,76 @@ function statusLabel(value: string | null | undefined): string {
   return value?.replace(/_/g, " ") || "Not started";
 }
 
-function intakeStatusCounts(patients: PatientLookupPatient[]) {
-  const counts = patients.reduce<Record<string, number>>((acc, patient) => {
-    const key = statusLabel(patient.latestSubmission?.status);
+function ageFromDateOfBirth(value: string | null): number | null {
+  if (!value) {
+    return null;
+  }
+  const birth = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(birth.getTime())) {
+    return null;
+  }
+
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const birthdayPassed =
+    today.getMonth() > birth.getMonth() ||
+    (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if (!birthdayPassed) {
+    age -= 1;
+  }
+  return age >= 0 && age < 130 ? age : null;
+}
+
+function ageRangeForPatient(patient: PatientLookupPatient): string {
+  const age = ageFromDateOfBirth(patient.dateOfBirth);
+  if (age == null) {
+    return "Unknown";
+  }
+  if (age < 18) {
+    return "Under 18";
+  }
+  if (age <= 29) {
+    return "18-29";
+  }
+  if (age <= 39) {
+    return "30-39";
+  }
+  if (age <= 49) {
+    return "40-49";
+  }
+  if (age <= 59) {
+    return "50-59";
+  }
+  if (age <= 69) {
+    return "60-69";
+  }
+  return "70+";
+}
+
+function genderLabel(value: string | null): string {
+  switch (value) {
+    case "male":
+      return "Male";
+    case "female":
+      return "Female";
+    case "non_binary":
+      return "Non-binary";
+    case "prefer_not":
+      return "Prefer not to say";
+    default:
+      return value?.replace(/_/g, " ") || "Unknown";
+  }
+}
+
+function countBy<T>(items: T[], valueForItem: (item: T) => string) {
+  const counts = items.reduce<Record<string, number>>((acc, item) => {
+    const key = valueForItem(item);
     acc[key] = (acc[key] ?? 0) + 1;
     return acc;
   }, {});
 
   return Object.entries(counts)
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 4);
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 }
 
 function stateCounts(patients: PatientLookupPatient[]) {
@@ -112,19 +175,17 @@ function PatientDemographicsOverview({
   patients: PatientLookupPatient[];
 }) {
   const total = patients.length;
-  const patientsWithBookings = patients.filter((patient) => patient.bookings.length > 0).length;
-  const patientsWithAppointments = patients.filter((patient) => patient.appointments.length > 0).length;
-  const patientsWithIntake = patients.filter((patient) => patient.latestSubmission).length;
+  const knownAge = patients.filter((patient) => ageFromDateOfBirth(patient.dateOfBirth) != null).length;
+  const knownGender = patients.filter((patient) => patient.gender?.trim()).length;
+  const ageRanges = countBy(patients, ageRangeForPatient);
+  const genderCounts = countBy(patients, (patient) => genderLabel(patient.gender));
   const states = stateCounts(patients);
-  const intakeStatuses = intakeStatusCounts(patients);
-  const maxStateCount = Math.max(...states.map(([, count]) => count), 1);
-  const maxIntakeCount = Math.max(...intakeStatuses.map(([, count]) => count), 1);
 
   const statCards = [
-    { label: "Patients", value: total, color: "#2563eb", background: "#eff6ff" },
-    { label: "With intake", value: patientsWithIntake, color: "#15803d", background: "#f0fdf4" },
-    { label: "With bookings", value: patientsWithBookings, color: "#c2410c", background: "#fff7ed" },
-    { label: "With appointments", value: patientsWithAppointments, color: "#7c3aed", background: "#f5f3ff" },
+    { label: "Patients", value: total },
+    { label: "Known age", value: knownAge },
+    { label: "Known gender", value: knownGender },
+    { label: "States", value: states.filter(([state]) => state !== "Unknown").length },
   ];
 
   return (
@@ -153,13 +214,13 @@ function PatientDemographicsOverview({
               alignContent: "space-between",
               border: "1px solid #e5ebf5",
               borderRadius: 10,
-              background: card.background,
+              background: "#ffffff",
             }}
           >
             <p style={{ margin: 0, fontSize: 12, color: "#475569", fontWeight: 800 }}>
               {card.label}
             </p>
-            <p style={{ margin: "10px 0 0", fontSize: 28, lineHeight: 1, color: card.color, fontWeight: 900 }}>
+            <p style={{ margin: "10px 0 0", fontSize: 28, lineHeight: 1, color: "#172033", fontWeight: 900 }}>
               {card.value}
             </p>
           </div>
@@ -175,61 +236,37 @@ function PatientDemographicsOverview({
       >
         <div style={{ padding: 14, border: "1px solid #e5ebf5", borderRadius: 10, background: "#fff" }}>
           <p style={{ margin: "0 0 10px", fontSize: 13, color: "#172033", fontWeight: 900 }}>
-            State mix
+            Age range
           </p>
-          {states.length > 0 ? (
-            <div style={{ display: "grid", gap: 9 }}>
-              {states.map(([state, count], index) => (
-                <div key={state} style={{ display: "grid", gap: 4 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12 }}>
-                    <span style={{ color: "#475569", fontWeight: 800 }}>{state}</span>
-                    <strong style={{ color: "#172033" }}>{count}</strong>
-                  </div>
-                  <div style={{ height: 8, borderRadius: 999, background: "#eef2f6", overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: `${Math.max(8, (count / maxStateCount) * 100)}%`,
-                        height: "100%",
-                        borderRadius: 999,
-                        background: ["#2563eb", "#15803d", "#c2410c", "#7c3aed", "#0891b2"][index] ?? "#64748b",
-                      }}
-                    />
-                  </div>
-                </div>
+          {ageRanges.length > 0 ? (
+            <ul style={{ margin: 0, padding: 0, display: "grid", gap: 7, listStyle: "none" }}>
+              {ageRanges.map(([range, count]) => (
+                <li key={range} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>
+                  <span style={{ color: "#475569", fontWeight: 800 }}>{range}</span>
+                  <strong style={{ color: "#172033" }}>{count}</strong>
+                </li>
               ))}
-            </div>
+            </ul>
           ) : (
-            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>No state data yet.</p>
+            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>No age data yet.</p>
           )}
         </div>
 
         <div style={{ padding: 14, border: "1px solid #e5ebf5", borderRadius: 10, background: "#fff" }}>
           <p style={{ margin: "0 0 10px", fontSize: 13, color: "#172033", fontWeight: 900 }}>
-            Intake status
+            Gender
           </p>
-          {intakeStatuses.length > 0 ? (
-            <div style={{ display: "grid", gap: 9 }}>
-              {intakeStatuses.map(([status, count], index) => (
-                <div key={status} style={{ display: "grid", gap: 4 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12 }}>
-                    <span style={{ color: "#475569", fontWeight: 800, textTransform: "capitalize" }}>{status}</span>
-                    <strong style={{ color: "#172033" }}>{count}</strong>
-                  </div>
-                  <div style={{ height: 8, borderRadius: 999, background: "#eef2f6", overflow: "hidden" }}>
-                    <div
-                      style={{
-                        width: `${Math.max(8, (count / maxIntakeCount) * 100)}%`,
-                        height: "100%",
-                        borderRadius: 999,
-                        background: ["#15803d", "#2563eb", "#c2410c", "#7c3aed"][index] ?? "#64748b",
-                      }}
-                    />
-                  </div>
-                </div>
+          {genderCounts.length > 0 ? (
+            <ul style={{ margin: 0, padding: 0, display: "grid", gap: 7, listStyle: "none" }}>
+              {genderCounts.map(([gender, count]) => (
+                <li key={gender} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>
+                  <span style={{ color: "#475569", fontWeight: 800 }}>{gender}</span>
+                  <strong style={{ color: "#172033" }}>{count}</strong>
+                </li>
               ))}
-            </div>
+            </ul>
           ) : (
-            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>No intake data yet.</p>
+            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>No gender data yet.</p>
           )}
         </div>
       </div>
@@ -310,10 +347,10 @@ function PatientTable({
 
       {patients.length > 0 ? (
         <div style={{ overflowX: "auto", border: "1px solid #e5ebf5", borderRadius: 10, background: "#fff" }}>
-          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: 13 }}>
+          <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "#f8fafc" }}>
-                {["Patient", "State", "Intake", "Bookings", "Appointments", "Latest activity"].map((header) => (
+                {["Patient", "Age", "Gender", "State", "Intake form", "Booking requests", "Provider appts", "Latest activity"].map((header) => (
                   <th
                     key={header}
                     scope="col"
@@ -352,6 +389,12 @@ function PatientTable({
                       <span style={{ display: "block", marginTop: 3, color: "#64748b", fontSize: 12 }}>
                         {patient.email ?? patient.userId}
                       </span>
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155" }}>
+                      {ageRangeForPatient(patient)}
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155" }}>
+                      {genderLabel(patient.gender)}
                     </td>
                     <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155", fontWeight: 800 }}>
                       {patient.serviceState ?? "Unknown"}
@@ -458,8 +501,8 @@ function PatientProfile({
       >
         {activeTab === "profile" ? (
           <>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div>
+	        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+	          <div>
             <h3 style={{ margin: "0 0 5px", fontSize: 15, color: "#172033" }}>
               {patient.name}
             </h3>
@@ -470,15 +513,35 @@ function PatientProfile({
               {patientLookupReference(patient)}
             </p>
           </div>
-          <p style={{ margin: 0, fontSize: 13, color: "#475569", fontWeight: 800 }}>
-            {patientLookupActivitySummary(patient)}
-          </p>
-        </div>
+	          <p style={{ margin: 0, fontSize: 13, color: "#475569", fontWeight: 800 }}>
+	            {patientLookupActivitySummary(patient)}
+	          </p>
+	        </div>
+
+        <dl
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+            gap: 10,
+            margin: 0,
+          }}
+        >
+          {[
+            ["Age range", ageRangeForPatient(patient)],
+            ["Gender", genderLabel(patient.gender)],
+            ["State", patient.serviceState ?? "Unknown"],
+          ].map(([label, value]) => (
+            <div key={label} style={{ padding: 12, border: "1px solid #e5ebf5", borderRadius: 8, background: "#fff" }}>
+              <dt style={{ marginBottom: 4, color: "#64748b", fontSize: 12, fontWeight: 800 }}>{label}</dt>
+              <dd style={{ margin: 0, color: "#172033", fontSize: 13, fontWeight: 800 }}>{value}</dd>
+            </div>
+          ))}
+        </dl>
 
         {patient.bookings.length > 0 ? (
           <div>
             <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
-              Bookings
+              Booking requests
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
               {patient.bookings.map((booking) => {
@@ -529,7 +592,7 @@ function PatientProfile({
         {patient.appointments.length > 0 ? (
           <div>
             <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
-              Appointments
+              Provider appointments
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
               {patient.appointments.map((appointment) => (

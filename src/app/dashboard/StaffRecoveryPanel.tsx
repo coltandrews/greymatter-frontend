@@ -75,7 +75,7 @@ export function StaffRecoveryPanel({
         data: { session },
       } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        throw new Error("Sign in again to retry booking.");
+        throw new Error("Sign in again to retry the booking request.");
       }
 
       const response = await retryBookingIntentOla(session.access_token, row.id);
@@ -109,14 +109,14 @@ export function StaffRecoveryPanel({
 
   return (
     <section style={{ margin: 0 }}>
-      <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Bookings that need help</h2>
+      <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Booking requests that need help</h2>
       <p style={{ margin: "0 0 16px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
-        Paid bookings that need staff review before provider confirmation.
+        Paid booking requests that need staff review before provider confirmation.
       </p>
 
       {initialBookings.length === 0 ? (
         <p style={{ margin: 0, fontSize: 15, color: "#64748b" }}>
-          No booking issues right now.
+          No booking request issues right now.
         </p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 12 }}>
@@ -165,7 +165,7 @@ export function StaffRecoveryPanel({
                       alignSelf: "flex-start",
                     }}
                   >
-                    {retryingId === row.id ? "Retrying..." : "Retry Ola booking"}
+                    {retryingId === row.id ? "Retrying..." : "Retry provider handoff"}
                   </button>
                 </div>
 
@@ -189,7 +189,7 @@ export function StaffRecoveryPanel({
                       Failure
                     </p>
                     <p style={{ margin: 0, fontSize: 13, color: "#b45309", lineHeight: 1.45 }}>
-                      {details[0]?.value ?? "Ola booking did not complete."}
+                      {details[0]?.value ?? "Provider handoff did not complete."}
                     </p>
                   </div>
                 </div>
@@ -255,7 +255,7 @@ export function StaffRecoveryPanel({
                 ) : null}
 
                 <AuditTrailPanel
-                  title="Booking audit trail"
+                  title="Booking request audit trail"
                   target={{
                     patientUserId: row.user_id,
                     bookingIntentId: row.id,

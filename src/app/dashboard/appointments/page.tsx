@@ -26,8 +26,8 @@ export default async function AppointmentsPage() {
     <DashboardShell
       role={role}
       currentPage="appointments"
-      title="Appointments"
-      subtitle="Queue, submissions, and booking issues."
+      title="Care Activity"
+      subtitle="Booking requests, intake forms, and provider handoff issues."
       email={user.email ?? user.id}
     >
       <div className={styles.appointmentsStack}>

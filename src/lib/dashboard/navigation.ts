@@ -15,7 +15,7 @@ export type DashboardNavItem = {
 const dashboardSections = [
   { key: "overview", label: "Overview", href: "/dashboard" },
   { key: "patients", label: "Patients", href: "/dashboard/patients" },
-  { key: "appointments", label: "Appointments", href: "/dashboard/appointments" },
+  { key: "appointments", label: "Care Activity", href: "/dashboard/appointments" },
   { key: "transactions", label: "Transactions", href: "/dashboard/transactions" },
 ] as const;
 
