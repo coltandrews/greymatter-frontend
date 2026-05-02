@@ -4,7 +4,6 @@ export type DashboardPageKey =
   | "patients"
   | "appointments"
   | "transactions"
-  | "intake"
   | "app-health";
 
 export type DashboardNavItem = {
@@ -18,7 +17,6 @@ const dashboardSections = [
   { key: "patients", label: "Patients", href: "/dashboard/patients" },
   { key: "appointments", label: "Appointments", href: "/dashboard/appointments" },
   { key: "transactions", label: "Transactions", href: "/dashboard/transactions" },
-  { key: "intake", label: "Intake", href: "/dashboard/intake" },
 ] as const;
 
 export function dashboardNavItems(

@@ -14,11 +14,9 @@ import {
 import {
   PRE_AUTH_INTAKE_STORAGE_KEY,
   serializePreAuthIntake,
-  type PreAuthIntakeData,
 } from "@/lib/intake/preAuthIntake";
-import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const card = {
   width: "100%" as const,
@@ -285,48 +283,19 @@ function QuestionField({
 
 export function PreAuthEligibility() {
   const searchParams = useSearchParams();
-  const [step, setStep] = useState<"eligibility" | "account">(
-    searchParams.get("signin") ? "account" : "eligibility",
-  );
-  const [questions, setQuestions] = useState<IntakeQuestion[]>(
-    mergePreSignupQuestions([]),
-  );
+  const startsInSignIn = Boolean(searchParams.get("signin"));
+  const [step, setStep] = useState<"eligibility" | "account">(startsInSignIn ? "account" : "eligibility");
+  const [accountMode, setAccountMode] = useState<"signup" | "signin">(startsInSignIn ? "signin" : "signup");
+  const questions = mergePreSignupQuestions([]);
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
   const [intakePageIndex, setIntakePageIndex] = useState(0);
-  const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const questionPages = groupQuestionsByPage(questions);
   const currentQuestions = questionPages[intakePageIndex] ?? questionPages[0] ?? [];
   const hasNextQuestionPage = intakePageIndex < questionPages.length - 1;
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const supabase = createClient();
-      const { data, error: loadError } = await supabase
-        .from("intake_questions")
-        .select("id, question_key, prompt, help_text, question_type, required, options, position, is_active")
-        .eq("audience", "pre_signup")
-        .eq("is_active", true)
-        .order("position", { ascending: true });
-
-      if (cancelled) {
-        return;
-      }
-      if (loadError) {
-        setQuestionLoadError(loadError.message);
-        return;
-      }
-      setQuestions(mergePreSignupQuestions((data ?? []) as IntakeQuestion[]));
-      setIntakePageIndex(0);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   if (step === "account") {
-    return <AuthEntry />;
+    return <AuthEntry initialMode={accountMode} />;
   }
 
   return (
@@ -402,15 +371,10 @@ export function PreAuthEligibility() {
                 pre_signup_answers: normalizeIntakeAnswers(extraQuestions, answers),
               }),
             );
+            setAccountMode("signup");
             setStep("account");
           }}
         >
-          {questionLoadError ? (
-            <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
-              Intake questions could not load: {questionLoadError}
-            </p>
-          ) : null}
-
           {questionPages.length > 1 ? (
             <p style={{ margin: "-4px 0 2px", color: "#64748b", fontSize: 13, fontWeight: 700 }}>
               Step {intakePageIndex + 1} of {questionPages.length}
@@ -451,7 +415,7 @@ export function PreAuthEligibility() {
               cursor: "pointer",
             }}
           >
-            {hasNextQuestionPage ? "Next step" : "Create account to continue"}
+            {hasNextQuestionPage ? "Next step" : "Continue"}
           </button>
           {intakePageIndex > 0 ? (
             <button
@@ -475,7 +439,10 @@ export function PreAuthEligibility() {
           ) : null}
           <button
             type="button"
-            onClick={() => setStep("account")}
+            onClick={() => {
+              setAccountMode("signin");
+              setStep("account");
+            }}
             style={{
               padding: 0,
               border: "none",

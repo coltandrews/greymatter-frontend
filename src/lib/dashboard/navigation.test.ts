@@ -8,12 +8,11 @@ describe("dashboardNavItems", () => {
   });
 
   it("uses page links for dashboard sections", () => {
-    expect(dashboardNavItems("admin", "overview").slice(0, 5)).toEqual([
+    expect(dashboardNavItems("admin", "overview").slice(0, 4)).toEqual([
       { label: "Overview", href: "/dashboard", active: true },
       { label: "Patients", href: "/dashboard/patients", active: false },
       { label: "Appointments", href: "/dashboard/appointments", active: false },
       { label: "Transactions", href: "/dashboard/transactions", active: false },
-      { label: "Intake", href: "/dashboard/intake", active: false },
     ]);
   });
 
@@ -42,12 +41,11 @@ describe("dashboardNavItems", () => {
   });
 
   it("marks app health active on the app health page", () => {
-    expect(dashboardNavItems("admin", "app-health").slice(0, 5)).toEqual([
+    expect(dashboardNavItems("admin", "app-health").slice(0, 4)).toEqual([
       { label: "Overview", href: "/dashboard", active: false },
       { label: "Patients", href: "/dashboard/patients", active: false },
       { label: "Appointments", href: "/dashboard/appointments", active: false },
       { label: "Transactions", href: "/dashboard/transactions", active: false },
-      { label: "Intake", href: "/dashboard/intake", active: false },
     ]);
     expect(dashboardNavItems("admin", "app-health").at(-1)).toEqual({
       label: "App Health",

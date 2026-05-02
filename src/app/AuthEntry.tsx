@@ -38,10 +38,10 @@ function isExistingUserSignupError(message: string) {
   );
 }
 
-export function AuthEntry() {
+export function AuthEntry({ initialMode = "signup" }: { initialMode?: Mode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<Mode>("signup");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
@@ -54,8 +54,10 @@ export function AuthEntry() {
     const q = searchParams.get("signin");
     if (q === "1" || q === "true") {
       setMode("signin");
+      return;
     }
-  }, [searchParams]);
+    setMode(initialMode);
+  }, [initialMode, searchParams]);
 
   async function onSignUp(e: React.FormEvent) {
     e.preventDefault();
