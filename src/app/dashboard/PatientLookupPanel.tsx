@@ -38,125 +38,244 @@ function formatUpdated(value: string): string {
   }
 }
 
-function PatientResult({ patient }: { patient: PatientLookupPatient }) {
+function PatientSearchResult({
+  patient,
+  onOpen,
+}: {
+  patient: PatientLookupPatient;
+  onOpen: () => void;
+}) {
   return (
-    <article
+    <button
+      type="button"
+      onClick={onOpen}
       style={{
         display: "grid",
-        gap: 14,
-        padding: 16,
+        gap: 8,
+        width: "100%",
+        padding: 14,
+        textAlign: "left",
         border: "1px solid #e5ebf5",
-        borderRadius: 10,
-        background: "#f8fafc",
+        borderRadius: 8,
+        background: "#fff",
+        cursor: "pointer",
       }}
+      aria-label={`Open ${patient.name} profile`}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <h3 style={{ margin: "0 0 5px", fontSize: 15, color: "#172033" }}>
+      <span
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 12,
+          alignItems: "center",
+        }}
+      >
+        <span style={{ minWidth: 0 }}>
+          <strong style={{ display: "block", fontSize: 14, color: "#172033" }}>
             {patient.name}
-          </h3>
-          <p style={{ margin: "0 0 5px", fontSize: 13, color: "#64748b" }}>
-            {patientLookupSummary(patient)}
-          </p>
-          <p style={{ margin: 0, fontSize: 12, color: "#94a3b8", fontFamily: "ui-monospace, monospace" }}>
-            {patientLookupReference(patient)}
-          </p>
-        </div>
-        <p style={{ margin: 0, fontSize: 13, color: "#475569", fontWeight: 800 }}>
-          {patientLookupActivitySummary(patient)}
-        </p>
+          </strong>
+          <span style={{ display: "block", marginTop: 3, fontSize: 13, color: "#64748b" }}>
+            {patient.email ?? patient.userId}
+          </span>
+        </span>
+        <span style={{ flex: "0 0 auto", fontSize: 13, color: "#2563eb", fontWeight: 800 }}>
+          View profile
+        </span>
+      </span>
+      <span style={{ fontSize: 12, color: "#64748b" }}>
+        {patient.serviceState ? `State ${patient.serviceState}` : "State unknown"} ·{" "}
+        {patientLookupActivitySummary(patient)}
+      </span>
+    </button>
+  );
+}
+
+function PatientProfile({
+  patient,
+  onBack,
+}: {
+  patient: PatientLookupPatient;
+  onBack: () => void;
+}) {
+  const [activeTab, setActiveTab] = useState<"profile" | "audit">("profile");
+
+  const tabStyle = (active: boolean) => ({
+    padding: "8px 12px",
+    border: "1px solid #dbe3ef",
+    borderRadius: 8,
+    background: active ? "#172033" : "#fff",
+    color: active ? "#fff" : "#475569",
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: "pointer",
+  });
+
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      <nav aria-label="Patient profile breadcrumb" style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 13 }}>
+        <button
+          type="button"
+          onClick={onBack}
+          style={{
+            padding: 0,
+            border: 0,
+            background: "transparent",
+            color: "#2563eb",
+            fontSize: 13,
+            fontWeight: 800,
+            cursor: "pointer",
+          }}
+        >
+          Patient search
+        </button>
+        <span style={{ color: "#94a3b8" }}>/</span>
+        <span style={{ color: "#475569", fontWeight: 800 }}>{patient.name}</span>
+      </nav>
+
+      <div role="tablist" aria-label="Patient profile sections" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "profile"}
+          onClick={() => setActiveTab("profile")}
+          style={tabStyle(activeTab === "profile")}
+        >
+          Profile
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "audit"}
+          onClick={() => setActiveTab("audit")}
+          style={tabStyle(activeTab === "audit")}
+        >
+          Audit trail
+        </button>
       </div>
 
-      {patient.bookings.length > 0 ? (
-        <div>
-          <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
-            Bookings
+      <article
+        style={{
+          display: "grid",
+          gap: 14,
+          padding: 16,
+          border: "1px solid #e5ebf5",
+          borderRadius: 10,
+          background: "#f8fafc",
+        }}
+      >
+        {activeTab === "profile" ? (
+          <>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div>
+            <h3 style={{ margin: "0 0 5px", fontSize: 15, color: "#172033" }}>
+              {patient.name}
+            </h3>
+            <p style={{ margin: "0 0 5px", fontSize: 13, color: "#64748b" }}>
+              {patientLookupSummary(patient)}
+            </p>
+            <p style={{ margin: 0, fontSize: 12, color: "#94a3b8", fontFamily: "ui-monospace, monospace" }}>
+              {patientLookupReference(patient)}
+            </p>
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: "#475569", fontWeight: 800 }}>
+            {patientLookupActivitySummary(patient)}
           </p>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
-            {patient.bookings.map((booking) => {
-              const status = bookingQueueStatusView(booking);
-              return (
+        </div>
+
+        {patient.bookings.length > 0 ? (
+          <div>
+            <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+              Bookings
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+              {patient.bookings.map((booking) => {
+                const status = bookingQueueStatusView(booking);
+                return (
+                  <li
+                    key={booking.id}
+                    style={{
+                      display: "grid",
+                      gap: 5,
+                      padding: 12,
+                      background: "#fff",
+                      border: "1px solid #e5ebf5",
+                      borderRadius: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 13, color: "#172033", fontWeight: 800 }}>
+                        {bookingQueueSlotLabel(booking)}
+                      </span>
+                      <span
+                        style={{
+                          padding: "3px 8px",
+                          borderRadius: 999,
+                          background: status.background,
+                          color: status.color,
+                          fontSize: 11,
+                          fontWeight: 800,
+                        }}
+                      >
+                        {status.label}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                      {bookingQueuePharmacyLabel(booking)}
+                    </p>
+                    <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", fontFamily: "ui-monospace, monospace" }}>
+                      {booking.olaOrderGuid || booking.id}
+                      {booking.hasNextSteps ? " · next steps" : ""}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ) : null}
+
+        {patient.appointments.length > 0 ? (
+          <div>
+            <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+              Appointments
+            </p>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
+              {patient.appointments.map((appointment) => (
                 <li
-                  key={booking.id}
+                  key={appointment.id}
                   style={{
-                    display: "grid",
-                    gap: 5,
                     padding: 12,
                     background: "#fff",
                     border: "1px solid #e5ebf5",
                     borderRadius: 8,
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                    <span style={{ fontSize: 13, color: "#172033", fontWeight: 800 }}>
-                      {bookingQueueSlotLabel(booking)}
-                    </span>
-                    <span
-                      style={{
-                        padding: "3px 8px",
-                        borderRadius: 999,
-                        background: status.background,
-                        color: status.color,
-                        fontSize: 11,
-                        fontWeight: 800,
-                      }}
-                    >
-                      {status.label}
-                    </span>
-                  </div>
-                  <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
-                    {bookingQueuePharmacyLabel(booking)}
+                  <p style={{ margin: "0 0 5px", fontSize: 13, color: "#172033", fontWeight: 800 }}>
+                    {patientLookupAppointmentLabel(appointment)}
                   </p>
-                  <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", fontFamily: "ui-monospace, monospace" }}>
-                    {booking.olaOrderGuid || booking.id}
-                    {booking.hasNextSteps ? " · next steps" : ""}
+                  <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                    Status {appointment.status ?? "unknown"} · Updated {formatUpdated(appointment.updatedAt)}
                   </p>
                 </li>
-              );
-            })}
-          </ul>
-        </div>
-      ) : null}
-
-      {patient.appointments.length > 0 ? (
-        <div>
-          <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
-            Appointments
-          </p>
-          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
-            {patient.appointments.map((appointment) => (
-              <li
-                key={appointment.id}
-                style={{
-                  padding: 12,
-                  background: "#fff",
-                  border: "1px solid #e5ebf5",
-                  borderRadius: 8,
-                }}
-              >
-                <p style={{ margin: "0 0 5px", fontSize: 13, color: "#172033", fontWeight: 800 }}>
-                  {patientLookupAppointmentLabel(appointment)}
-                </p>
-                <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
-                  Status {appointment.status ?? "unknown"} · Updated {formatUpdated(appointment.updatedAt)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-
-      <AuditTrailPanel
-        title="Patient audit trail"
-        target={{ patientUserId: patient.userId }}
-      />
-    </article>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+          </>
+        ) : (
+          <AuditTrailPanel
+            title="Patient audit trail"
+            target={{ patientUserId: patient.userId }}
+          />
+        )}
+      </article>
+    </div>
   );
 }
 
 export function PatientLookupPanel() {
   const [query, setQuery] = useState("");
   const [patients, setPatients] = useState<PatientLookupPatient[]>([]);
+  const [selectedPatient, setSelectedPatient] = useState<PatientLookupPatient | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -171,6 +290,7 @@ export function PatientLookupPanel() {
     setLoading(true);
     setError(null);
     setSearched(true);
+    setSelectedPatient(null);
     try {
       const supabase = createClient();
       const {
@@ -192,6 +312,17 @@ export function PatientLookupPanel() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (selectedPatient) {
+    return (
+      <section style={{ margin: "0 0 28px" }} aria-labelledby="patient-profile-title">
+        <h2 id="patient-profile-title" style={{ margin: "0 0 8px", fontSize: 18 }}>
+          Patient profile
+        </h2>
+        <PatientProfile patient={selectedPatient} onBack={() => setSelectedPatient(null)} />
+      </section>
+    );
   }
 
   return (
@@ -257,7 +388,11 @@ export function PatientLookupPanel() {
       {patients.length > 0 ? (
         <div style={{ display: "grid", gap: 12 }}>
           {patients.map((patient) => (
-            <PatientResult key={patient.userId} patient={patient} />
+            <PatientSearchResult
+              key={patient.userId}
+              patient={patient}
+              onOpen={() => setSelectedPatient(patient)}
+            />
           ))}
         </div>
       ) : null}
