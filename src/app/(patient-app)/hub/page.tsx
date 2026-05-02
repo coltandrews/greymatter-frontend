@@ -23,7 +23,7 @@ export default async function HubPage() {
         .order("starts_at", { ascending: true }),
       supabase
         .from("booking_intents")
-        .select("id, booking_status, payment_status, ola_status, selected_slot, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
+        .select("id, booking_status, payment_status, ola_status, selected_slot, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
         .eq("user_id", user.id)
         .neq("booking_status", "draft")
         .order("created_at", { ascending: false }),
@@ -66,6 +66,7 @@ export default async function HubPage() {
               payment_status: r.payment_status,
               ola_status: r.ola_status,
               selected_slot: r.selected_slot,
+              stripe_checkout_session_id: r.stripe_checkout_session_id,
               created_at: r.created_at,
               updated_at: r.updated_at,
               ola_redirect_url: r.ola_redirect_url,

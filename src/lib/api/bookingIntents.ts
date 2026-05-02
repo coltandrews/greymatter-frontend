@@ -68,3 +68,18 @@ export async function reconcileBookingIntentStripe(
     },
   );
 }
+
+export async function reconcileCheckoutSession(
+  supabaseAccessToken: string,
+  checkoutSessionId: string,
+) {
+  return fetch(`${apiBase()}/api/booking-intents/reconcile-checkout-session`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ checkoutSessionId }),
+  });
+}

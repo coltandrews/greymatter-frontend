@@ -1,7 +1,8 @@
 "use client";
 
+import { reconcileCheckoutSession } from "@/lib/api/bookingIntents";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   checkoutReturnAction,
   checkoutReturnView,
@@ -15,6 +16,23 @@ import styles from "./confirmed.module.css";
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLLS = 15;
 
+async function loadBookingIntentByCheckoutSession(
+  checkoutSessionId: string,
+): Promise<BookingIntentReturnRow | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("booking_intents")
+    .select("id, booking_status, payment_status, ola_status, ola_redirect_url, selected_slot")
+    .eq("stripe_checkout_session_id", checkoutSessionId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as BookingIntentReturnRow | null;
+}
+
 export function CheckoutReturnCard({
   checkoutSessionId,
   initialBookingIntent,
@@ -26,6 +44,7 @@ export function CheckoutReturnCard({
     useState<BookingIntentReturnRow | null>(initialBookingIntent);
   const [pollCount, setPollCount] = useState(0);
   const [pollError, setPollError] = useState<string | null>(null);
+  const reconcileAttempted = useRef(false);
   const view = useMemo(() => checkoutReturnView(bookingIntent), [bookingIntent]);
   const action = useMemo(() => checkoutReturnAction(bookingIntent), [bookingIntent]);
   const polling = Boolean(checkoutSessionId) && shouldPollCheckoutReturn(bookingIntent);
@@ -43,6 +62,40 @@ export function CheckoutReturnCard({
   );
 
   useEffect(() => {
+    if (!checkoutSessionId || !polling || reconcileAttempted.current) {
+      return;
+    }
+
+    reconcileAttempted.current = true;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.access_token) {
+          return;
+        }
+
+        const response = await reconcileCheckoutSession(
+          session.access_token,
+          checkoutSessionId,
+        );
+        if (!response.ok && response.status !== 409) {
+          throw new Error("Could not sync Stripe checkout status.");
+        }
+
+        const latest = await loadBookingIntentByCheckoutSession(checkoutSessionId);
+        setBookingIntent(latest);
+        setPollError(null);
+      } catch {
+        setPollError("Payment is confirmed in Stripe. We are syncing your appointment status.");
+      }
+    })();
+  }, [checkoutSessionId, polling]);
+
+  useEffect(() => {
     if (!polling || pollCount >= MAX_POLLS) {
       return;
     }
@@ -50,18 +103,8 @@ export function CheckoutReturnCard({
     const timer = window.setTimeout(() => {
       (async () => {
         try {
-          const supabase = createClient();
-          const { data, error } = await supabase
-            .from("booking_intents")
-            .select("id, booking_status, payment_status, ola_status, ola_redirect_url, selected_slot")
-            .eq("stripe_checkout_session_id", checkoutSessionId)
-            .maybeSingle();
-
-          if (error) {
-            throw new Error(error.message);
-          }
-
-          setBookingIntent(data as BookingIntentReturnRow | null);
+          const latest = await loadBookingIntentByCheckoutSession(checkoutSessionId);
+          setBookingIntent(latest);
           setPollError(null);
         } catch {
           setPollError("Status is taking longer than expected. Check your hub for updates.");

@@ -3,6 +3,7 @@ import {
   createBookingIntent,
   createBookingIntentCheckout,
   reconcileBookingIntentStripe,
+  reconcileCheckoutSession,
   retryBookingIntentOla,
 } from "./bookingIntents";
 
@@ -83,6 +84,27 @@ describe("booking intent API helpers", () => {
           Authorization: "Bearer access-token",
           Accept: "application/json",
         },
+      },
+    );
+  });
+
+  it("reconciles Stripe checkout state for the current patient through the backend", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.com");
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await reconcileCheckoutSession("access-token", "cs_test_123");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/booking-intents/reconcile-checkout-session",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ checkoutSessionId: "cs_test_123" }),
       },
     );
   });

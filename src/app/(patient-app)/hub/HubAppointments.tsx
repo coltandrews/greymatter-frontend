@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { reconcileCheckoutSession } from "@/lib/api/bookingIntents";
 import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
 import { patientBookingTimeline } from "@/lib/scheduling/patientTimeline";
@@ -25,6 +26,7 @@ export type HubBookingIntentRow = {
   payment_status: string;
   ola_status: string;
   selected_slot: unknown;
+  stripe_checkout_session_id: string | null;
   created_at: string;
   updated_at: string;
   ola_redirect_url: string | null;
@@ -214,6 +216,10 @@ function mapBookingIntentRows(data: unknown[]): HubBookingIntentRow[] {
       payment_status: String(o.payment_status),
       ola_status: String(o.ola_status),
       selected_slot: o.selected_slot,
+      stripe_checkout_session_id:
+        o.stripe_checkout_session_id == null
+          ? null
+          : String(o.stripe_checkout_session_id),
       created_at: String(o.created_at),
       updated_at: String(o.updated_at),
       ola_redirect_url:
@@ -247,7 +253,7 @@ async function loadAppointmentsFromSupabase(): Promise<{
         .order("starts_at", { ascending: true }),
       supabase
         .from("booking_intents")
-        .select("id, booking_status, payment_status, ola_status, selected_slot, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
+        .select("id, booking_status, payment_status, ola_status, selected_slot, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
         .eq("user_id", user.id)
         .neq("booking_status", "draft")
         .order("created_at", { ascending: false }),
@@ -378,6 +384,7 @@ export function HubAppointments({
   const [selected, setSelected] = useState<HubVisitRow | null>(null);
   const [orderDetailsByGuid, setOrderDetailsByGuid] = useState<Record<string, OrderDetailState>>({});
   const orderDetailRequests = useRef(new Set<string>());
+  const reconciliationRequests = useRef(new Set<string>());
   const selectedOrderGuid =
     selected?.kind === "appointment"
       ? selected.appointment.ola_order_guid
@@ -403,6 +410,57 @@ export function HubAppointments({
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    const pendingCheckoutSessions = bookingIntents
+      .filter((row) =>
+        row.payment_status === "pending" &&
+        row.stripe_checkout_session_id &&
+        !reconciliationRequests.current.has(row.stripe_checkout_session_id)
+      )
+      .map((row) => row.stripe_checkout_session_id as string);
+
+    if (pendingCheckoutSessions.length === 0) {
+      return;
+    }
+
+    for (const checkoutSessionId of pendingCheckoutSessions) {
+      reconciliationRequests.current.add(checkoutSessionId);
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          return;
+        }
+
+        await Promise.allSettled(
+          pendingCheckoutSessions.map((checkoutSessionId) =>
+            reconcileCheckoutSession(session.access_token, checkoutSessionId),
+          ),
+        );
+
+        const { rows, bookingIntents: loadedBookingIntents, error: e } =
+          await loadAppointmentsFromSupabase();
+        if (cancelled || e) {
+          return;
+        }
+        setItems(rows);
+        setBookingIntents(loadedBookingIntents);
+      } catch {
+        // Keep the current hub state; the return page and staff tools can still reconcile.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [bookingIntents]);
 
   const closeDetail = useCallback(() => {
     setSelected(null);
