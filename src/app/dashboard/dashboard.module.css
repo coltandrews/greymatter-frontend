@@ -7,11 +7,15 @@
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
   min-height: 100vh;
   padding: 24px 18px;
   display: flex;
   flex-direction: column;
   gap: 22px;
+  overflow-y: auto;
   background: #ffffff;
   border-right: 1px solid #e5ebf5;
 }
@@ -68,7 +72,7 @@
 }
 
 .sidebarFooter {
-  margin-top: auto;
+  margin-top: 0;
 }
 
 .content {

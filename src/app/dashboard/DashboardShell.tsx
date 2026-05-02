@@ -28,7 +28,7 @@ export function DashboardShell({
         </div>
         <DashboardNav role={role} currentPage={currentPage} />
         <div className={styles.sidebarFooter}>
-          <SignOutButton />
+          <SignOutButton noMargin />
         </div>
       </aside>
       <section className={styles.content}>
