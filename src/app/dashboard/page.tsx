@@ -3,7 +3,7 @@ import { SignOutButton } from "@/components/SignOutButton";
 import { bookingOperationsSummary } from "@/lib/dashboard/operationsSummary";
 import { redirect } from "next/navigation";
 import { BookingQueuePanel } from "./BookingQueuePanel";
-import { ConfigHealthPanel } from "./ConfigHealthPanel";
+import { DashboardNav } from "./DashboardNav";
 import { OperationsSummaryCards } from "./OperationsSummaryCards";
 import { PatientLookupPanel } from "./PatientLookupPanel";
 import { StaffRecoveryPanel } from "./StaffRecoveryPanel";
@@ -80,10 +80,12 @@ export default async function DashboardPage() {
           border: "1px solid #e5ebf5",
         }}
       >
-        <h1 style={{ margin: "0 0 8px", fontSize: 22 }}>Staff dashboard</h1>
+        <h1 style={{ margin: "0 0 8px", fontSize: 22 }}>Admin portal</h1>
         <p style={{ margin: "0 0 20px", fontSize: 14, color: "#64748b" }}>
           {user.email ?? user.id}
         </p>
+
+        <DashboardNav role={role} currentPage="dashboard" />
 
         {subErr ? (
           <p role="alert" style={{ margin: "0 0 16px", color: "#b91c1c", fontSize: 14 }}>
@@ -101,91 +103,100 @@ export default async function DashboardPage() {
           </p>
         ) : null}
 
-        <ConfigHealthPanel />
+        <div id="overview" style={{ scrollMarginTop: 24 }}>
+          <OperationsSummaryCards summary={operationsSummary} />
+        </div>
 
-        <OperationsSummaryCards summary={operationsSummary} />
+        <div id="patients" style={{ scrollMarginTop: 24 }}>
+          <PatientLookupPanel />
+        </div>
 
-        <PatientLookupPanel />
+        <div id="booking-queue" style={{ scrollMarginTop: 24 }}>
+          <BookingQueuePanel />
+        </div>
 
-        <BookingQueuePanel />
-
-        {!subErr && submissions && submissions.length > 0 ? (
-          <div style={{ overflowX: "auto", marginBottom: 20 }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                fontSize: 14,
-              }}
-            >
-              <thead>
-                <tr style={{ textAlign: "left", borderBottom: "1px solid #e5ebf5" }}>
-                  <th style={{ padding: "10px 12px 10px 0", color: "#64748b", fontWeight: 600 }}>
-                    Patient user id
-                  </th>
-                  <th style={{ padding: "10px 12px", color: "#64748b", fontWeight: 600 }}>
-                    Status
-                  </th>
-                  <th style={{ padding: "10px 12px", color: "#64748b", fontWeight: 600 }}>
-                    Updated
-                  </th>
-                  <th style={{ padding: "10px 0 10px 12px", color: "#64748b", fontWeight: 600 }}>
-                    Created
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {submissions.map((s) => (
-                  <tr key={s.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                    <td
-                      style={{
-                        padding: "12px 12px 12px 0",
-                        fontFamily: "ui-monospace, monospace",
-                        fontSize: 12,
-                        color: "#172033",
-                      }}
-                      title={s.user_id}
-                    >
-                      {s.user_id}
-                    </td>
-                    <td style={{ padding: "12px", textTransform: "capitalize" as const }}>
-                      {s.status.replace("_", " ")}
-                    </td>
-                    <td style={{ padding: "12px", color: "#475569" }}>{formatWhen(s.updated_at)}</td>
-                    <td style={{ padding: "12px 0 12px 12px", color: "#475569" }}>
-                      {formatWhen(s.created_at)}
-                    </td>
+        <div id="submissions" style={{ scrollMarginTop: 24 }}>
+          <h2 style={{ margin: "0 0 12px", fontSize: 18 }}>Submissions</h2>
+          {!subErr && submissions && submissions.length > 0 ? (
+            <div style={{ overflowX: "auto", marginBottom: 20 }}>
+              <table
+                style={{
+                  width: "100%",
+                  borderCollapse: "collapse",
+                  fontSize: 14,
+                }}
+              >
+                <thead>
+                  <tr style={{ textAlign: "left", borderBottom: "1px solid #e5ebf5" }}>
+                    <th style={{ padding: "10px 12px 10px 0", color: "#64748b", fontWeight: 600 }}>
+                      Patient user id
+                    </th>
+                    <th style={{ padding: "10px 12px", color: "#64748b", fontWeight: 600 }}>
+                      Status
+                    </th>
+                    <th style={{ padding: "10px 12px", color: "#64748b", fontWeight: 600 }}>
+                      Updated
+                    </th>
+                    <th style={{ padding: "10px 0 10px 12px", color: "#64748b", fontWeight: 600 }}>
+                      Created
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
+                </thead>
+                <tbody>
+                  {submissions.map((s) => (
+                    <tr key={s.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                      <td
+                        style={{
+                          padding: "12px 12px 12px 0",
+                          fontFamily: "ui-monospace, monospace",
+                          fontSize: 12,
+                          color: "#172033",
+                        }}
+                        title={s.user_id}
+                      >
+                        {s.user_id}
+                      </td>
+                      <td style={{ padding: "12px", textTransform: "capitalize" as const }}>
+                        {s.status.replace("_", " ")}
+                      </td>
+                      <td style={{ padding: "12px", color: "#475569" }}>{formatWhen(s.updated_at)}</td>
+                      <td style={{ padding: "12px 0 12px 12px", color: "#475569" }}>
+                        {formatWhen(s.created_at)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
 
-        {!subErr && (!submissions || submissions.length === 0) ? (
-          <p style={{ margin: "0 0 20px", fontSize: 15, color: "#64748b" }}>
-            No submissions yet.
-          </p>
-        ) : null}
+          {!subErr && (!submissions || submissions.length === 0) ? (
+            <p style={{ margin: "0 0 20px", fontSize: 15, color: "#64748b" }}>
+              No submissions yet.
+            </p>
+          ) : null}
+        </div>
 
-        <StaffRecoveryPanel
-          initialBookings={(recoveryRows ?? []).map((row) => ({
-            id: row.id,
-            user_id: row.user_id,
-            payment_status: row.payment_status,
-            booking_status: row.booking_status,
-            ola_status: row.ola_status,
-            service_state: row.service_state,
-            selected_slot: row.selected_slot,
-            selected_pharmacy: row.selected_pharmacy,
-            vendor_metadata: row.vendor_metadata,
-            ola_order_guid: row.ola_order_guid,
-            ola_redirect_url: row.ola_redirect_url,
-            failure_reason: row.failure_reason,
-            created_at: row.created_at,
-            updated_at: row.updated_at,
-          }))}
-        />
+        <div id="recovery" style={{ scrollMarginTop: 24 }}>
+          <StaffRecoveryPanel
+            initialBookings={(recoveryRows ?? []).map((row) => ({
+              id: row.id,
+              user_id: row.user_id,
+              payment_status: row.payment_status,
+              booking_status: row.booking_status,
+              ola_status: row.ola_status,
+              service_state: row.service_state,
+              selected_slot: row.selected_slot,
+              selected_pharmacy: row.selected_pharmacy,
+              vendor_metadata: row.vendor_metadata,
+              ola_order_guid: row.ola_order_guid,
+              ola_redirect_url: row.ola_redirect_url,
+              failure_reason: row.failure_reason,
+              created_at: row.created_at,
+              updated_at: row.updated_at,
+            }))}
+          />
+        </div>
 
         <div style={{ marginTop: 24 }}>
           <SignOutButton />
