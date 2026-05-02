@@ -50,6 +50,27 @@ describe("booking intent API helpers", () => {
     );
   });
 
+  it("requests embedded Stripe checkout for an existing booking intent", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.com");
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await createBookingIntentCheckout("access-token", "booking-id", { embedded: true });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/booking-intents/booking-id/checkout",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ uiMode: "embedded" }),
+      },
+    );
+  });
+
   it("retries Ola booking for a booking intent through the backend", async () => {
     vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.com");
     const fetchMock = vi.fn(async () => new Response("{}"));

@@ -513,9 +513,43 @@ a.btnGhost {
   box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
 }
 
+.paymentCard {
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid #e8ecf4;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(23, 32, 51, 0.06);
+}
+
+.paymentHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.paymentTitle {
+  margin: 0 0 5px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #172033;
+}
+
+.paymentMeta {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  font-family: ui-monospace, monospace;
+}
+
 @media (max-width: 720px) {
   .calendarLayout {
     grid-template-columns: 1fr;
+  }
+
+  .paymentHeader {
+    flex-direction: column;
   }
 
   .pharmacySearchGrid {

@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  EmbeddedCheckout,
+  EmbeddedCheckoutProvider,
+} from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import {
   fetchVendorOlaPharmacies,
   fetchVendorOlaSchedules,
 } from "@/lib/api/vendorOla";
@@ -23,6 +28,12 @@ import styles from "./schedule.module.css";
 
 type Step = "intake" | "pharmacy" | "calendar";
 
+type EmbeddedCheckoutState = {
+  bookingIntentId: string;
+  checkoutSessionId: string | null;
+  clientSecret: string;
+};
+
 type InsuranceForm = {
   insurance_member_id: string;
   insurance_plan_name: string;
@@ -36,6 +47,9 @@ const EMPTY_INSURANCE: InsuranceForm = {
   payer_identification: "",
   cover_type: "Primary",
 };
+
+const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 
 type PharmacyChoice = {
   key: string;
@@ -133,6 +147,16 @@ async function vendorResponseErrorMessage(res: Response): Promise<string> {
     /* use raw response text */
   }
   return `Appointment request failed (${res.status}): ${raw}`;
+}
+
+function stringFromRecord(record: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+  return "";
 }
 
 function stringValue(record: Record<string, unknown>, keys: string[]): string {
@@ -245,6 +269,7 @@ export function ScheduleFlow({
   const [insuranceModalOpen, setInsuranceModalOpen] = useState(false);
   const [confirmSaving, setConfirmSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [embeddedCheckout, setEmbeddedCheckout] = useState<EmbeddedCheckoutState | null>(null);
 
   const serviceStateValue = (serviceState ?? "").trim();
   const scheduleBlockedReason = !serviceStateValue
@@ -500,12 +525,36 @@ export function ScheduleFlow({
       const checkoutRes = await createBookingIntentCheckout(
         session.access_token,
         bookingIntentId,
+        { embedded: true },
       );
       if (!checkoutRes.ok) {
         setConfirmError(await vendorResponseErrorMessage(checkoutRes));
         return;
       }
       const checkoutJson = (await checkoutRes.json().catch(() => ({}))) as Record<string, unknown>;
+      const checkoutClientSecret = stringFromRecord(checkoutJson, [
+        "clientSecret",
+        "checkoutClientSecret",
+        "client_secret",
+      ]);
+      if (checkoutClientSecret) {
+        if (!stripePublishableKey) {
+          setConfirmError("Stripe publishable key is not configured.");
+          return;
+        }
+        setEmbeddedCheckout({
+          bookingIntentId,
+          checkoutSessionId: stringFromRecord(checkoutJson, [
+            "checkoutSessionId",
+            "checkout_session_id",
+            "sessionId",
+          ]) || null,
+          clientSecret: checkoutClientSecret,
+        });
+        setInsuranceModalOpen(false);
+        return;
+      }
+
       const checkoutUrl =
         typeof checkoutJson.checkoutUrl === "string" ? checkoutJson.checkoutUrl : "";
       if (!checkoutUrl) {
@@ -518,6 +567,62 @@ export function ScheduleFlow({
       setConfirmSaving(false);
     }
   }, [answers, insurance, patient, selectedDate, selectedPharmacy, selectedSlot, confirmSaving, serviceStateValue]);
+
+  const onEmbeddedCheckoutComplete = useCallback(() => {
+    const checkoutSessionId = embeddedCheckout?.checkoutSessionId;
+    if (checkoutSessionId) {
+      window.location.assign(
+        `/schedule/confirmed?checkout_session_id=${encodeURIComponent(checkoutSessionId)}`,
+      );
+      return;
+    }
+    window.location.assign("/hub");
+  }, [embeddedCheckout?.checkoutSessionId]);
+
+  if (embeddedCheckout) {
+    return (
+      <>
+        <Link href="/hub" className={styles.back}>
+          ← Patient Hub
+        </Link>
+        <h1 className={styles.title}>Complete payment</h1>
+        <p className={styles.stepHint}>
+          Your appointment request is ready. Complete payment here to continue booking.
+        </p>
+        <section className={styles.paymentCard} aria-labelledby="payment-title">
+          <div className={styles.paymentHeader}>
+            <div>
+              <h2 id="payment-title" className={styles.paymentTitle}>
+                Payment
+              </h2>
+              <p className={styles.paymentMeta}>
+                Booking {embeddedCheckout.bookingIntentId.slice(0, 8)}
+              </p>
+            </div>
+            <button
+              type="button"
+              className={styles.btnGhost}
+              onClick={() => {
+                setEmbeddedCheckout(null);
+                setConfirmError(null);
+              }}
+            >
+              Back to appointment
+            </button>
+          </div>
+          <EmbeddedCheckoutProvider
+            stripe={stripePromise}
+            options={{
+              clientSecret: embeddedCheckout.clientSecret,
+              onComplete: onEmbeddedCheckoutComplete,
+            }}
+          >
+            <EmbeddedCheckout />
+          </EmbeddedCheckoutProvider>
+        </section>
+      </>
+    );
+  }
 
   if (step === "intake") {
     return (

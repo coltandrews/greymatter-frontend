@@ -24,6 +24,7 @@ export async function createBookingIntent(
 export async function createBookingIntentCheckout(
   supabaseAccessToken: string,
   bookingIntentId: string,
+  options?: { embedded?: boolean },
 ) {
   return fetch(
     `${apiBase()}/api/booking-intents/${encodeURIComponent(bookingIntentId)}/checkout`,
@@ -32,7 +33,9 @@ export async function createBookingIntentCheckout(
       headers: {
         Authorization: `Bearer ${supabaseAccessToken}`,
         Accept: "application/json",
+        ...(options?.embedded ? { "Content-Type": "application/json" } : {}),
       },
+      body: options?.embedded ? JSON.stringify({ uiMode: "embedded" }) : undefined,
     },
   );
 }
