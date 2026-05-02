@@ -555,14 +555,7 @@ export function ScheduleFlow({
         return;
       }
 
-      const checkoutUrl =
-        typeof checkoutJson.checkoutUrl === "string" ? checkoutJson.checkoutUrl : "";
-      if (!checkoutUrl) {
-        setConfirmError("Could not start checkout. Please try again.");
-        return;
-      }
-
-      window.location.assign(checkoutUrl);
+      setConfirmError("Embedded checkout is not available yet. Please try again in a moment.");
     } finally {
       setConfirmSaving(false);
     }
