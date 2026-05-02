@@ -17,7 +17,7 @@ import {
   patientLookupSummary,
 } from "@/lib/dashboard/patientLookup";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AuditTrailPanel } from "./AuditTrailPanel";
 
 async function readBackendMessage(res: Response): Promise<string> {
@@ -38,55 +38,348 @@ function formatUpdated(value: string): string {
   }
 }
 
-function PatientSearchResult({
-  patient,
-  onOpen,
+function latestPatientUpdate(patient: PatientLookupPatient): string | null {
+  const dates = [
+    patient.latestSubmission?.updatedAt,
+    ...patient.bookings.map((booking) => booking.updatedAt),
+    ...patient.appointments.map((appointment) => appointment.updatedAt),
+  ].filter((value): value is string => Boolean(value));
+
+  return dates
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null;
+}
+
+function patientMatchesFilter(patient: PatientLookupPatient, search: string, state: string): boolean {
+  const normalized = search.trim().toLowerCase();
+  const stateMatches = !state || patient.serviceState === state;
+  if (!stateMatches) {
+    return false;
+  }
+
+  if (!normalized) {
+    return true;
+  }
+
+  return [
+    patient.name,
+    patient.email,
+    patient.userId,
+    patient.serviceState,
+    patient.latestSubmission?.status,
+    patientLookupActivitySummary(patient),
+  ].some((value) => value?.toLowerCase().includes(normalized));
+}
+
+function uniquePatientStates(patients: PatientLookupPatient[]): string[] {
+  return Array.from(new Set(
+    patients
+      .map((patient) => patient.serviceState)
+      .filter((value): value is string => Boolean(value)),
+  )).sort((a, b) => a.localeCompare(b));
+}
+
+function statusLabel(value: string | null | undefined): string {
+  return value?.replace(/_/g, " ") || "Not started";
+}
+
+function intakeStatusCounts(patients: PatientLookupPatient[]) {
+  const counts = patients.reduce<Record<string, number>>((acc, patient) => {
+    const key = statusLabel(patient.latestSubmission?.status);
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 4);
+}
+
+function stateCounts(patients: PatientLookupPatient[]) {
+  const counts = patients.reduce<Record<string, number>>((acc, patient) => {
+    const key = patient.serviceState || "Unknown";
+    acc[key] = (acc[key] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 5);
+}
+
+function PatientDemographicsOverview({
+  patients,
 }: {
-  patient: PatientLookupPatient;
-  onOpen: () => void;
+  patients: PatientLookupPatient[];
 }) {
+  const total = patients.length;
+  const patientsWithBookings = patients.filter((patient) => patient.bookings.length > 0).length;
+  const patientsWithAppointments = patients.filter((patient) => patient.appointments.length > 0).length;
+  const patientsWithIntake = patients.filter((patient) => patient.latestSubmission).length;
+  const states = stateCounts(patients);
+  const intakeStatuses = intakeStatusCounts(patients);
+  const maxStateCount = Math.max(...states.map(([, count]) => count), 1);
+  const maxIntakeCount = Math.max(...intakeStatuses.map(([, count]) => count), 1);
+
+  const statCards = [
+    { label: "Patients", value: total, color: "#2563eb", background: "#eff6ff" },
+    { label: "With intake", value: patientsWithIntake, color: "#15803d", background: "#f0fdf4" },
+    { label: "With bookings", value: patientsWithBookings, color: "#c2410c", background: "#fff7ed" },
+    { label: "With appointments", value: patientsWithAppointments, color: "#7c3aed", background: "#f5f3ff" },
+  ];
+
   return (
-    <button
-      type="button"
-      onClick={onOpen}
+    <section
+      aria-label="Patient demographics overview"
       style={{
         display: "grid",
-        gap: 8,
-        width: "100%",
-        padding: 14,
-        textAlign: "left",
-        border: "1px solid #e5ebf5",
-        borderRadius: 8,
-        background: "#fff",
-        cursor: "pointer",
+        gap: 14,
+        marginBottom: 16,
       }}
-      aria-label={`Open ${patient.name} profile`}
     >
-      <span
+      <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12,
-          alignItems: "center",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gap: 10,
         }}
       >
-        <span style={{ minWidth: 0 }}>
-          <strong style={{ display: "block", fontSize: 14, color: "#172033" }}>
-            {patient.name}
-          </strong>
-          <span style={{ display: "block", marginTop: 3, fontSize: 13, color: "#64748b" }}>
-            {patient.email ?? patient.userId}
-          </span>
-        </span>
-        <span style={{ flex: "0 0 auto", fontSize: 13, color: "#2563eb", fontWeight: 800 }}>
-          View profile
-        </span>
-      </span>
-      <span style={{ fontSize: 12, color: "#64748b" }}>
-        {patient.serviceState ? `State ${patient.serviceState}` : "State unknown"} ·{" "}
-        {patientLookupActivitySummary(patient)}
-      </span>
-    </button>
+        {statCards.map((card) => (
+          <div
+            key={card.label}
+            style={{
+              minHeight: 88,
+              padding: 14,
+              display: "grid",
+              alignContent: "space-between",
+              border: "1px solid #e5ebf5",
+              borderRadius: 10,
+              background: card.background,
+            }}
+          >
+            <p style={{ margin: 0, fontSize: 12, color: "#475569", fontWeight: 800 }}>
+              {card.label}
+            </p>
+            <p style={{ margin: "10px 0 0", fontSize: 28, lineHeight: 1, color: card.color, fontWeight: 900 }}>
+              {card.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+          gap: 12,
+        }}
+      >
+        <div style={{ padding: 14, border: "1px solid #e5ebf5", borderRadius: 10, background: "#fff" }}>
+          <p style={{ margin: "0 0 10px", fontSize: 13, color: "#172033", fontWeight: 900 }}>
+            State mix
+          </p>
+          {states.length > 0 ? (
+            <div style={{ display: "grid", gap: 9 }}>
+              {states.map(([state, count], index) => (
+                <div key={state} style={{ display: "grid", gap: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12 }}>
+                    <span style={{ color: "#475569", fontWeight: 800 }}>{state}</span>
+                    <strong style={{ color: "#172033" }}>{count}</strong>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 999, background: "#eef2f6", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        width: `${Math.max(8, (count / maxStateCount) * 100)}%`,
+                        height: "100%",
+                        borderRadius: 999,
+                        background: ["#2563eb", "#15803d", "#c2410c", "#7c3aed", "#0891b2"][index] ?? "#64748b",
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>No state data yet.</p>
+          )}
+        </div>
+
+        <div style={{ padding: 14, border: "1px solid #e5ebf5", borderRadius: 10, background: "#fff" }}>
+          <p style={{ margin: "0 0 10px", fontSize: 13, color: "#172033", fontWeight: 900 }}>
+            Intake status
+          </p>
+          {intakeStatuses.length > 0 ? (
+            <div style={{ display: "grid", gap: 9 }}>
+              {intakeStatuses.map(([status, count], index) => (
+                <div key={status} style={{ display: "grid", gap: 4 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 12 }}>
+                    <span style={{ color: "#475569", fontWeight: 800, textTransform: "capitalize" }}>{status}</span>
+                    <strong style={{ color: "#172033" }}>{count}</strong>
+                  </div>
+                  <div style={{ height: 8, borderRadius: 999, background: "#eef2f6", overflow: "hidden" }}>
+                    <div
+                      style={{
+                        width: `${Math.max(8, (count / maxIntakeCount) * 100)}%`,
+                        height: "100%",
+                        borderRadius: 999,
+                        background: ["#15803d", "#2563eb", "#c2410c", "#7c3aed"][index] ?? "#64748b",
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>No intake data yet.</p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PatientTable({
+  patients,
+  allPatients,
+  filterText,
+  stateFilter,
+  onFilterTextChange,
+  onStateFilterChange,
+  onOpenPatient,
+}: {
+  patients: PatientLookupPatient[];
+  allPatients: PatientLookupPatient[];
+  filterText: string;
+  stateFilter: string;
+  onFilterTextChange: (value: string) => void;
+  onStateFilterChange: (value: string) => void;
+  onOpenPatient: (patient: PatientLookupPatient) => void;
+}) {
+  const states = uniquePatientStates(allPatients);
+
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+          flexWrap: "wrap",
+        }}
+      >
+        <p style={{ margin: 0, color: "#64748b", fontSize: 13, fontWeight: 800 }}>
+          {patients.length} of {allPatients.length} patients
+        </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginLeft: "auto" }}>
+          <input
+            value={filterText}
+            onChange={(event) => onFilterTextChange(event.target.value)}
+            placeholder="Search table"
+            aria-label="Search patient table"
+            style={{
+              width: 240,
+              maxWidth: "100%",
+              padding: "9px 11px",
+              borderRadius: 8,
+              border: "1px solid #dbe3ef",
+              fontSize: 13,
+              color: "#172033",
+            }}
+          />
+          <select
+            value={stateFilter}
+            onChange={(event) => onStateFilterChange(event.target.value)}
+            aria-label="Filter patients by state"
+            style={{
+              minWidth: 128,
+              padding: "9px 11px",
+              borderRadius: 8,
+              border: "1px solid #dbe3ef",
+              background: "#fff",
+              fontSize: 13,
+              color: "#172033",
+            }}
+          >
+            <option value="">All states</option>
+            {states.map((state) => (
+              <option key={state} value={state}>{state}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {patients.length > 0 ? (
+        <div style={{ overflowX: "auto", border: "1px solid #e5ebf5", borderRadius: 10, background: "#fff" }}>
+          <table style={{ width: "100%", minWidth: 760, borderCollapse: "collapse", fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: "#f8fafc" }}>
+                {["Patient", "State", "Intake", "Bookings", "Appointments", "Latest activity"].map((header) => (
+                  <th
+                    key={header}
+                    scope="col"
+                    style={{
+                      padding: "11px 12px",
+                      textAlign: "left",
+                      color: "#64748b",
+                      fontWeight: 900,
+                      borderBottom: "1px solid #e5ebf5",
+                    }}
+                  >
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {patients.map((patient) => {
+                const latestUpdate = latestPatientUpdate(patient);
+                return (
+                  <tr
+                    key={patient.userId}
+                    tabIndex={0}
+                    onClick={() => onOpenPatient(patient)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        onOpenPatient(patient);
+                      }
+                    }}
+                    style={{ cursor: "pointer" }}
+                    aria-label={`Open ${patient.name} profile`}
+                  >
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9" }}>
+                      <strong style={{ display: "block", color: "#172033" }}>{patient.name}</strong>
+                      <span style={{ display: "block", marginTop: 3, color: "#64748b", fontSize: 12 }}>
+                        {patient.email ?? patient.userId}
+                      </span>
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155", fontWeight: 800 }}>
+                      {patient.serviceState ?? "Unknown"}
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155", textTransform: "capitalize" }}>
+                      {statusLabel(patient.latestSubmission?.status)}
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155" }}>
+                      {patient.bookings.length}
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155" }}>
+                      {patient.appointments.length}
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#64748b" }}>
+                      {latestUpdate ? formatUpdated(latestUpdate) : "No activity"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p style={{ margin: 0, padding: 18, border: "1px solid #e5ebf5", borderRadius: 10, background: "#fff", color: "#64748b", fontSize: 14 }}>
+          No patients match those filters.
+        </p>
+      )}
+    </div>
   );
 }
 
@@ -279,24 +572,21 @@ export function PatientLookupPanel({
   initialPatientId?: string | null;
   initialQuery?: string;
 }) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
+  const [stateFilter, setStateFilter] = useState("");
   const [patients, setPatients] = useState<PatientLookupPatient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<PatientLookupPatient | null>(null);
   const [searched, setSearched] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function search(
-    searchValue = query,
+  async function loadPatients(
     options: { selectPatientId?: string | null } = {},
   ) {
-    const trimmed = searchValue.trim();
-    if (trimmed.length < 2 || loading) {
-      setError("Enter at least 2 characters.");
+    if (loading) {
       return;
     }
 
-    setQuery(trimmed);
     setLoading(true);
     setError(null);
     setSearched(true);
@@ -311,7 +601,7 @@ export function PatientLookupPanel({
         throw new Error("Sign in again to search patients.");
       }
 
-      const response = await fetchPatientLookup(session.access_token, trimmed);
+      const response = await fetchPatientLookup(session.access_token);
       if (!response.ok) {
         throw new Error(await readBackendMessage(response));
       }
@@ -332,14 +622,16 @@ export function PatientLookupPanel({
   }
 
   useEffect(() => {
-    if (initialQuery.trim().length < 2) {
-      return;
-    }
-
-    void search(initialQuery, {
+    setQuery(initialQuery);
+    void loadPatients({
       selectPatientId: initialPatientId,
     });
   }, [initialPatientId, initialQuery]);
+
+  const filteredPatients = useMemo(
+    () => patients.filter((patient) => patientMatchesFilter(patient, query, stateFilter)),
+    [patients, query, stateFilter],
+  );
 
   if (selectedPatient) {
     return (
@@ -365,54 +657,29 @@ export function PatientLookupPanel({
         }}
       >
         <h2 id="patient-lookup-title" style={{ margin: "8px 0 0", fontSize: 18 }}>
-          Patient lookup
+          Patients
         </h2>
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void search();
-          }}
+        <button
+          type="button"
+          onClick={() => void loadPatients()}
+          disabled={loading}
           style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(180px, 260px) auto",
-            gap: 8,
-            marginLeft: "auto",
-            maxWidth: "100%",
+            minHeight: 36,
+            padding: "0 12px",
+            borderRadius: 8,
+            border: "1px solid #dbe3ef",
+            background: "#fff",
+            color: "#172033",
+            fontSize: 13,
+            fontWeight: 800,
+            cursor: loading ? "not-allowed" : "pointer",
           }}
         >
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search patients"
-            aria-label="Search patients"
-            style={{
-              minWidth: 0,
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: "1px solid #dbe3ef",
-              fontSize: 14,
-              color: "#172033",
-            }}
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 8,
-              border: "1px solid #172033",
-              background: loading ? "#94a3b8" : "#172033",
-              color: "#fff",
-              fontSize: 13,
-              fontWeight: 800,
-              cursor: loading ? "not-allowed" : "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {loading ? "Searching..." : "Search"}
-          </button>
-        </form>
+          {loading ? "Loading..." : "Refresh"}
+        </button>
       </div>
+
+      <PatientDemographicsOverview patients={patients} />
 
       <div
         aria-live="polite"
@@ -428,13 +695,13 @@ export function PatientLookupPanel({
       >
         {!searched && !loading ? (
           <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#64748b" }}>
-            Search for a patient to see results.
+            Loading patients...
           </p>
         ) : null}
 
         {loading ? (
           <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#64748b" }}>
-            Searching patients...
+            Loading patients...
           </p>
         ) : null}
 
@@ -449,20 +716,20 @@ export function PatientLookupPanel({
 
         {searched && !loading && !error && patients.length === 0 ? (
           <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#64748b" }}>
-            No matching patients found.
+            No patients found.
           </p>
         ) : null}
 
-        {patients.length > 0 ? (
-          <div style={{ display: "grid", gap: 12 }}>
-            {patients.map((patient) => (
-              <PatientSearchResult
-                key={patient.userId}
-                patient={patient}
-                onOpen={() => setSelectedPatient(patient)}
-              />
-            ))}
-          </div>
+        {!loading && !error && patients.length > 0 ? (
+          <PatientTable
+            patients={filteredPatients}
+            allPatients={patients}
+            filterText={query}
+            stateFilter={stateFilter}
+            onFilterTextChange={setQuery}
+            onStateFilterChange={setStateFilter}
+            onOpenPatient={setSelectedPatient}
+          />
         ) : null}
       </div>
     </section>

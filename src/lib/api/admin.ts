@@ -167,10 +167,14 @@ export async function fetchTransactionReceipt(
 
 export async function fetchPatientLookup(
   supabaseAccessToken: string,
-  query: string,
+  query = "",
 ) {
-  const search = new URLSearchParams({ q: query });
-  return fetch(`${apiBase()}/api/admin/patient-lookup?${search.toString()}`, {
+  const search = new URLSearchParams();
+  if (query.trim()) {
+    search.set("q", query.trim());
+  }
+  const suffix = search.toString() ? `?${search.toString()}` : "";
+  return fetch(`${apiBase()}/api/admin/patient-lookup${suffix}`, {
     headers: {
       Authorization: `Bearer ${supabaseAccessToken}`,
       Accept: "application/json",

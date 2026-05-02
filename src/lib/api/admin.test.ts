@@ -107,6 +107,24 @@ describe("admin API helpers", () => {
     );
   });
 
+  it("loads patients without a lookup query", async () => {
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.com";
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchPatientLookup("access-token");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/admin/patient-lookup",
+      {
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+        },
+      },
+    );
+  });
+
   it("fetches audit events by booking intent", async () => {
     process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.com";
     const fetchMock = vi.fn(async () => new Response("{}"));
