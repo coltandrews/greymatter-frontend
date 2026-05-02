@@ -58,8 +58,8 @@ export function hubBookingIntentStatusView(
   }
 
   return {
-    label: "Pending",
-    subtitle: "Appointment request started. Payment is not complete.",
+    label: "Payment Pending",
+    subtitle: "Checkout is not complete. This appointment is not booked yet.",
     tone: "pending",
   };
 }

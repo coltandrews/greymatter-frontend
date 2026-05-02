@@ -56,15 +56,16 @@ describe("hubBookingIntentStatusView", () => {
     });
   });
 
-  it("shows pending before payment is complete", () => {
+  it("shows payment pending before payment is complete", () => {
     expect(
       hubBookingIntentStatusView({
         booking_status: "payment_pending",
         payment_status: "pending",
         ola_status: "not_started",
       }),
-    ).toMatchObject({
-      label: "Pending",
+    ).toEqual({
+      label: "Payment Pending",
+      subtitle: "Checkout is not complete. This appointment is not booked yet.",
       tone: "pending",
     });
   });

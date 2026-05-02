@@ -39,4 +39,23 @@ describe("patientBookingTimeline", () => {
       state: "attention",
     });
   });
+
+  it("makes clear that unpaid requests are not booked", () => {
+    const timeline = patientBookingTimeline({
+      booking_status: "payment_pending",
+      payment_status: "pending",
+      ola_status: "not_started",
+    });
+
+    expect(timeline[0]).toMatchObject({
+      key: "payment",
+      state: "current",
+      description: "Checkout is not complete. Appointment is not booked yet.",
+    });
+    expect(timeline[1]).toMatchObject({
+      key: "provider",
+      state: "pending",
+      description: "Starts after payment is complete",
+    });
+  });
 });

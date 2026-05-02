@@ -52,3 +52,19 @@ export async function retryBookingIntentOla(
     },
   );
 }
+
+export async function reconcileBookingIntentStripe(
+  supabaseAccessToken: string,
+  bookingIntentId: string,
+) {
+  return fetch(
+    `${apiBase()}/api/booking-intents/${encodeURIComponent(bookingIntentId)}/reconcile-stripe`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${supabaseAccessToken}`,
+        Accept: "application/json",
+      },
+    },
+  );
+}

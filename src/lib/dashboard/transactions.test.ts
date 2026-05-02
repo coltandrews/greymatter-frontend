@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  canReconcileStripeTransaction,
   formatTransactionAmount,
   stripeDashboardUrl,
   transactionPatientLabel,
   transactionStatusView,
+  transactionWebhookStatusView,
 } from "./transactions";
 
 const row = {
@@ -34,6 +36,36 @@ describe("transaction dashboard helpers", () => {
     expect(transactionStatusView("paid")).toMatchObject({ label: "Paid" });
     expect(transactionStatusView("pending")).toMatchObject({ label: "Pending" });
     expect(transactionStatusView(null)).toMatchObject({ label: "Unknown" });
+  });
+
+  it("shows whether Stripe checkout completion has reached the app", () => {
+    expect(transactionWebhookStatusView(row)).toMatchObject({ label: "Received" });
+    expect(transactionWebhookStatusView({
+      ...row,
+      paymentStatus: "pending",
+      paidAt: null,
+    })).toMatchObject({ label: "Not Received" });
+    expect(transactionWebhookStatusView({
+      ...row,
+      paymentStatus: "unpaid",
+      stripeCheckoutSessionId: null,
+      paidAt: null,
+    })).toMatchObject({ label: "Not Expected" });
+  });
+
+  it("allows reconciliation only for pending rows with a Stripe checkout session", () => {
+    expect(canReconcileStripeTransaction({
+      ...row,
+      paymentStatus: "pending",
+      paidAt: null,
+    })).toBe(true);
+    expect(canReconcileStripeTransaction(row)).toBe(false);
+    expect(canReconcileStripeTransaction({
+      ...row,
+      paymentStatus: "pending",
+      stripeCheckoutSessionId: null,
+      paidAt: null,
+    })).toBe(false);
   });
 
   it("builds Stripe dashboard links from checkout sessions first", () => {

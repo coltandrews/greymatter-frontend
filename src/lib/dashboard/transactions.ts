@@ -36,6 +36,22 @@ export function transactionStatusView(status: string | null): TransactionStatusV
   }
 }
 
+export function transactionWebhookStatusView(row: TransactionRow): TransactionStatusView {
+  if (row.paymentStatus === "paid" && row.paidAt) {
+    return { label: "Received", color: "#166534", background: "#dcfce7" };
+  }
+
+  if (row.paymentStatus === "pending" && row.stripeCheckoutSessionId?.trim()) {
+    return { label: "Not Received", color: "#92400e", background: "#fef3c7" };
+  }
+
+  return { label: "Not Expected", color: "#475569", background: "#f1f5f9" };
+}
+
+export function canReconcileStripeTransaction(row: TransactionRow): boolean {
+  return row.paymentStatus === "pending" && Boolean(row.stripeCheckoutSessionId?.trim());
+}
+
 export function stripeDashboardUrl(row: TransactionRow): string | null {
   if (row.stripeCheckoutSessionId?.trim()) {
     const sessionId = row.stripeCheckoutSessionId.trim();

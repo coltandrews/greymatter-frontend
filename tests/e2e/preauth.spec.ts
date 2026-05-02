@@ -11,7 +11,7 @@ test("eligible patient completes pre-account intake before account creation", as
   await page.getByLabel("Date Of Birth").fill("1990-01-01");
   await page.getByLabel("Gender").selectOption("female");
   await page.getByLabel("State").selectOption("SC");
-  await page.getByRole("radio", { name: "Yes" }).check();
+  await page.locator("label").filter({ hasText: /^Yes$/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
@@ -35,7 +35,7 @@ test("pre-account intake blocks unsupported booking-for-someone-else flow", asyn
   await page.getByLabel("Date Of Birth").fill("1990-01-01");
   await page.getByLabel("Gender").selectOption("female");
   await page.getByLabel("State").selectOption("SC");
-  await page.getByRole("radio", { name: "No" }).check();
+  await page.locator("label").filter({ hasText: /^No$/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(

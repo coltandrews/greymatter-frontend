@@ -5,11 +5,14 @@ import {
   type TransactionRow,
   type TransactionsResponse,
 } from "@/lib/api/admin";
+import { reconcileBookingIntentStripe } from "@/lib/api/bookingIntents";
 import {
+  canReconcileStripeTransaction,
   formatTransactionAmount,
   stripeDashboardUrl,
   transactionPatientLabel,
   transactionStatusView,
+  transactionWebhookStatusView,
 } from "@/lib/dashboard/transactions";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
@@ -40,6 +43,8 @@ export function TransactionsPanel() {
   const [rows, setRows] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reconcilingId, setReconcilingId] = useState<string | null>(null);
+  const [rowMessageById, setRowMessageById] = useState<Record<string, string>>({});
 
   async function loadTransactions() {
     setLoading(true);
@@ -70,6 +75,38 @@ export function TransactionsPanel() {
   useEffect(() => {
     void loadTransactions();
   }, []);
+
+  async function reconcileStripe(row: TransactionRow) {
+    setReconcilingId(row.id);
+    setRowMessageById((messages) => ({ ...messages, [row.id]: "" }));
+    try {
+      const supabase = createClient();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Sign in again to reconcile Stripe.");
+      }
+
+      const response = await reconcileBookingIntentStripe(session.access_token, row.id);
+      if (!response.ok) {
+        throw new Error(await readBackendMessage(response));
+      }
+
+      setRowMessageById((messages) => ({
+        ...messages,
+        [row.id]: "Stripe payment reconciled.",
+      }));
+      await loadTransactions();
+    } catch (err) {
+      setRowMessageById((messages) => ({
+        ...messages,
+        [row.id]: err instanceof Error ? err.message : "Could not reconcile Stripe.",
+      }));
+    } finally {
+      setReconcilingId(null);
+    }
+  }
 
   return (
     <section className={styles.workspaceCard} aria-labelledby="transactions-title">
@@ -113,6 +150,7 @@ export function TransactionsPanel() {
                 <th scope="col">Status</th>
                 <th scope="col">Amount</th>
                 <th scope="col">Paid</th>
+                <th scope="col">Webhook</th>
                 <th scope="col">Booking</th>
                 <th scope="col">Stripe</th>
                 <th scope="col">Action</th>
@@ -121,7 +159,10 @@ export function TransactionsPanel() {
             <tbody>
               {rows.map((row) => {
                 const status = transactionStatusView(row.paymentStatus);
+                const webhookStatus = transactionWebhookStatusView(row);
                 const stripeUrl = stripeDashboardUrl(row);
+                const canReconcile = canReconcileStripeTransaction(row);
+                const rowMessage = rowMessageById[row.id];
 
                 return (
                   <tr key={row.id}>
@@ -141,6 +182,14 @@ export function TransactionsPanel() {
                     <td>{formatTransactionAmount(row)}</td>
                     <td>{formatDate(row.paidAt)}</td>
                     <td>
+                      <span
+                        className={styles.statusBadge}
+                        style={{ background: webhookStatus.background, color: webhookStatus.color }}
+                      >
+                        {webhookStatus.label}
+                      </span>
+                    </td>
+                    <td>
                       <span className={styles.monoCell} title={row.id}>
                         {row.id}
                       </span>
@@ -154,18 +203,44 @@ export function TransactionsPanel() {
                       </span>
                     </td>
                     <td>
-                      {stripeUrl ? (
-                        <a
-                          className={styles.smallAction}
-                          href={stripeUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          View In Stripe
-                        </a>
-                      ) : (
-                        <span className={styles.emptyText}>Not available</span>
-                      )}
+                      <div className={styles.tableActions}>
+                        {stripeUrl ? (
+                          <a
+                            className={styles.smallAction}
+                            href={stripeUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            View In Stripe
+                          </a>
+                        ) : null}
+                        {canReconcile ? (
+                          <button
+                            type="button"
+                            className={styles.smallAction}
+                            onClick={() => {
+                              void reconcileStripe(row);
+                            }}
+                            disabled={reconcilingId === row.id}
+                          >
+                            {reconcilingId === row.id ? "Checking..." : "Reconcile"}
+                          </button>
+                        ) : null}
+                        {!stripeUrl && !canReconcile ? (
+                          <span className={styles.emptyText}>Not available</span>
+                        ) : null}
+                        {rowMessage ? (
+                          <span
+                            className={
+                              rowMessage.includes("reconciled")
+                                ? styles.actionMessage
+                                : styles.actionError
+                            }
+                          >
+                            {rowMessage}
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                   </tr>
                 );

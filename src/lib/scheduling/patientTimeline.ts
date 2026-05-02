@@ -26,7 +26,9 @@ export function patientBookingTimeline(
     {
       key: "payment",
       label: "Payment",
-      description: paymentComplete ? "Payment received" : "Payment not complete",
+      description: paymentComplete
+        ? "Payment received"
+        : "Checkout is not complete. Appointment is not booked yet.",
       state: paymentComplete ? "complete" : "current",
     },
     {
@@ -38,7 +40,7 @@ export function patientBookingTimeline(
           ? "Staff is reviewing this booking"
           : paymentComplete
             ? "Provider booking in progress"
-            : "Starts after payment",
+            : "Starts after payment is complete",
       state: providerBooked
         ? "complete"
         : needsReview
