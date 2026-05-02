@@ -22,7 +22,7 @@ import styles from "./dashboard.module.css";
 
 function formatDate(value: string | null): string {
   if (!value) {
-    return "Not paid";
+    return "-";
   }
   try {
     return new Date(value).toLocaleString(undefined, {
@@ -197,7 +197,7 @@ export function TransactionsPanel() {
                 <th scope="col">Patient</th>
                 <th scope="col">Status</th>
                 <th scope="col">Amount</th>
-                <th scope="col">Paid</th>
+                <th scope="col" className={styles.paidColumn}>Paid</th>
                 <th scope="col">Webhook</th>
                 <th scope="col">Booking</th>
                 <th scope="col">Stripe</th>
@@ -288,7 +288,7 @@ export function TransactionsPanel() {
                       </span>
                     </td>
                     <td>{formatTransactionAmount(row)}</td>
-                    <td>{formatDate(row.paidAt)}</td>
+                    <td className={styles.paidCell}>{formatDate(row.paidAt)}</td>
                     <td>
                       <span
                         className={styles.statusBadge}

@@ -482,6 +482,16 @@
   width: 76px;
 }
 
+.paidColumn,
+.paidCell {
+  min-width: 180px;
+  width: 180px;
+}
+
+.paidCell {
+  white-space: nowrap;
+}
+
 .contextMenu {
   position: relative;
   width: 44px;
