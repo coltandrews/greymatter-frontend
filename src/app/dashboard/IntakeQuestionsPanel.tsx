@@ -2,6 +2,7 @@
 
 import {
   makeQuestionKey,
+  mergePreSignupQuestions,
   optionsToText,
   parseOptionsText,
   questionTypeNeedsOptions,
@@ -44,6 +45,10 @@ const emptyForm: QuestionForm = {
   options: "",
 };
 
+function isPersistedQuestion(question: IntakeQuestion): boolean {
+  return !question.id.startsWith("default-");
+}
+
 function formFromQuestion(question: IntakeQuestion): QuestionForm {
   return {
     prompt: question.prompt,
@@ -78,8 +83,21 @@ export function IntakeQuestionsPanel() {
   const needsOptions = questionTypeNeedsOptions(form.question_type);
 
   const orderedRows = useMemo(
-    () => [...rows].sort((a, b) => a.position - b.position),
+    () => mergePreSignupQuestions(rows, { includeInactive: true }),
     [rows],
+  );
+  const coreRows = orderedRows.filter((row) =>
+    [
+      "legal_first_name",
+      "legal_last_name",
+      "date_of_birth",
+      "gender",
+      "service_state",
+      "for_self",
+    ].includes(row.question_key),
+  );
+  const customRows = orderedRows.filter(
+    (row) => !coreRows.some((core) => core.question_key === row.question_key),
   );
 
   async function loadRows() {
@@ -119,7 +137,7 @@ export function IntakeQuestionsPanel() {
         throw new Error("Question and key are required.");
       }
       const options = needsOptions ? parseOptionsText(form.options) : [];
-      if (needsOptions && options.length === 0) {
+      if (needsOptions && form.question_key !== "service_state" && options.length === 0) {
         throw new Error("Add at least one possible answer.");
       }
 
@@ -275,26 +293,49 @@ export function IntakeQuestionsPanel() {
 
         <div className={styles.questionList}>
           {loading ? <p className={styles.emptyText}>Loading questions...</p> : null}
-          {!loading && orderedRows.length === 0 ? (
-            <p className={styles.emptyText}>No intake questions yet.</p>
-          ) : null}
-          {orderedRows.map((question) => (
-            <button
-              key={question.id}
-              type="button"
-              className={styles.questionRow}
-              onClick={() => {
-                setEditingId(question.id);
-                setForm(formFromQuestion(question));
-              }}
-            >
-              <span>
-                <strong>{question.prompt}</strong>
-                <small>{question.question_type.replace("_", " ")} · {question.question_key}</small>
-              </span>
-              <em>{question.is_active ? "Active" : "Off"}</em>
-            </button>
-          ))}
+          <div className={styles.questionGroup}>
+            <p className={styles.questionGroupTitle}>Core Patient Details</p>
+            {coreRows.map((question) => (
+              <button
+                key={question.id}
+                type="button"
+                className={styles.questionRow}
+                onClick={() => {
+                  setEditingId(isPersistedQuestion(question) ? question.id : null);
+                  setForm(formFromQuestion(question));
+                }}
+              >
+                <span>
+                  <strong>{question.prompt}</strong>
+                  <small>{question.question_type.replace("_", " ")} · {question.question_key}</small>
+                </span>
+                <em>{question.is_active ? "Active" : "Off"}</em>
+              </button>
+            ))}
+          </div>
+          <div className={styles.questionGroup}>
+            <p className={styles.questionGroupTitle}>Additional Questions</p>
+            {customRows.length === 0 ? (
+              <p className={styles.emptyText}>No additional questions yet.</p>
+            ) : null}
+            {customRows.map((question) => (
+              <button
+                key={question.id}
+                type="button"
+                className={styles.questionRow}
+                onClick={() => {
+                  setEditingId(isPersistedQuestion(question) ? question.id : null);
+                  setForm(formFromQuestion(question));
+                }}
+              >
+                <span>
+                  <strong>{question.prompt}</strong>
+                  <small>{question.question_type.replace("_", " ")} · {question.question_key}</small>
+                </span>
+                <em>{question.is_active ? "Active" : "Off"}</em>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </section>

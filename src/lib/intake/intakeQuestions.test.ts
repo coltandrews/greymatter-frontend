@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   intakeAnswerComplete,
+  isCorePreSignupQuestionKey,
   makeQuestionKey,
+  mergePreSignupQuestions,
   normalizeIntakeAnswers,
   parseOptionsText,
 } from "./intakeQuestions";
@@ -53,5 +55,28 @@ describe("intake question helpers", () => {
       symptoms: ["nausea"],
       notes: "Some detail",
     });
+  });
+
+  it("merges configured core questions with default pre-signup questions", () => {
+    const merged = mergePreSignupQuestions([
+      {
+        id: "db-first",
+        question_key: "legal_first_name",
+        prompt: "Legal First Name",
+        help_text: null,
+        question_type: "text",
+        required: true,
+        options: [],
+        position: 10,
+        is_active: true,
+      },
+    ]);
+
+    expect(merged[0]).toMatchObject({
+      id: "db-first",
+      prompt: "Legal First Name",
+    });
+    expect(merged.map((question) => question.question_key)).toContain("for_self");
+    expect(isCorePreSignupQuestionKey("service_state")).toBe(true);
   });
 });

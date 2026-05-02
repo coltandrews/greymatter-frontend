@@ -6,12 +6,12 @@ test("eligible patient completes pre-account intake before account creation", as
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Check eligibility" })).toBeVisible();
-  await page.getByLabel("First name").fill("Pat");
-  await page.getByLabel("Last name").fill("Patient");
-  await page.getByLabel("Date of birth").fill("1990-01-01");
+  await page.getByLabel("First Name").fill("Pat");
+  await page.getByLabel("Last Name").fill("Patient");
+  await page.getByLabel("Date Of Birth").fill("1990-01-01");
   await page.getByLabel("Gender").selectOption("female");
   await page.getByLabel("State").selectOption("SC");
-  await page.getByLabel("I am booking care for myself").check();
+  await page.getByRole("radio", { name: "Yes" }).check();
   await page.getByRole("button", { name: "Create account to continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
@@ -30,11 +30,12 @@ test("eligible patient completes pre-account intake before account creation", as
 test("pre-account intake blocks unsupported booking-for-someone-else flow", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByLabel("First name").fill("Pat");
-  await page.getByLabel("Last name").fill("Patient");
-  await page.getByLabel("Date of birth").fill("1990-01-01");
+  await page.getByLabel("First Name").fill("Pat");
+  await page.getByLabel("Last Name").fill("Patient");
+  await page.getByLabel("Date Of Birth").fill("1990-01-01");
   await page.getByLabel("Gender").selectOption("female");
   await page.getByLabel("State").selectOption("SC");
+  await page.getByRole("radio", { name: "No" }).check();
   await page.getByRole("button", { name: "Create account to continue" }).click();
 
   await expect(

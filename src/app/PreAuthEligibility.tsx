@@ -4,6 +4,8 @@ import { AuthEntry } from "./AuthEntry";
 import { US_STATES } from "./intake/usStates";
 import {
   intakeAnswerComplete,
+  isCorePreSignupQuestionKey,
+  mergePreSignupQuestions,
   normalizeIntakeAnswers,
   type IntakeQuestion,
   type IntakeQuestionAnswer,
@@ -42,15 +44,12 @@ const input = {
   fontSize: 16,
 };
 
-const initial: PreAuthIntakeData = {
-  legal_first_name: "",
-  legal_last_name: "",
-  date_of_birth: "",
-  gender: "",
-  service_state: "",
-  address_state: "",
-  for_self: undefined,
-};
+const genderOptions = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "non_binary", label: "Non-Binary" },
+  { value: "prefer_not", label: "Prefer Not To Say" },
+];
 
 function stringAnswer(value: IntakeQuestionAnswer | undefined): string {
   return typeof value === "string" ? value : "";
@@ -58,6 +57,19 @@ function stringAnswer(value: IntakeQuestionAnswer | undefined): string {
 
 function arrayAnswer(value: IntakeQuestionAnswer | undefined): string[] {
   return Array.isArray(value) ? value : [];
+}
+
+function optionsForQuestion(question: IntakeQuestion) {
+  if (question.question_key === "service_state" && question.options.length === 0) {
+    return US_STATES.map((state) => ({
+      value: state.code,
+      label: state.name,
+    }));
+  }
+  if (question.question_key === "gender" && question.options.length === 0) {
+    return genderOptions;
+  }
+  return question.options;
 }
 
 function QuestionField({
@@ -91,6 +103,7 @@ function QuestionField({
   }
 
   if (question.question_type === "select") {
+    const options = optionsForQuestion(question);
     return (
       <label style={field}>
         {label}
@@ -100,7 +113,7 @@ function QuestionField({
           style={input}
         >
           <option value="">Select...</option>
-          {question.options.map((option) => (
+          {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
@@ -180,8 +193,9 @@ export function PreAuthEligibility() {
   const [step, setStep] = useState<"eligibility" | "account">(
     searchParams.get("signin") ? "account" : "eligibility",
   );
-  const [form, setForm] = useState(initial);
-  const [questions, setQuestions] = useState<IntakeQuestion[]>([]);
+  const [questions, setQuestions] = useState<IntakeQuestion[]>(
+    mergePreSignupQuestions([]),
+  );
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
   const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -204,7 +218,7 @@ export function PreAuthEligibility() {
         setQuestionLoadError(loadError.message);
         return;
       }
-      setQuestions((data ?? []) as IntakeQuestion[]);
+      setQuestions(mergePreSignupQuestions((data ?? []) as IntakeQuestion[]));
     })();
     return () => {
       cancelled = true;
@@ -238,15 +252,13 @@ export function PreAuthEligibility() {
           onSubmit={(event) => {
             event.preventDefault();
             setError(null);
-            const state = form.service_state?.trim() ?? "";
-            if (!form.for_self) {
-              setError("This online flow currently supports patients booking for themselves.");
-              return;
-            }
-            if (!state) {
-              setError("Select the state where you will receive care.");
-              return;
-            }
+            const firstName = stringAnswer(answers.legal_first_name).trim();
+            const lastName = stringAnswer(answers.legal_last_name).trim();
+            const dateOfBirth = stringAnswer(answers.date_of_birth).trim();
+            const gender = stringAnswer(answers.gender).trim();
+            const state = stringAnswer(answers.service_state).trim();
+            const forSelf = stringAnswer(answers.for_self) === "yes";
+
             const unanswered = questions.find(
               (question) => !intakeAnswerComplete(question, answers[question.question_key]),
             );
@@ -254,100 +266,33 @@ export function PreAuthEligibility() {
               setError(`Answer: ${unanswered.prompt}`);
               return;
             }
+            if (!forSelf) {
+              setError("This online flow currently supports patients booking for themselves.");
+              return;
+            }
+            if (!state) {
+              setError("Select the state where you will receive care.");
+              return;
+            }
+            const extraQuestions = questions.filter(
+              (question) => !isCorePreSignupQuestionKey(question.question_key),
+            );
             window.localStorage.setItem(
               PRE_AUTH_INTAKE_STORAGE_KEY,
               serializePreAuthIntake({
-                ...form,
+                legal_first_name: firstName,
+                legal_last_name: lastName,
+                date_of_birth: dateOfBirth,
+                gender,
                 service_state: state,
                 address_state: state,
-                pre_signup_answers: normalizeIntakeAnswers(questions, answers),
+                for_self: true,
+                pre_signup_answers: normalizeIntakeAnswers(extraQuestions, answers),
               }),
             );
             setStep("account");
           }}
         >
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
-            <label style={field}>
-              First name
-              <input
-                required
-                autoComplete="given-name"
-                value={form.legal_first_name}
-                onChange={(e) => setForm((p) => ({ ...p, legal_first_name: e.target.value }))}
-                style={input}
-              />
-            </label>
-            <label style={field}>
-              Last name
-              <input
-                required
-                autoComplete="family-name"
-                value={form.legal_last_name}
-                onChange={(e) => setForm((p) => ({ ...p, legal_last_name: e.target.value }))}
-                style={input}
-              />
-            </label>
-          </div>
-
-          <label style={field}>
-            Date of birth
-            <input
-              required
-              type="date"
-              value={form.date_of_birth}
-              onChange={(e) => setForm((p) => ({ ...p, date_of_birth: e.target.value }))}
-              style={input}
-            />
-          </label>
-
-          <label style={field}>
-            Gender
-            <select
-              required
-              value={form.gender}
-              onChange={(e) => setForm((p) => ({ ...p, gender: e.target.value }))}
-              style={input}
-            >
-              <option value="">Select...</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="non_binary">Non-binary</option>
-              <option value="prefer_not">Prefer not to say</option>
-            </select>
-          </label>
-
-          <label style={field}>
-            State
-            <select
-              required
-              value={form.service_state}
-              onChange={(e) =>
-                setForm((p) => ({
-                  ...p,
-                  service_state: e.target.value,
-                  address_state: e.target.value,
-                }))
-              }
-              style={input}
-            >
-              <option value="">Select state...</option>
-              {US_STATES.map((state) => (
-                <option key={state.code} value={state.code}>
-                  {state.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label style={{ ...field, display: "flex", alignItems: "center", gap: 10 }}>
-            <input
-              type="checkbox"
-              checked={form.for_self === true}
-              onChange={(e) => setForm((p) => ({ ...p, for_self: e.target.checked }))}
-            />
-            I am booking care for myself
-          </label>
-
           {questionLoadError ? (
             <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
               Intake questions could not load: {questionLoadError}

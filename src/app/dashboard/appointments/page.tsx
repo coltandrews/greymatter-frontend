@@ -1,19 +1,8 @@
-import { BookingQueuePanel } from "../BookingQueuePanel";
 import { DashboardShell } from "../DashboardShell";
 import { StaffRecoveryPanel } from "../StaffRecoveryPanel";
+import { SubmissionsPanel } from "../SubmissionsPanel";
 import { requireDashboardAccess } from "../dashboardAccess";
 import styles from "../dashboard.module.css";
-
-function formatWhen(iso: string) {
-  try {
-    return new Date(iso).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return iso;
-  }
-}
 
 export default async function AppointmentsPage() {
   const { role, supabase, user } = await requireDashboardAccess();
@@ -43,50 +32,10 @@ export default async function AppointmentsPage() {
     >
       <div className={styles.appointmentsStack}>
         <section className={styles.workspaceCard}>
-          <BookingQueuePanel />
-        </section>
-
-        <section className={styles.workspaceCard}>
-          <div className={styles.workspaceHeader}>
-            <h2 className={styles.workspaceTitle}>Submissions</h2>
-            <p className={styles.workspaceMeta}>
-              {submissions?.length ?? 0} total
-            </p>
-          </div>
-          {submissionsError ? (
-            <p role="alert" className={styles.inlineError}>
-              {submissionsError.message}
-            </p>
-          ) : null}
-          {!submissionsError && submissions && submissions.length > 0 ? (
-            <div className={styles.tableWrap}>
-              <table className={styles.adminTable}>
-                <thead>
-                  <tr>
-                    <th>Patient User ID</th>
-                    <th>Status</th>
-                    <th>Updated</th>
-                    <th>Created</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.map((submission) => (
-                    <tr key={submission.id}>
-                      <td className={styles.monoCell} title={submission.user_id}>
-                        {submission.user_id}
-                      </td>
-                      <td>{submission.status.replace("_", " ")}</td>
-                      <td>{formatWhen(submission.updated_at)}</td>
-                      <td>{formatWhen(submission.created_at)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-          {!submissionsError && (!submissions || submissions.length === 0) ? (
-            <p className={styles.emptyText}>No submissions yet.</p>
-          ) : null}
+          <SubmissionsPanel
+            initialSubmissions={submissions ?? []}
+            submissionsError={submissionsError?.message ?? null}
+          />
         </section>
 
         <section className={styles.workspaceCard}>
