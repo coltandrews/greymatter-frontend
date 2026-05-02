@@ -14,11 +14,17 @@ import {
   transactionPatientLabel,
   transactionReceiptFileName,
   transactionStatusView,
-  transactionWebhookStatusView,
 } from "@/lib/dashboard/transactions";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import styles from "./dashboard.module.css";
+
+type ActionMenuState = {
+  id: string;
+  top: number;
+  left: number;
+};
 
 function formatDate(value: string | null): string {
   if (!value) {
@@ -34,6 +40,14 @@ function formatDate(value: string | null): string {
   }
 }
 
+function patientProfileHref(row: TransactionRow): string {
+  const search = new URLSearchParams({
+    patient: row.userId,
+    q: row.patientEmail ?? row.userId,
+  });
+  return `/dashboard/patients?${search.toString()}`;
+}
+
 async function readBackendMessage(res: Response): Promise<string> {
   const body = await res.json().catch(() => null) as { message?: unknown } | null;
   return typeof body?.message === "string" && body.message.trim()
@@ -47,7 +61,7 @@ export function TransactionsPanel() {
   const [error, setError] = useState<string | null>(null);
   const [reconcilingId, setReconcilingId] = useState<string | null>(null);
   const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
-  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
+  const [openActionMenu, setOpenActionMenu] = useState<ActionMenuState | null>(null);
   const [rowMessageById, setRowMessageById] = useState<Record<string, string>>({});
 
   async function loadTransactions() {
@@ -81,7 +95,7 @@ export function TransactionsPanel() {
   }, []);
 
   async function reconcileStripe(row: TransactionRow) {
-    setOpenActionMenuId(null);
+    setOpenActionMenu(null);
     setReconcilingId(row.id);
     setRowMessageById((messages) => ({ ...messages, [row.id]: "" }));
     try {
@@ -114,7 +128,7 @@ export function TransactionsPanel() {
   }
 
   async function downloadReceipt(row: TransactionRow) {
-    setOpenActionMenuId(null);
+    setOpenActionMenu(null);
     setDownloadingReceiptId(row.id);
     setRowMessageById((messages) => ({ ...messages, [row.id]: "" }));
     try {
@@ -153,6 +167,21 @@ export function TransactionsPanel() {
     } finally {
       setDownloadingReceiptId(null);
     }
+  }
+
+  function toggleActionMenu(row: TransactionRow, button: HTMLButtonElement) {
+    setOpenActionMenu((current) => {
+      if (current?.id === row.id) {
+        return null;
+      }
+
+      const rect = button.getBoundingClientRect();
+      return {
+        id: row.id,
+        top: rect.bottom + 6,
+        left: Math.max(12, Math.min(rect.left, window.innerWidth - 190)),
+      };
+    });
   }
 
   return (
@@ -198,15 +227,11 @@ export function TransactionsPanel() {
                 <th scope="col">Status</th>
                 <th scope="col">Amount</th>
                 <th scope="col" className={styles.paidColumn}>Paid</th>
-                <th scope="col">Webhook</th>
-                <th scope="col">Booking</th>
-                <th scope="col">Stripe</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => {
                 const status = transactionStatusView(row.paymentStatus);
-                const webhookStatus = transactionWebhookStatusView(row);
                 const stripeUrl = stripeDashboardUrl(row);
                 const canReconcile = canReconcileStripeTransaction(row);
                 const rowMessage = rowMessageById[row.id];
@@ -219,16 +244,23 @@ export function TransactionsPanel() {
                           type="button"
                           className={styles.contextMenuButton}
                           aria-haspopup="menu"
-                          aria-expanded={openActionMenuId === row.id}
+                          aria-expanded={openActionMenu?.id === row.id}
                           aria-label={`Open actions for ${transactionPatientLabel(row)}`}
-                          onClick={() => {
-                            setOpenActionMenuId((current) => current === row.id ? null : row.id);
+                          onClick={(event) => {
+                            toggleActionMenu(row, event.currentTarget);
                           }}
                         >
                           ...
                         </button>
-                        {openActionMenuId === row.id ? (
-                          <div className={styles.contextMenuPanel} role="menu">
+                        {openActionMenu?.id === row.id ? (
+                          <div
+                            className={styles.contextMenuPanel}
+                            role="menu"
+                            style={{
+                              top: openActionMenu.top,
+                              left: openActionMenu.left,
+                            }}
+                          >
                             {stripeUrl ? (
                               <a
                                 role="menuitem"
@@ -237,7 +269,7 @@ export function TransactionsPanel() {
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={() => {
-                                  setOpenActionMenuId(null);
+                                  setOpenActionMenu(null);
                                 }}
                               >
                                 View In Stripe
@@ -276,39 +308,10 @@ export function TransactionsPanel() {
                     </td>
                     <td>
                       <strong className={styles.tableStrong}>
-                        {transactionPatientLabel(row)}
+                        <Link className={styles.patientLink} href={patientProfileHref(row)}>
+                          {transactionPatientLabel(row)}
+                        </Link>
                       </strong>
-                    </td>
-                    <td>
-                      <span
-                        className={styles.statusBadge}
-                        style={{ background: status.background, color: status.color }}
-                      >
-                        {status.label}
-                      </span>
-                    </td>
-                    <td>{formatTransactionAmount(row)}</td>
-                    <td className={styles.paidCell}>{formatDate(row.paidAt)}</td>
-                    <td>
-                      <span
-                        className={styles.statusBadge}
-                        style={{ background: webhookStatus.background, color: webhookStatus.color }}
-                      >
-                        {webhookStatus.label}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={styles.monoCell} title={row.id}>
-                        {row.id}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className={styles.monoCell}
-                        title={row.stripeCheckoutSessionId ?? row.stripePaymentIntentId ?? "No Stripe ID"}
-                      >
-                        {row.stripeCheckoutSessionId ?? row.stripePaymentIntentId ?? "No Stripe ID"}
-                      </span>
                       {rowMessage ? (
                         <span
                           className={
@@ -321,6 +324,16 @@ export function TransactionsPanel() {
                         </span>
                       ) : null}
                     </td>
+                    <td>
+                      <span
+                        className={styles.statusBadge}
+                        style={{ background: status.background, color: status.color }}
+                      >
+                        {status.label}
+                      </span>
+                    </td>
+                    <td>{formatTransactionAmount(row)}</td>
+                    <td className={styles.paidCell}>{formatDate(row.paidAt)}</td>
                   </tr>
                 );
               })}

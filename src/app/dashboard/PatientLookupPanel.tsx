@@ -17,7 +17,7 @@ import {
   patientLookupSummary,
 } from "@/lib/dashboard/patientLookup";
 import { createClient } from "@/lib/supabase/client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AuditTrailPanel } from "./AuditTrailPanel";
 
 async function readBackendMessage(res: Response): Promise<string> {
@@ -272,7 +272,13 @@ function PatientProfile({
   );
 }
 
-export function PatientLookupPanel() {
+export function PatientLookupPanel({
+  initialPatientId = null,
+  initialQuery = "",
+}: {
+  initialPatientId?: string | null;
+  initialQuery?: string;
+}) {
   const [query, setQuery] = useState("");
   const [patients, setPatients] = useState<PatientLookupPatient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<PatientLookupPatient | null>(null);
@@ -280,13 +286,17 @@ export function PatientLookupPanel() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function search() {
-    const trimmed = query.trim();
+  async function search(
+    searchValue = query,
+    options: { selectPatientId?: string | null } = {},
+  ) {
+    const trimmed = searchValue.trim();
     if (trimmed.length < 2 || loading) {
       setError("Enter at least 2 characters.");
       return;
     }
 
+    setQuery(trimmed);
     setLoading(true);
     setError(null);
     setSearched(true);
@@ -306,7 +316,13 @@ export function PatientLookupPanel() {
         throw new Error(await readBackendMessage(response));
       }
       const payload = await response.json() as PatientLookupResponse;
-      setPatients(payload.patients ?? []);
+      const nextPatients = payload.patients ?? [];
+      setPatients(nextPatients);
+      if (options.selectPatientId) {
+        setSelectedPatient(
+          nextPatients.find((patient) => patient.userId === options.selectPatientId) ?? null,
+        );
+      }
     } catch (err) {
       setPatients([]);
       setError(err instanceof Error ? err.message : "Could not search patients.");
@@ -314,6 +330,16 @@ export function PatientLookupPanel() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (initialQuery.trim().length < 2) {
+      return;
+    }
+
+    void search(initialQuery, {
+      selectPatientId: initialPatientId,
+    });
+  }, [initialPatientId, initialQuery]);
 
   if (selectedPatient) {
     return (
