@@ -2,9 +2,7 @@ export type DashboardRole = "staff" | "admin";
 export type DashboardPageKey =
   | "overview"
   | "patients"
-  | "booking-queue"
-  | "submissions"
-  | "booking-issues"
+  | "appointments"
   | "app-health";
 
 export type DashboardNavItem = {
@@ -16,9 +14,7 @@ export type DashboardNavItem = {
 const dashboardSections = [
   { key: "overview", label: "Overview", href: "/dashboard" },
   { key: "patients", label: "Patients", href: "/dashboard/patients" },
-  { key: "booking-queue", label: "Booking Queue", href: "/dashboard/booking-queue" },
-  { key: "submissions", label: "Submissions", href: "/dashboard/submissions" },
-  { key: "booking-issues", label: "Booking Issues", href: "/dashboard/booking-issues" },
+  { key: "appointments", label: "Appointments", href: "/dashboard/appointments" },
 ] as const;
 
 export function dashboardNavItems(

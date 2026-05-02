@@ -81,7 +81,7 @@ export function BookingQueuePanel() {
       >
         <div>
           <h2 id="booking-queue-title" style={{ margin: "0 0 6px", fontSize: 18 }}>
-            Booking Queue
+            Queue
           </h2>
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
             {loading ? "Loading booking requests..." : `${rows.length} active request${rows.length === 1 ? "" : "s"}`}

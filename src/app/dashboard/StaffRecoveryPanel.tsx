@@ -108,7 +108,7 @@ export function StaffRecoveryPanel({
   }
 
   return (
-    <section style={{ marginTop: 28, paddingTop: 24, borderTop: "1px solid #e5ebf5" }}>
+    <section style={{ margin: 0 }}>
       <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Bookings that need help</h2>
       <p style={{ margin: "0 0 16px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
         Paid bookings that need staff review before provider confirmation.

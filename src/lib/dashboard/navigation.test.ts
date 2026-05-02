@@ -11,8 +11,16 @@ describe("dashboardNavItems", () => {
     expect(dashboardNavItems("admin", "overview").slice(0, 3)).toEqual([
       { label: "Overview", href: "/dashboard", active: true },
       { label: "Patients", href: "/dashboard/patients", active: false },
-      { label: "Booking Queue", href: "/dashboard/booking-queue", active: false },
+      { label: "Appointments", href: "/dashboard/appointments", active: false },
     ]);
+  });
+
+  it("marks appointments active", () => {
+    expect(dashboardNavItems("staff", "appointments")).toContainEqual({
+      label: "Appointments",
+      href: "/dashboard/appointments",
+      active: true,
+    });
   });
 
   it("shows app health to admins", () => {
