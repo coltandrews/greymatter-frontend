@@ -424,6 +424,12 @@
   margin-bottom: 16px;
 }
 
+.workspaceHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .workspaceTitle {
   margin: 0;
   font-size: 18px;
@@ -567,6 +573,78 @@
   align-content: start;
 }
 
+.questionList {
+  max-height: 680px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.pageTabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.pageTab {
+  min-width: 88px;
+  min-height: 46px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pageTab small {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pageTab:hover {
+  border-color: #172033;
+}
+
+.pageTabActive {
+  border-color: #172033;
+  background: #172033;
+  color: #ffffff;
+}
+
+.pageTabActive small {
+  color: #cbd5e1;
+}
+
+.questionListHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5ebf5;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.questionListHeader span {
+  color: #172033;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.questionListHeader small {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .questionGroup {
   display: grid;
   gap: 8px;
@@ -677,6 +755,11 @@
   cursor: pointer;
 }
 
+.questionRow:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
 .questionRow strong,
 .questionRow small {
   display: block;
@@ -694,7 +777,26 @@
   text-transform: capitalize;
 }
 
-.questionRow em {
+.questionRowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.questionRowActions select {
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.questionRowActions em {
   flex-shrink: 0;
   font-style: normal;
   padding: 4px 8px;

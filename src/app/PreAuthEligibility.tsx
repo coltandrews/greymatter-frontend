@@ -44,6 +44,55 @@ const input = {
   fontSize: 16,
 };
 
+const optionGrid = {
+  display: "grid" as const,
+  gap: 10,
+  marginTop: 2,
+};
+
+const optionCard = {
+  position: "relative" as const,
+  minHeight: 46,
+  display: "flex" as const,
+  alignItems: "center",
+  gap: 10,
+  padding: "11px 12px",
+  borderRadius: 12,
+  border: "1px solid #dbe3ef",
+  background: "#fff",
+  color: "#172033",
+  fontSize: 14,
+  fontWeight: 700,
+  cursor: "pointer",
+};
+
+const selectedOptionCard = {
+  borderColor: "#172033",
+  background: "#f8fafc",
+  boxShadow: "0 6px 18px rgba(23, 32, 51, 0.08)",
+};
+
+const optionMark = {
+  width: 20,
+  height: 20,
+  display: "inline-grid" as const,
+  placeItems: "center",
+  flexShrink: 0,
+  borderRadius: 999,
+  border: "1px solid #cbd5e1",
+  background: "#fff",
+  color: "#fff",
+  fontSize: 12,
+  fontWeight: 900,
+};
+
+const selectedOptionMark = {
+  borderColor: "#172033",
+  background: "#172033",
+};
+
+const pageSize = 1000;
+
 const genderOptions = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
@@ -70,6 +119,21 @@ function optionsForQuestion(question: IntakeQuestion) {
     return genderOptions;
   }
   return question.options;
+}
+
+function pageForPosition(position: number): number {
+  return Math.max(1, Math.floor(Math.max(position, 0) / pageSize) + 1);
+}
+
+function groupQuestionsByPage(questions: IntakeQuestion[]): IntakeQuestion[][] {
+  const groups = new Map<number, IntakeQuestion[]>();
+  questions.forEach((question) => {
+    const page = pageForPosition(question.position);
+    groups.set(page, [...(groups.get(page) ?? []), question]);
+  });
+  return [...groups.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, pageQuestions]) => pageQuestions);
 }
 
 function QuestionField({
@@ -127,49 +191,80 @@ function QuestionField({
   if (question.question_type === "multi_select") {
     const selected = arrayAnswer(answer);
     return (
-      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 10, padding: 12 }}>
-        <legend style={{ padding: "0 4px" }}>{label}</legend>
+      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 14, padding: 14, background: "#ffffff" }}>
+        <legend style={{ padding: "0 4px", fontWeight: 800 }}>{label}</legend>
         {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
-        {question.options.map((option) => (
-          <label key={option.value} style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 500 }}>
-            <input
-              type="checkbox"
-              checked={selected.includes(option.value)}
-              onChange={(e) => {
-                onChange(
-                  e.target.checked
-                    ? [...selected, option.value]
-                    : selected.filter((item) => item !== option.value),
-                );
-              }}
-            />
-            {option.label}
-          </label>
-        ))}
+        <div style={optionGrid}>
+          {question.options.map((option) => {
+            const checked = selected.includes(option.value);
+            return (
+              <label
+                key={option.value}
+                style={{
+                  ...optionCard,
+                  ...(checked ? selectedOptionCard : {}),
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(e) => {
+                    onChange(
+                      e.target.checked
+                        ? [...selected, option.value]
+                        : selected.filter((item) => item !== option.value),
+                    );
+                  }}
+                  style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
+                />
+                <span style={{ ...optionMark, ...(checked ? selectedOptionMark : {}) }}>
+                  {checked ? "✓" : ""}
+                </span>
+                <span>{option.label}</span>
+              </label>
+            );
+          })}
+        </div>
       </fieldset>
     );
   }
 
   if (question.question_type === "yes_no") {
     return (
-      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 10, padding: 12 }}>
-        <legend style={{ padding: "0 4px" }}>{label}</legend>
+      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 14, padding: 14, background: "#ffffff" }}>
+        <legend style={{ padding: "0 4px", fontWeight: 800 }}>{label}</legend>
         {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
-        {[
-          ["yes", "Yes"],
-          ["no", "No"],
-        ].map(([value, text]) => (
-          <label key={value} style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 500 }}>
-            <input
-              type="radio"
-              name={question.question_key}
-              value={value}
-              checked={answer === value}
-              onChange={() => onChange(value)}
-            />
-            {text}
-          </label>
-        ))}
+        <div style={{ ...optionGrid, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+          {[
+            ["yes", "Yes"],
+            ["no", "No"],
+          ].map(([value, text]) => {
+            const checked = answer === value;
+            return (
+              <label
+                key={value}
+                style={{
+                  ...optionCard,
+                  justifyContent: "center",
+                  ...(checked ? selectedOptionCard : {}),
+                }}
+              >
+                <input
+                  type="radio"
+                  name={question.question_key}
+                  value={value}
+                  checked={checked}
+                  onChange={() => onChange(value)}
+                  style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
+                />
+                <span style={{ ...optionMark, ...(checked ? selectedOptionMark : {}) }}>
+                  {checked ? "✓" : ""}
+                </span>
+                <span>{text}</span>
+              </label>
+            );
+          })}
+        </div>
       </fieldset>
     );
   }
@@ -197,8 +292,12 @@ export function PreAuthEligibility() {
     mergePreSignupQuestions([]),
   );
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
+  const [intakePageIndex, setIntakePageIndex] = useState(0);
   const [questionLoadError, setQuestionLoadError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const questionPages = groupQuestionsByPage(questions);
+  const currentQuestions = questionPages[intakePageIndex] ?? questionPages[0] ?? [];
+  const hasNextQuestionPage = intakePageIndex < questionPages.length - 1;
 
   useEffect(() => {
     let cancelled = false;
@@ -219,6 +318,7 @@ export function PreAuthEligibility() {
         return;
       }
       setQuestions(mergePreSignupQuestions((data ?? []) as IntakeQuestion[]));
+      setIntakePageIndex(0);
     })();
     return () => {
       cancelled = true;
@@ -252,6 +352,18 @@ export function PreAuthEligibility() {
           onSubmit={(event) => {
             event.preventDefault();
             setError(null);
+            const unanswered = currentQuestions.find(
+              (question) => !intakeAnswerComplete(question, answers[question.question_key]),
+            );
+            if (unanswered) {
+              setError(`Answer: ${unanswered.prompt}`);
+              return;
+            }
+            if (hasNextQuestionPage) {
+              setIntakePageIndex((current) => current + 1);
+              return;
+            }
+
             const firstName = stringAnswer(answers.legal_first_name).trim();
             const lastName = stringAnswer(answers.legal_last_name).trim();
             const dateOfBirth = stringAnswer(answers.date_of_birth).trim();
@@ -259,11 +371,11 @@ export function PreAuthEligibility() {
             const state = stringAnswer(answers.service_state).trim();
             const forSelf = stringAnswer(answers.for_self) === "yes";
 
-            const unanswered = questions.find(
+            const unansweredAnyPage = questions.find(
               (question) => !intakeAnswerComplete(question, answers[question.question_key]),
             );
-            if (unanswered) {
-              setError(`Answer: ${unanswered.prompt}`);
+            if (unansweredAnyPage) {
+              setError(`Answer: ${unansweredAnyPage.prompt}`);
               return;
             }
             if (!forSelf) {
@@ -299,7 +411,13 @@ export function PreAuthEligibility() {
             </p>
           ) : null}
 
-          {questions.map((question) => (
+          {questionPages.length > 1 ? (
+            <p style={{ margin: "-4px 0 2px", color: "#64748b", fontSize: 13, fontWeight: 700 }}>
+              Step {intakePageIndex + 1} of {questionPages.length}
+            </p>
+          ) : null}
+
+          {currentQuestions.map((question) => (
             <QuestionField
               key={question.id}
               question={question}
@@ -333,8 +451,28 @@ export function PreAuthEligibility() {
               cursor: "pointer",
             }}
           >
-            Create account to continue
+            {hasNextQuestionPage ? "Next step" : "Create account to continue"}
           </button>
+          {intakePageIndex > 0 ? (
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setIntakePageIndex((current) => Math.max(0, current - 1));
+              }}
+              style={{
+                padding: 0,
+                border: "none",
+                background: "transparent",
+                color: "#2563eb",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Back to previous step
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={() => setStep("account")}

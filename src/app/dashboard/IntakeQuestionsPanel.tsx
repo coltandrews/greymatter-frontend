@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./dashboard.module.css";
 
+const pageSize = 1000;
+const pageStep = 10;
 const questionTypes: { value: IntakeQuestionType; label: string }[] = [
   { value: "text", label: "Short Text" },
   { value: "textarea", label: "Long Text" },
@@ -62,6 +64,25 @@ function formFromQuestion(question: IntakeQuestion): QuestionForm {
   };
 }
 
+function pageForPosition(position: number): number {
+  return Math.max(1, Math.floor(Math.max(position, 0) / pageSize) + 1);
+}
+
+function positionInPage(position: number): number {
+  const normalized = Math.max(position, 0);
+  const remainder = normalized % pageSize;
+  return remainder === 0 ? pageStep : remainder;
+}
+
+function nextPositionForPage(rows: IntakeQuestion[], page: number): number {
+  const pageRows = rows.filter((row) => pageForPosition(row.position) === page);
+  const maxInPage = pageRows.reduce(
+    (max, row) => Math.max(max, positionInPage(row.position)),
+    0,
+  );
+  return (page - 1) * pageSize + maxInPage + pageStep;
+}
+
 async function readMessage(res: unknown): Promise<string> {
   if (res && typeof res === "object" && "message" in res) {
     const message = (res as { message?: unknown }).message;
@@ -76,6 +97,9 @@ export function IntakeQuestionsPanel() {
   const [rows, setRows] = useState<IntakeQuestion[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<QuestionForm>(emptyForm);
+  const [selectedPage, setSelectedPage] = useState(1);
+  const [manualPageCount, setManualPageCount] = useState(1);
+  const [draggingQuestionId, setDraggingQuestionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,8 +120,18 @@ export function IntakeQuestionsPanel() {
       "for_self",
     ].includes(row.question_key),
   );
-  const customRows = orderedRows.filter(
-    (row) => !coreRows.some((core) => core.question_key === row.question_key),
+  const maxQuestionPage = orderedRows.reduce(
+    (max, row) => Math.max(max, pageForPosition(row.position)),
+    1,
+  );
+  const pageCount = Math.max(manualPageCount, maxQuestionPage);
+  const pages = Array.from({ length: pageCount }, (_, index) => index + 1);
+  const activeRows = orderedRows.filter((row) => pageForPosition(row.position) === selectedPage);
+  const selectedPageRows = activeRows.filter((row) =>
+    coreRows.some((core) => core.question_key === row.question_key),
+  );
+  const selectedCustomRows = activeRows.filter(
+    (row) => !selectedPageRows.some((core) => core.question_key === row.question_key),
   );
 
   async function loadRows() {
@@ -124,6 +158,61 @@ export function IntakeQuestionsPanel() {
 
   function updateForm(update: Partial<QuestionForm>) {
     setForm((current) => ({ ...current, ...update }));
+  }
+
+  function editQuestion(question: IntakeQuestion) {
+    setSelectedPage(pageForPosition(question.position));
+    setEditingId(isPersistedQuestion(question) ? question.id : null);
+    setForm(formFromQuestion(question));
+  }
+
+  async function moveQuestionToPage(question: IntakeQuestion, page: number) {
+    const position = nextPositionForPage(orderedRows, page);
+    const payload = {
+      audience: "pre_signup",
+      question_key: question.question_key,
+      prompt: question.prompt,
+      help_text: question.help_text,
+      question_type: question.question_type,
+      required: question.required,
+      is_active: question.is_active,
+      position,
+      options: question.options,
+    };
+
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const supabase = createClient();
+      const result = isPersistedQuestion(question)
+        ? await supabase.from("intake_questions").update({ position }).eq("id", question.id)
+        : await supabase.from("intake_questions").insert(payload);
+
+      if (result.error) {
+        throw new Error(await readMessage(result.error));
+      }
+
+      setSelectedPage(page);
+      setMessage(`Moved to page ${page}.`);
+      await loadRows();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not move intake question.");
+    } finally {
+      setDraggingQuestionId(null);
+      setSaving(false);
+    }
+  }
+
+  function addPage() {
+    const nextPage = pageCount + 1;
+    setManualPageCount(nextPage);
+    setSelectedPage(nextPage);
+    setForm({
+      ...emptyForm,
+      position: String((nextPage - 1) * pageSize + pageStep),
+    });
+    setEditingId(null);
   }
 
   async function saveQuestion() {
@@ -182,9 +271,14 @@ export function IntakeQuestionsPanel() {
           </h2>
           <p className={styles.compactText}>Pre-signup questions shown before account creation.</p>
         </div>
-        <p className={styles.workspaceMeta}>
-          {orderedRows.filter((row) => row.is_active).length} active
-        </p>
+        <div className={styles.workspaceHeaderActions}>
+          <p className={styles.workspaceMeta}>
+            {orderedRows.filter((row) => row.is_active).length} active
+          </p>
+          <button type="button" className={styles.smallAction} onClick={addPage}>
+            Add Page
+          </button>
+        </div>
       </div>
 
       {error ? <p className={styles.inlineError}>{error}</p> : null}
@@ -192,6 +286,33 @@ export function IntakeQuestionsPanel() {
 
       <div className={styles.questionBuilder}>
         <div className={styles.questionForm}>
+          <div className={styles.pageTabs} aria-label="Intake question pages">
+            {pages.map((page) => (
+              <button
+                key={page}
+                type="button"
+                className={`${styles.pageTab} ${page === selectedPage ? styles.pageTabActive : ""}`}
+                onClick={() => {
+                  setSelectedPage(page);
+                  if (!editingId) {
+                    updateForm({ position: String(nextPositionForPage(orderedRows, page)) });
+                  }
+                }}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const questionId = event.dataTransfer.getData("text/plain") || draggingQuestionId;
+                  const question = orderedRows.find((row) => row.id === questionId);
+                  if (question) {
+                    void moveQuestionToPage(question, page);
+                  }
+                }}
+              >
+                Page {page}
+                <small>{orderedRows.filter((row) => pageForPosition(row.position) === page).length}</small>
+              </button>
+            ))}
+          </div>
           <label className={styles.adminField}>
             Question
             <input
@@ -296,47 +417,102 @@ export function IntakeQuestionsPanel() {
 
         <div className={styles.questionList}>
           {loading ? <p className={styles.emptyText}>Loading questions...</p> : null}
+          <div className={styles.questionListHeader}>
+            <span>Page {selectedPage}</span>
+            <small>Drag questions onto another page tab or use Move.</small>
+          </div>
           <div className={styles.questionGroup}>
             <p className={styles.questionGroupTitle}>Core Patient Details</p>
-            {coreRows.map((question) => (
-              <button
+            {selectedPageRows.length === 0 ? (
+              <p className={styles.emptyText}>No core questions on this page.</p>
+            ) : null}
+            {selectedPageRows.map((question) => (
+              <div
                 key={question.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 className={styles.questionRow}
-                onClick={() => {
-                  setEditingId(isPersistedQuestion(question) ? question.id : null);
-                  setForm(formFromQuestion(question));
+                draggable
+                onDragStart={(event) => {
+                  setDraggingQuestionId(question.id);
+                  event.dataTransfer.setData("text/plain", question.id);
+                  event.dataTransfer.effectAllowed = "move";
                 }}
+                onDragEnd={() => setDraggingQuestionId(null)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    editQuestion(question);
+                  }
+                }}
+                onClick={() => editQuestion(question)}
               >
                 <span>
                   <strong>{question.prompt}</strong>
                   <small>{question.question_type.replace("_", " ")} · {question.question_key}</small>
                 </span>
-                <em>{question.is_active ? "Active" : "Off"}</em>
-              </button>
+                <span className={styles.questionRowActions}>
+                  <select
+                    value={pageForPosition(question.position)}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => void moveQuestionToPage(question, Number(event.target.value))}
+                  >
+                    {pages.map((page) => (
+                      <option key={page} value={page}>
+                        Page {page}
+                      </option>
+                    ))}
+                  </select>
+                  <em>{question.is_active ? "Active" : "Off"}</em>
+                </span>
+              </div>
             ))}
           </div>
           <div className={styles.questionGroup}>
             <p className={styles.questionGroupTitle}>Additional Questions</p>
-            {customRows.length === 0 ? (
-              <p className={styles.emptyText}>No additional questions yet.</p>
+            {selectedCustomRows.length === 0 ? (
+              <p className={styles.emptyText}>No additional questions on this page.</p>
             ) : null}
-            {customRows.map((question) => (
-              <button
+            {selectedCustomRows.map((question) => (
+              <div
                 key={question.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 className={styles.questionRow}
-                onClick={() => {
-                  setEditingId(isPersistedQuestion(question) ? question.id : null);
-                  setForm(formFromQuestion(question));
+                draggable
+                onDragStart={(event) => {
+                  setDraggingQuestionId(question.id);
+                  event.dataTransfer.setData("text/plain", question.id);
+                  event.dataTransfer.effectAllowed = "move";
                 }}
+                onDragEnd={() => setDraggingQuestionId(null)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    editQuestion(question);
+                  }
+                }}
+                onClick={() => editQuestion(question)}
               >
                 <span>
                   <strong>{question.prompt}</strong>
                   <small>{question.question_type.replace("_", " ")} · {question.question_key}</small>
                 </span>
-                <em>{question.is_active ? "Active" : "Off"}</em>
-              </button>
+                <span className={styles.questionRowActions}>
+                  <select
+                    value={pageForPosition(question.position)}
+                    onClick={(event) => event.stopPropagation()}
+                    onChange={(event) => void moveQuestionToPage(question, Number(event.target.value))}
+                  >
+                    {pages.map((page) => (
+                      <option key={page} value={page}>
+                        Page {page}
+                      </option>
+                    ))}
+                  </select>
+                  <em>{question.is_active ? "Active" : "Off"}</em>
+                </span>
+              </div>
             ))}
           </div>
         </div>
