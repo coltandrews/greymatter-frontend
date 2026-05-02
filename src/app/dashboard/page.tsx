@@ -9,6 +9,8 @@ import styles from "./dashboard.module.css";
 type BookingIntentOverviewRow = {
   id: string;
   user_id: string;
+  amount_cents: number | null;
+  currency: string | null;
   payment_status: string | null;
   booking_status: string | null;
   ola_status: string | null;
@@ -37,6 +39,21 @@ type StatusTone = "ok" | "pending" | "warning" | "neutral";
 
 function formatCountLabel(count: number, singular: string, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function formatCurrencyCents(amountCents: number, currency: string | null) {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: currency || "usd",
+  }).format(amountCents / 100);
+}
+
+function sumAmountCents(rows: BookingIntentOverviewRow[]) {
+  return rows.reduce((sum, row) => sum + (typeof row.amount_cents === "number" ? row.amount_cents : 0), 0);
+}
+
+function primaryCurrency(rows: BookingIntentOverviewRow[]) {
+  return rows.find((row) => row.currency?.trim())?.currency ?? "usd";
 }
 
 function formatStatus(value: string | null) {
@@ -130,7 +147,7 @@ export default async function DashboardPage() {
   ] = await Promise.all([
     supabase
       .from("booking_intents")
-      .select("id, user_id, payment_status, booking_status, ola_status, service_state, stripe_checkout_session_id, failure_reason, created_at, updated_at")
+      .select("id, user_id, amount_cents, currency, payment_status, booking_status, ola_status, service_state, stripe_checkout_session_id, failure_reason, created_at, updated_at")
       .neq("booking_status", "draft")
       .order("updated_at", { ascending: false }),
     supabase
@@ -150,6 +167,9 @@ export default async function DashboardPage() {
   const submissions = (submissionRows ?? []) as SubmissionOverviewRow[];
   const operationsSummary = bookingOperationsSummary(bookings);
   const transactions = bookings.filter(isTransaction);
+  const paidTransactions = transactions.filter((row) => row.payment_status === "paid");
+  const pendingTransactions = transactions.filter((row) => row.payment_status === "pending");
+  const transactionCurrency = primaryCurrency(transactions);
   const failedTransactions = transactions.filter((row) => row.payment_status === "failed").length;
   const openBookings = operationsSummary.paymentPending + operationsSummary.olaPending + operationsSummary.needsReview;
   const warningItems = [
@@ -167,13 +187,23 @@ export default async function DashboardPage() {
       : null,
   ].filter((item): item is string => Boolean(item));
 
-  const statusCards = [
+  const bookingStatusRows = [
     { label: "Open bookings", value: openBookings, tone: "pending" as const },
     { label: "Needs review", value: operationsSummary.needsReview, tone: "warning" as const },
     { label: "Booked", value: operationsSummary.booked, tone: "ok" as const },
+  ];
+  const paymentStatusRows = [
     { label: "Transactions", value: transactions.length, tone: "neutral" as const },
-    { label: "Appointments", value: appointmentCount ?? appointments.length, tone: "neutral" as const },
-    { label: "Submissions", value: submissionCount ?? submissions.length, tone: "neutral" as const },
+    {
+      label: "Paid total",
+      value: formatCurrencyCents(sumAmountCents(paidTransactions), transactionCurrency),
+      tone: "ok" as const,
+    },
+    {
+      label: "Pending total",
+      value: formatCurrencyCents(sumAmountCents(pendingTransactions), transactionCurrency),
+      tone: "pending" as const,
+    },
   ];
 
   const dataError = bookingsError?.message ?? appointmentsError?.message ?? submissionsError?.message ?? null;
@@ -208,16 +238,36 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className={styles.overviewStatusGrid}>
-            {statusCards.map((card) => (
-              <div key={card.label} className={styles.overviewStatusCard}>
-                <p className={styles.overviewStatusLabel}>{card.label}</p>
-                <p className={styles.overviewStatusValue}>{card.value}</p>
-                <span className={`${styles.overviewBadge} ${statusClass(card.tone)}`}>
-                  {card.tone}
-                </span>
-              </div>
-            ))}
+          <div className={styles.overviewStatusSections}>
+            <div className={styles.overviewStatusSection}>
+              <p className={styles.overviewMiniTitle}>Booking operations</p>
+              <ul className={styles.overviewStatRows}>
+                {bookingStatusRows.map((row) => (
+                  <li key={row.label} className={styles.overviewStatRow}>
+                    <span className={styles.overviewStatusLabel}>{row.label}</span>
+                    <strong className={styles.overviewStatRowValue}>{row.value}</strong>
+                    <span className={`${styles.overviewBadge} ${statusClass(row.tone)}`}>
+                      {row.tone}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className={styles.overviewStatusSection}>
+              <p className={styles.overviewMiniTitle}>Payments</p>
+              <ul className={styles.overviewStatRows}>
+                {paymentStatusRows.map((row) => (
+                  <li key={row.label} className={styles.overviewStatRow}>
+                    <span className={styles.overviewStatusLabel}>{row.label}</span>
+                    <strong className={styles.overviewStatRowValue}>{row.value}</strong>
+                    <span className={`${styles.overviewBadge} ${statusClass(row.tone)}`}>
+                      {row.tone}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </section>
 

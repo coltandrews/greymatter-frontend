@@ -291,6 +291,7 @@ export function PatientLookupPanel() {
     setError(null);
     setSearched(true);
     setSelectedPatient(null);
+    setPatients([]);
     try {
       const supabase = createClient();
       const {
@@ -327,75 +328,117 @@ export function PatientLookupPanel() {
 
   return (
     <section style={{ margin: "0 0 28px" }} aria-labelledby="patient-lookup-title">
-      <h2 id="patient-lookup-title" style={{ margin: "0 0 8px", fontSize: 18 }}>
-        Patient lookup
-      </h2>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          void search();
-        }}
+      <div
         style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) auto",
-          gap: 10,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 16,
           marginBottom: 12,
+          flexWrap: "wrap",
         }}
       >
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search email, name, or user ID"
-          style={{
-            minWidth: 0,
-            padding: "10px 12px",
-            borderRadius: 8,
-            border: "1px solid #dbe3ef",
-            fontSize: 14,
-            color: "#172033",
+        <h2 id="patient-lookup-title" style={{ margin: "8px 0 0", fontSize: 18 }}>
+          Patient lookup
+        </h2>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void search();
           }}
-        />
-        <button
-          type="submit"
-          disabled={loading}
           style={{
-            padding: "10px 14px",
-            borderRadius: 8,
-            border: "1px solid #172033",
-            background: loading ? "#94a3b8" : "#172033",
-            color: "#fff",
-            fontSize: 13,
-            fontWeight: 800,
-            cursor: loading ? "not-allowed" : "pointer",
+            display: "grid",
+            gridTemplateColumns: "minmax(180px, 260px) auto",
+            gap: 8,
+            marginLeft: "auto",
+            maxWidth: "100%",
           }}
         >
-          {loading ? "Searching..." : "Search"}
-        </button>
-      </form>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search patients"
+            aria-label="Search patients"
+            style={{
+              minWidth: 0,
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #dbe3ef",
+              fontSize: 14,
+              color: "#172033",
+            }}
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "10px 14px",
+              borderRadius: 8,
+              border: "1px solid #172033",
+              background: loading ? "#94a3b8" : "#172033",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: loading ? "not-allowed" : "pointer",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {loading ? "Searching..." : "Search"}
+          </button>
+        </form>
+      </div>
 
-      {error ? (
-        <p role="alert" style={{ margin: "0 0 12px", color: "#b91c1c", fontSize: 14 }}>
-          {error}
-        </p>
-      ) : null}
+      <div
+        aria-live="polite"
+        style={{
+          minHeight: 220,
+          display: "grid",
+          gap: 12,
+          padding: 16,
+          border: "1px solid #e5ebf5",
+          borderRadius: 10,
+          background: "#f8fafc",
+        }}
+      >
+        {!searched && !loading ? (
+          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#64748b" }}>
+            Search for a patient to see results.
+          </p>
+        ) : null}
 
-      {searched && !loading && !error && patients.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>
-          No matching patients found.
-        </p>
-      ) : null}
+        {loading ? (
+          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#64748b" }}>
+            Searching patients...
+          </p>
+        ) : null}
 
-      {patients.length > 0 ? (
-        <div style={{ display: "grid", gap: 12 }}>
-          {patients.map((patient) => (
-            <PatientSearchResult
-              key={patient.userId}
-              patient={patient}
-              onOpen={() => setSelectedPatient(patient)}
-            />
-          ))}
-        </div>
-      ) : null}
+        {error ? (
+          <p
+            role="alert"
+            style={{ margin: 0, alignSelf: "center", justifySelf: "center", color: "#b91c1c", fontSize: 14 }}
+          >
+            {error}
+          </p>
+        ) : null}
+
+        {searched && !loading && !error && patients.length === 0 ? (
+          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#64748b" }}>
+            No matching patients found.
+          </p>
+        ) : null}
+
+        {patients.length > 0 ? (
+          <div style={{ display: "grid", gap: 12 }}>
+            {patients.map((patient) => (
+              <PatientSearchResult
+                key={patient.userId}
+                patient={patient}
+                onOpen={() => setSelectedPatient(patient)}
+              />
+            ))}
+          </div>
+        ) : null}
+      </div>
     </section>
   );
 }

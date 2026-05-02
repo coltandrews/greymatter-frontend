@@ -589,21 +589,39 @@
   margin-bottom: 14px;
 }
 
-.overviewStatusGrid {
+.overviewStatusSections {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.overviewStatusCard {
-  min-height: 118px;
-  padding: 14px;
-  display: grid;
-  align-content: space-between;
-  gap: 10px;
+.overviewStatusSection {
+  min-width: 0;
+  padding: 12px;
   border-radius: 10px;
   background: #f8fafc;
   border: 1px solid #eef2f6;
+}
+
+.overviewStatRows {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  list-style: none;
+}
+
+.overviewStatRow {
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #e5ebf5;
+}
+
+.overviewStatRow:last-child {
+  border-bottom: 0;
 }
 
 .overviewStatusLabel {
@@ -613,9 +631,9 @@
   font-weight: 800;
 }
 
-.overviewStatusValue {
+.overviewStatRowValue {
   margin: 0;
-  font-size: 30px;
+  font-size: 16px;
   line-height: 1;
   color: #172033;
   font-weight: 800;
@@ -801,7 +819,8 @@
   }
 
   .overviewWidgetGrid,
-  .overviewDataSplit {
+  .overviewDataSplit,
+  .overviewStatusSections {
     grid-template-columns: 1fr;
   }
 
