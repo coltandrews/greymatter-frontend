@@ -155,17 +155,17 @@ export function parseOptionsText(value: string): IntakeQuestionOption[] {
     .filter(Boolean)
     .map((line) => {
       const [rawValue, ...labelParts] = line.split("|");
-      const optionValue = rawValue.trim();
-      const label = labelParts.join("|").trim() || optionValue;
+      const explicitValue = labelParts.length > 0 ? rawValue.trim() : "";
+      const label = labelParts.join("|").trim() || rawValue.trim();
       return {
-        value: makeQuestionKey(optionValue) || optionValue,
+        value: makeQuestionKey(explicitValue || label) || label,
         label,
       };
     });
 }
 
 export function optionsToText(options: IntakeQuestionOption[]): string {
-  return options.map((option) => `${option.value}|${option.label}`).join("\n");
+  return options.map((option) => option.label).join("\n");
 }
 
 export function intakeAnswerComplete(

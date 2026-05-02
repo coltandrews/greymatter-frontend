@@ -46,6 +46,27 @@ export type BookingQueueResponse = {
   rows: BookingQueueRow[];
 };
 
+export type TransactionRow = {
+  id: string;
+  userId: string;
+  patientName: string;
+  patientEmail: string | null;
+  amountCents: number | null;
+  currency: string | null;
+  paymentStatus: string | null;
+  bookingStatus: string | null;
+  serviceState: string | null;
+  stripeCheckoutSessionId: string | null;
+  stripePaymentIntentId: string | null;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type TransactionsResponse = {
+  rows: TransactionRow[];
+};
+
 export type PatientLookupAppointment = {
   id: string;
   status: string | null;
@@ -112,6 +133,19 @@ export async function fetchBookingQueue(
 ) {
   const search = new URLSearchParams({ limit: String(limit) });
   return fetch(`${apiBase()}/api/admin/booking-queue?${search.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+    },
+  });
+}
+
+export async function fetchTransactions(
+  supabaseAccessToken: string,
+  limit = 100,
+) {
+  const search = new URLSearchParams({ limit: String(limit) });
+  return fetch(`${apiBase()}/api/admin/transactions?${search.toString()}`, {
     headers: {
       Authorization: `Bearer ${supabaseAccessToken}`,
       Accept: "application/json",

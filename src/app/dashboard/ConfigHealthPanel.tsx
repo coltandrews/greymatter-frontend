@@ -125,34 +125,37 @@ export function ConfigHealthPanel() {
       ) : null}
 
       {checks.length > 0 ? (
-        <div className={styles.healthGrid}>
-          {checks.map((check) => {
-            const view = configHealthStatusView(check.status);
-            return (
-              <article
-                key={check.key}
-                className={styles.healthCard}
-              >
-                <div className={styles.healthCardTop}>
-                  <h3 className={styles.healthCardTitle}>
-                    {check.label}
-                  </h3>
-                  <span
-                    className={styles.healthBadge}
-                    style={{
-                      background: view.background,
-                      color: view.color,
-                    }}
-                  >
-                    {view.label}
-                  </span>
-                </div>
-                <p className={styles.healthCardMessage}>
-                  {check.message}
-                </p>
-              </article>
-            );
-          })}
+        <div className={styles.healthTableWrap}>
+          <table className={styles.healthTable}>
+            <thead>
+              <tr>
+                <th scope="col">Status</th>
+                <th scope="col">Check</th>
+                <th scope="col">Message</th>
+              </tr>
+            </thead>
+            <tbody>
+              {checks.map((check) => {
+                const view = configHealthStatusView(check.status);
+                const statusClass = check.status === "ok"
+                  ? styles.healthStatusOk
+                  : styles.healthStatusError;
+
+                return (
+                  <tr key={check.key}>
+                    <td>
+                      <span className={`${styles.healthStatus} ${statusClass}`}>
+                        <span className={styles.healthStatusDot} aria-hidden="true" />
+                        {view.label}
+                      </span>
+                    </td>
+                    <td className={styles.healthCheckName}>{check.label}</td>
+                    <td className={styles.healthCheckMessage}>{check.message}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       ) : null}
     </section>

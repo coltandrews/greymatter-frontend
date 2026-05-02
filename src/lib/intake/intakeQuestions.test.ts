@@ -5,6 +5,7 @@ import {
   makeQuestionKey,
   mergePreSignupQuestions,
   normalizeIntakeAnswers,
+  optionsToText,
   parseOptionsText,
 } from "./intakeQuestions";
 
@@ -15,12 +16,19 @@ describe("intake question helpers", () => {
     );
   });
 
-  it("parses option text into values and labels", () => {
-    expect(parseOptionsText("yes|Yes\nno|No\nMaybe")).toEqual([
+  it("parses formatted option labels into stored values and labels", () => {
+    expect(parseOptionsText("Yes\nNo\nPrefer Not To Say")).toEqual([
       { value: "yes", label: "Yes" },
       { value: "no", label: "No" },
-      { value: "maybe", label: "Maybe" },
+      { value: "prefer_not_to_say", label: "Prefer Not To Say" },
     ]);
+  });
+
+  it("keeps option editing focused on display labels", () => {
+    expect(optionsToText([
+      { value: "yes", label: "Yes" },
+      { value: "prefer_not_to_say", label: "Prefer Not To Say" },
+    ])).toBe("Yes\nPrefer Not To Say");
   });
 
   it("requires multi-select answers when configured", () => {

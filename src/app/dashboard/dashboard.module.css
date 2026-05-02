@@ -225,7 +225,7 @@
 }
 
 .healthPanel {
-  padding: 24px;
+  padding: 20px;
   border-radius: 16px;
   background: #ffffff;
   border: 1px solid #e5ebf5;
@@ -237,7 +237,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 18px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .healthIntro {
@@ -245,8 +245,8 @@
 }
 
 .healthEyebrow {
-  margin: 0 0 8px;
-  font-size: 12px;
+  margin: 0 0 6px;
+  font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -254,32 +254,32 @@
 }
 
 .healthTitle {
-  margin: 0 0 8px;
-  font-size: 24px;
+  margin: 0 0 6px;
+  font-size: 22px;
   font-weight: 800;
   color: #172033;
 }
 
 .healthSummary {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.55;
   color: #64748b;
 }
 
 .healthRefresh {
   flex-shrink: 0;
-  min-height: 40px;
-  padding: 0 16px;
-  border-radius: 10px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 9px;
   border: 1px solid #172033;
   background: #172033;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   font-family: inherit;
   cursor: pointer;
-  box-shadow: 0 8px 18px rgba(23, 32, 51, 0.14);
+  box-shadow: 0 6px 14px rgba(23, 32, 51, 0.12);
 }
 
 .healthRefresh:disabled {
@@ -293,27 +293,27 @@
 .healthStats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
 .healthStat {
-  padding: 14px;
-  border-radius: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
   background: #f8fafc;
   border: 1px solid #eef2f6;
 }
 
 .healthStatLabel {
-  margin: 0 0 6px;
-  font-size: 12px;
+  margin: 0 0 4px;
+  font-size: 11px;
   color: #64748b;
   font-weight: 800;
 }
 
 .healthStatValue {
   margin: 0;
-  font-size: 28px;
+  font-size: 20px;
   color: #172033;
   font-weight: 800;
 }
@@ -333,45 +333,72 @@
   font-size: 14px;
 }
 
-.healthGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-}
-
-.healthCard {
-  padding: 16px;
+.healthTableWrap {
+  overflow-x: auto;
   border-radius: 12px;
   border: 1px solid #e5ebf5;
+  background: #ffffff;
+}
+
+.healthTable {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.healthTable th {
+  padding: 9px 12px;
+  border-bottom: 1px solid #e5ebf5;
   background: #f8fafc;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
 }
 
-.healthCardTop {
-  display: flex;
+.healthTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.healthTable tr:last-child td {
+  border-bottom: 0;
+}
+
+.healthStatus {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 7px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.healthCardTitle {
-  margin: 0;
-  font-size: 14px;
+.healthStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.healthStatusOk {
+  color: #15803d;
+}
+
+.healthStatusError {
+  color: #b91c1c;
+}
+
+.healthCheckName {
   color: #172033;
   font-weight: 800;
 }
 
-.healthBadge {
-  flex-shrink: 0;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.healthCardMessage {
-  margin: 0;
-  font-size: 13px;
+.healthCheckMessage {
   line-height: 1.45;
   color: #64748b;
 }
@@ -457,6 +484,11 @@
   text-overflow: ellipsis;
 }
 
+.tableStrong {
+  color: #172033;
+  font-weight: 800;
+}
+
 .inlineError {
   margin: 0 0 14px;
   padding: 12px 14px;
@@ -481,6 +513,9 @@
   flex-shrink: 0;
   min-height: 36px;
   padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 9px;
   border: 1px solid #dbe3ef;
   background: #ffffff;
@@ -488,6 +523,7 @@
   font: inherit;
   font-size: 13px;
   font-weight: 800;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -575,6 +611,13 @@
 .adminField textarea {
   min-height: 92px;
   resize: vertical;
+}
+
+.fieldHint {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .inlineControls,

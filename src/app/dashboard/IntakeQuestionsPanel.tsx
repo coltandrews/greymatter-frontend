@@ -250,8 +250,11 @@ export function IntakeQuestionsPanel() {
               <textarea
                 value={form.options}
                 onChange={(event) => updateForm({ options: event.target.value })}
-                placeholder={"yes|Yes\nno|No"}
+                placeholder={"Yes\nNo\nPrefer Not To Say"}
               />
+              <small className={styles.compactText}>
+                One answer per line. Stored values are generated automatically.
+              </small>
             </label>
           ) : null}
           <div className={styles.inlineControls}>

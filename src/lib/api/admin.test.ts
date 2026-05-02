@@ -5,6 +5,7 @@ import {
   fetchBookingQueue,
   fetchConfigHealth,
   fetchPatientLookup,
+  fetchTransactions,
 } from "./admin";
 
 describe("admin API helpers", () => {
@@ -42,6 +43,24 @@ describe("admin API helpers", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.com/api/admin/booking-queue?limit=50",
+      {
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+        },
+      },
+    );
+  });
+
+  it("fetches staff transactions through the backend", async () => {
+    process.env.NEXT_PUBLIC_API_BASE_URL = "https://api.example.com";
+    const fetchMock = vi.fn(async () => new Response("{}"));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchTransactions("access-token", 25);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/admin/transactions?limit=25",
       {
         headers: {
           Authorization: "Bearer access-token",
