@@ -447,6 +447,40 @@
   border-radius: 12px;
 }
 
+.transactionListStack {
+  display: grid;
+  gap: 14px;
+}
+
+.transactionSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.transactionSummaryItem {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #e5ebf5;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.transactionSummaryLabel {
+  margin: 0 0 7px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.transactionSummaryValue {
+  margin: 0;
+  color: #172033;
+  font-size: 22px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
 .adminTable {
   width: 100%;
   min-width: 640px;
@@ -579,8 +613,18 @@
 }
 
 .tableStrong {
+  display: block;
   color: #172033;
   font-weight: 800;
+}
+
+.tableMeta {
+  display: block;
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .patientLink {
@@ -926,7 +970,8 @@
 
   .overviewWidgetGrid,
   .overviewDataSplit,
-  .overviewStatusSections {
+  .overviewStatusSections,
+  .transactionSummaryGrid {
     grid-template-columns: 1fr;
   }
 

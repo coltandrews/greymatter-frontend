@@ -48,6 +48,31 @@ function patientProfileHref(row: TransactionRow): string {
   return `/dashboard/patients?${search.toString()}`;
 }
 
+function formatSummaryAmount(rows: TransactionRow[], fallbackCurrency?: string): string {
+  const rowsWithAmounts = rows.filter((row) => typeof row.amountCents === "number");
+  if (rowsWithAmounts.length === 0) {
+    return fallbackCurrency
+      ? new Intl.NumberFormat(undefined, {
+          style: "currency",
+          currency: fallbackCurrency,
+        }).format(0)
+      : "Not recorded";
+  }
+
+  const currencies = new Set(rowsWithAmounts.map((row) => (row.currency || "usd").toUpperCase()));
+  if (currencies.size > 1) {
+    return "Multiple currencies";
+  }
+
+  const currency = Array.from(currencies)[0];
+  const totalCents = rowsWithAmounts.reduce((total, row) => total + (row.amountCents ?? 0), 0);
+
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency,
+  }).format(totalCents / 100);
+}
+
 async function readBackendMessage(res: Response): Promise<string> {
   const body = await res.json().catch(() => null) as { message?: unknown } | null;
   return typeof body?.message === "string" && body.message.trim()
@@ -184,6 +209,14 @@ export function TransactionsPanel() {
     });
   }
 
+  const pendingRows = rows.filter((row) => row.paymentStatus === "pending");
+  const primaryCurrency = rows.find((row) => typeof row.amountCents === "number")?.currency || "usd";
+  const summaryItems = [
+    { label: "Total", value: formatSummaryAmount(rows) },
+    { label: "Pending total", value: formatSummaryAmount(pendingRows, primaryCurrency) },
+    { label: "Transaction total", value: rows.length.toLocaleString() },
+  ];
+
   return (
     <section className={styles.workspaceCard} aria-labelledby="transactions-title">
       <div className={styles.workspaceHeader}>
@@ -218,127 +251,141 @@ export function TransactionsPanel() {
       ) : null}
 
       {rows.length > 0 ? (
-        <div className={styles.tableWrap}>
-          <table className={styles.adminTable}>
-            <thead>
-              <tr>
-                <th scope="col" className={styles.actionColumn}>Actions</th>
-                <th scope="col">Patient</th>
-                <th scope="col">Status</th>
-                <th scope="col">Amount</th>
-                <th scope="col" className={styles.paidColumn}>Paid</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const status = transactionStatusView(row.paymentStatus);
-                const stripeUrl = stripeDashboardUrl(row);
-                const canReconcile = canReconcileStripeTransaction(row);
-                const rowMessage = rowMessageById[row.id];
+        <div className={styles.transactionListStack}>
+          <div className={styles.transactionSummaryGrid} aria-label="Transaction totals">
+            {summaryItems.map((item) => (
+              <div key={item.label} className={styles.transactionSummaryItem}>
+                <p className={styles.transactionSummaryLabel}>{item.label}</p>
+                <p className={styles.transactionSummaryValue}>{item.value}</p>
+              </div>
+            ))}
+          </div>
 
-                return (
-                  <tr key={row.id}>
-                    <td className={styles.actionCell}>
-                      <div className={styles.contextMenu}>
-                        <button
-                          type="button"
-                          className={styles.contextMenuButton}
-                          aria-haspopup="menu"
-                          aria-expanded={openActionMenu?.id === row.id}
-                          aria-label={`Open actions for ${transactionPatientLabel(row)}`}
-                          onClick={(event) => {
-                            toggleActionMenu(row, event.currentTarget);
-                          }}
-                        >
-                          ...
-                        </button>
-                        {openActionMenu?.id === row.id ? (
-                          <div
-                            className={styles.contextMenuPanel}
-                            role="menu"
-                            style={{
-                              top: openActionMenu.top,
-                              left: openActionMenu.left,
+          <div className={styles.tableWrap}>
+            <table className={styles.adminTable}>
+              <thead>
+                <tr>
+                  <th scope="col" className={styles.actionColumn}>Actions</th>
+                  <th scope="col">Patient</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Amount</th>
+                  <th scope="col" className={styles.paidColumn}>Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const status = transactionStatusView(row.paymentStatus);
+                  const stripeUrl = stripeDashboardUrl(row);
+                  const canReconcile = canReconcileStripeTransaction(row);
+                  const rowMessage = rowMessageById[row.id];
+
+                  return (
+                    <tr key={row.id}>
+                      <td className={styles.actionCell}>
+                        <div className={styles.contextMenu}>
+                          <button
+                            type="button"
+                            className={styles.contextMenuButton}
+                            aria-haspopup="menu"
+                            aria-expanded={openActionMenu?.id === row.id}
+                            aria-label={`Open actions for ${transactionPatientLabel(row)}`}
+                            onClick={(event) => {
+                              toggleActionMenu(row, event.currentTarget);
                             }}
                           >
-                            {stripeUrl ? (
-                              <a
-                                role="menuitem"
-                                className={styles.contextMenuItem}
-                                href={stripeUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={() => {
-                                  setOpenActionMenu(null);
-                                }}
-                              >
-                                View In Stripe
-                              </a>
-                            ) : null}
-                            <button
-                              type="button"
-                              role="menuitem"
-                              className={styles.contextMenuItem}
-                              onClick={() => {
-                                void downloadReceipt(row);
+                            ...
+                          </button>
+                          {openActionMenu?.id === row.id ? (
+                            <div
+                              className={styles.contextMenuPanel}
+                              role="menu"
+                              style={{
+                                top: openActionMenu.top,
+                                left: openActionMenu.left,
                               }}
-                              disabled={downloadingReceiptId === row.id}
                             >
-                              {downloadingReceiptId === row.id ? "Downloading..." : "Print Receipt"}
-                            </button>
-                            {canReconcile ? (
+                              {stripeUrl ? (
+                                <a
+                                  role="menuitem"
+                                  className={styles.contextMenuItem}
+                                  href={stripeUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={() => {
+                                    setOpenActionMenu(null);
+                                  }}
+                                >
+                                  View In Stripe
+                                </a>
+                              ) : null}
                               <button
                                 type="button"
                                 role="menuitem"
                                 className={styles.contextMenuItem}
                                 onClick={() => {
-                                  void reconcileStripe(row);
+                                  void downloadReceipt(row);
                                 }}
-                                disabled={reconcilingId === row.id}
+                                disabled={downloadingReceiptId === row.id}
                               >
-                                {reconcilingId === row.id ? "Checking..." : "Reconcile"}
+                                {downloadingReceiptId === row.id ? "Downloading..." : "Print Receipt"}
                               </button>
-                            ) : null}
-                            {!stripeUrl && !canReconcile ? (
-                              <span className={styles.contextMenuEmpty}>No Stripe action</span>
-                            ) : null}
-                          </div>
+                              {canReconcile ? (
+                                <button
+                                  type="button"
+                                  role="menuitem"
+                                  className={styles.contextMenuItem}
+                                  onClick={() => {
+                                    void reconcileStripe(row);
+                                  }}
+                                  disabled={reconcilingId === row.id}
+                                >
+                                  {reconcilingId === row.id ? "Checking..." : "Reconcile"}
+                                </button>
+                              ) : null}
+                              {!stripeUrl && !canReconcile ? (
+                                <span className={styles.contextMenuEmpty}>No Stripe action</span>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </td>
+                      <td>
+                        <strong className={styles.tableStrong}>
+                          <Link className={styles.patientLink} href={patientProfileHref(row)}>
+                            {row.patientName}
+                          </Link>
+                        </strong>
+                        {row.patientEmail ? (
+                          <span className={styles.tableMeta}>{row.patientEmail}</span>
                         ) : null}
-                      </div>
-                    </td>
-                    <td>
-                      <strong className={styles.tableStrong}>
-                        <Link className={styles.patientLink} href={patientProfileHref(row)}>
-                          {transactionPatientLabel(row)}
-                        </Link>
-                      </strong>
-                      {rowMessage ? (
+                        {rowMessage ? (
+                          <span
+                            className={
+                              rowMessage.includes("reconciled") || rowMessage.includes("downloaded")
+                                ? styles.actionMessage
+                                : styles.actionError
+                            }
+                          >
+                            {rowMessage}
+                          </span>
+                        ) : null}
+                      </td>
+                      <td>
                         <span
-                          className={
-                            rowMessage.includes("reconciled") || rowMessage.includes("downloaded")
-                              ? styles.actionMessage
-                              : styles.actionError
-                          }
+                          className={styles.statusBadge}
+                          style={{ background: status.background, color: status.color }}
                         >
-                          {rowMessage}
+                          {status.label}
                         </span>
-                      ) : null}
-                    </td>
-                    <td>
-                      <span
-                        className={styles.statusBadge}
-                        style={{ background: status.background, color: status.color }}
-                      >
-                        {status.label}
-                      </span>
-                    </td>
-                    <td>{formatTransactionAmount(row)}</td>
-                    <td className={styles.paidCell}>{formatDate(row.paidAt)}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td>{formatTransactionAmount(row)}</td>
+                      <td className={styles.paidCell}>{formatDate(row.paidAt)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : null}
     </section>
