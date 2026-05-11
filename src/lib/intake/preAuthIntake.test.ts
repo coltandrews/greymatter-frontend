@@ -19,6 +19,10 @@ describe("pre-auth intake", () => {
       pre_signup_answers: {
         glp_1_history: "no",
       },
+      selected_treatment: "glp_1",
+      treatment_answers: {
+        glp_1_current_weight: "210",
+      },
     });
 
     expect(parsePreAuthIntake(raw)).toEqual({
@@ -31,6 +35,10 @@ describe("pre-auth intake", () => {
       for_self: true,
       pre_signup_answers: {
         glp_1_history: "no",
+      },
+      selected_treatment: "glp_1",
+      treatment_answers: {
+        glp_1_current_weight: "210",
       },
     });
   });
@@ -71,6 +79,15 @@ describe("pre-auth intake", () => {
         for_self: "yes",
         symptoms: ["nausea", "fatigue"],
       },
+      {
+        selectedTreatment: "testosterone",
+        questions: [
+          { question_key: "testosterone_symptoms", question_type: "multi_select" },
+        ],
+        answers: {
+          testosterone_symptoms: ["low_energy", "mood"],
+        },
+      },
     );
 
     expect(data).toMatchObject({
@@ -87,6 +104,10 @@ describe("pre-auth intake", () => {
         service_state: "SC",
         for_self: "yes",
         symptoms: ["nausea", "fatigue"],
+      },
+      selected_treatment: "testosterone",
+      treatment_answers: {
+        testosterone_symptoms: ["low_energy", "mood"],
       },
     });
   });

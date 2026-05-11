@@ -1,0 +1,173 @@
+.page {
+  min-height: 100%;
+  padding: 44px 20px 72px;
+  background: #f5f7fa;
+}
+
+.shell {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 24px;
+}
+
+.hero {
+  display: grid;
+  gap: 12px;
+}
+
+.logo {
+  width: 156px;
+  max-width: 100%;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #2f80ed;
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #2b2f34;
+  font-size: clamp(30px, 5vw, 48px);
+  line-height: 1;
+  font-weight: 900;
+}
+
+.lead {
+  max-width: 680px;
+  margin: 0;
+  color: #596064;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  gap: 18px;
+}
+
+.panel {
+  border: 1px solid #d9dddf;
+  border-radius: 8px;
+  background: #fff;
+  padding: 22px;
+}
+
+.darkPanel {
+  border-radius: 8px;
+  padding: 22px;
+  color: #fff;
+  background:
+    linear-gradient(0deg, rgba(43, 47, 52, 0.84), rgba(43, 47, 52, 0.84)),
+    url("/textures/graphite-texture.jpeg") center / cover;
+}
+
+.sectionTitle {
+  margin: 0 0 14px;
+  color: inherit;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.treatmentName {
+  margin: 0;
+  color: #2b2f34;
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.darkPanel .treatmentName {
+  color: #fff;
+}
+
+.muted {
+  margin: 8px 0 0;
+  color: #596064;
+  line-height: 1.55;
+}
+
+.darkPanel .muted {
+  color: rgba(255, 255, 255, 0.76);
+}
+
+.summaryList {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 0;
+}
+
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(177, 181, 182, 0.36);
+  color: inherit;
+}
+
+.summaryRow span {
+  color: #596064;
+}
+
+.darkPanel .summaryRow span {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.summaryRow strong {
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 22px;
+}
+
+.primary {
+  border: none;
+  border-radius: 8px;
+  background: #2f80ed;
+  color: #fff;
+  padding: 13px 18px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.secondary {
+  border: 1px solid #c7cccf;
+  border-radius: 8px;
+  background: #fff;
+  color: #2b2f34;
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.error {
+  margin: 14px 0 0;
+  color: #b91c1c;
+  font-size: 14px;
+}
+
+.checkoutFrame {
+  margin-top: 18px;
+}
+
+@media (max-width: 760px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -23,6 +23,8 @@ export type IntakeDraftData = {
   for_self?: boolean;
   service_state?: string;
   pre_signup_answers?: Record<string, string | string[]>;
+  selected_treatment?: string;
+  treatment_answers?: Record<string, string | string[]>;
 };
 
 const GENDERS: readonly string[] = ["male", "female", "non_binary", "prefer_not"];

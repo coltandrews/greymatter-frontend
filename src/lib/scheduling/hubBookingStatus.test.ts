@@ -11,7 +11,7 @@ describe("hubBookingIntentStatusView", () => {
       }),
     ).toEqual({
       label: "Confirmed",
-      subtitle: "Initial semaglutide consultation",
+      subtitle: "Provider review received. Watch for medication updates.",
       tone: "confirmed",
     });
   });
@@ -38,7 +38,7 @@ describe("hubBookingIntentStatusView", () => {
       }),
     ).toEqual({
       label: "Next steps",
-      subtitle: "Provider booking is ready. Review the next steps.",
+      subtitle: "Provider next steps are ready. Review them before continuing.",
       tone: "action",
     });
   });
@@ -65,7 +65,7 @@ describe("hubBookingIntentStatusView", () => {
       }),
     ).toEqual({
       label: "Payment Pending",
-      subtitle: "Checkout is not complete. This appointment is not booked yet.",
+      subtitle: "Checkout is not complete. This medication request is not submitted yet.",
       tone: "pending",
     });
   });

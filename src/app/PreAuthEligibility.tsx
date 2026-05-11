@@ -14,16 +14,29 @@ import {
   buildPreAuthIntakeData,
   serializePreAuthIntake,
 } from "@/lib/intake/preAuthIntake";
+import {
+  TREATMENTS,
+  treatmentQuestions,
+  type TreatmentKey,
+} from "@/lib/treatments";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const card = {
   width: "100%" as const,
-  maxWidth: 520,
+  maxWidth: 760,
   padding: 28,
-  background: "#fff",
-  borderRadius: 12,
-  border: "1px solid #e5ebf5",
+  background: "#f5f7fa",
+  borderRadius: 8,
+  border: "1px solid #d9dddf",
+  boxShadow: "0 24px 70px rgba(43, 47, 52, 0.14)",
+};
+
+const brand = {
+  graphite: "#2B2F34",
+  offWhite: "#F5F7FA",
+  steel: "#B1B5B6",
+  blue: "#2F80ED",
 };
 
 const field = {
@@ -37,8 +50,9 @@ const field = {
 const input = {
   padding: "10px 12px",
   borderRadius: 8,
-  border: "1px solid #cbd5e1",
+  border: "1px solid #c7cccf",
   fontSize: 16,
+  background: "#fff",
 };
 
 const flowActions = {
@@ -54,7 +68,7 @@ const primaryAction = {
   padding: "12px 16px",
   borderRadius: 8,
   border: "none",
-  background: "#172033",
+  background: brand.graphite,
   color: "#fff",
   fontSize: 16,
   fontWeight: 700,
@@ -64,7 +78,7 @@ const linkButton = {
   padding: 0,
   border: "none",
   background: "transparent",
-  color: "#2563eb",
+  color: brand.blue,
   fontSize: 14,
   fontWeight: 600,
   cursor: "pointer",
@@ -84,17 +98,17 @@ const optionCard = {
   gap: 10,
   padding: "11px 12px",
   borderRadius: 12,
-  border: "1px solid #dbe3ef",
+  border: "1px solid #d9dddf",
   background: "#fff",
-  color: "#172033",
+  color: brand.graphite,
   fontSize: 14,
   fontWeight: 700,
   cursor: "pointer",
 };
 
 const selectedOptionCard = {
-  borderColor: "#172033",
-  background: "#f8fafc",
+  borderColor: brand.blue,
+  background: "#ffffff",
   boxShadow: "0 6px 18px rgba(23, 32, 51, 0.08)",
 };
 
@@ -113,8 +127,8 @@ const optionMark = {
 };
 
 const selectedOptionMark = {
-  borderColor: "#172033",
-  background: "#172033",
+  borderColor: brand.blue,
+  background: brand.blue,
 };
 
 const pageSize = 1000;
@@ -312,10 +326,14 @@ function QuestionField({
 export function PreAuthEligibility() {
   const searchParams = useSearchParams();
   const startsInSignIn = Boolean(searchParams.get("signin"));
-  const [step, setStep] = useState<"eligibility" | "account">(startsInSignIn ? "account" : "eligibility");
+  const [step, setStep] = useState<
+    "eligibility" | "treatment" | "treatment_questions" | "account"
+  >(startsInSignIn ? "account" : "eligibility");
   const [accountMode, setAccountMode] = useState<"signup" | "signin">(startsInSignIn ? "signin" : "signup");
   const questions = mergePreSignupQuestions([]);
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
+  const [selectedTreatment, setSelectedTreatment] = useState<TreatmentKey | null>(null);
+  const [treatmentAnswers, setTreatmentAnswers] = useState<IntakeQuestionAnswers>({});
   const [intakePageIndex, setIntakePageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const questionPages = groupQuestionsByPage(questions);
@@ -324,10 +342,41 @@ export function PreAuthEligibility() {
   const currentPageComplete = currentQuestions.every((question) =>
     intakeAnswerComplete(question, answers[question.question_key]),
   );
+  const medicationQuestions = treatmentQuestions(selectedTreatment);
+  const medicationQuestionsComplete = medicationQuestions.every((question) =>
+    intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
+  );
+
+  function saveIntakeAndContinue() {
+    const intake = buildPreAuthIntakeData(questions, answers, {
+      selectedTreatment,
+      questions: medicationQuestions,
+      answers: treatmentAnswers,
+    });
+    window.localStorage.setItem(
+      PRE_AUTH_INTAKE_STORAGE_KEY,
+      serializePreAuthIntake(intake),
+    );
+    setAccountMode("signup");
+    setStep("account");
+  }
 
   if (step === "account") {
     return <AuthEntry initialMode={accountMode} intakeReady />;
   }
+
+  const heading =
+    step === "treatment"
+      ? "Choose treatment"
+      : step === "treatment_questions"
+        ? `${TREATMENTS.find((treatment) => treatment.key === selectedTreatment)?.name ?? "Treatment"} intake`
+        : "Check eligibility";
+  const lead =
+    step === "treatment"
+      ? "Select the care path you want reviewed by a licensed provider."
+      : step === "treatment_questions"
+        ? "Answer the treatment-specific questions before creating your account."
+        : "Start with demographics and basic health information. Your answers attach to your account after signup.";
 
   return (
     <main
@@ -336,124 +385,290 @@ export function PreAuthEligibility() {
         placeItems: "center",
         padding: "32px 20px",
         minHeight: "100vh",
-        background: "#f8fafc",
+        background: `${brand.graphite} url('/textures/graphite-texture.jpeg') center / cover fixed`,
       }}
     >
       <section style={card}>
-        <h1 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 700, color: "#172033" }}>
-          Check eligibility
+        <img
+          src="/brand/gmmd-logo-light.jpeg"
+          alt="GMMD"
+          style={{ display: "block", width: 176, maxWidth: "100%", marginBottom: 28 }}
+        />
+        <h1 style={{ margin: "0 0 8px", fontSize: 30, fontWeight: 800, color: brand.graphite }}>
+          {heading}
         </h1>
-        <p style={{ margin: "0 0 22px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
-          Start with the basics. If eligible, you&apos;ll create an account before scheduling.
+        <p style={{ margin: "0 0 22px", fontSize: 15, color: "#596064", lineHeight: 1.55 }}>
+          {lead}
         </p>
 
-        <form
-          style={{ display: "grid", gap: 14 }}
-          onSubmit={(event) => {
-            event.preventDefault();
-            setError(null);
-            const unanswered = currentQuestions.find(
-              (question) => !intakeAnswerComplete(question, answers[question.question_key]),
-            );
-            if (unanswered) {
-              setError(`Answer: ${unanswered.prompt}`);
-              return;
-            }
-            if (hasNextQuestionPage) {
-              setIntakePageIndex((current) => current + 1);
-              return;
-            }
-
-            const intake = buildPreAuthIntakeData(questions, answers);
-
-            const unansweredAnyPage = questions.find(
-              (question) => !intakeAnswerComplete(question, answers[question.question_key]),
-            );
-            if (unansweredAnyPage) {
-              setError(`Answer: ${unansweredAnyPage.prompt}`);
-              return;
-            }
-            if (intake.for_self !== true) {
-              setError("This online flow currently supports patients booking for themselves.");
-              return;
-            }
-            if (!intake.service_state) {
-              setError("Select the state where you will receive care.");
-              return;
-            }
-            window.localStorage.setItem(
-              PRE_AUTH_INTAKE_STORAGE_KEY,
-              serializePreAuthIntake(intake),
-            );
-            setAccountMode("signup");
-            setStep("account");
-          }}
-        >
-          {questionPages.length > 1 ? (
-            <p style={{ margin: "-4px 0 2px", color: "#64748b", fontSize: 13, fontWeight: 700 }}>
-              Step {intakePageIndex + 1} of {questionPages.length}
-            </p>
-          ) : null}
-
-          {currentQuestions.map((question) => (
-            <QuestionField
-              key={question.id}
-              question={question}
-              answer={answers[question.question_key]}
-              onChange={(value) =>
-                setAnswers((current) => ({
-                  ...current,
-                  [question.question_key]: value,
-                }))
+        {step === "eligibility" ? (
+          <form
+            style={{ display: "grid", gap: 14 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              setError(null);
+              const unanswered = currentQuestions.find(
+                (question) => !intakeAnswerComplete(question, answers[question.question_key]),
+              );
+              if (unanswered) {
+                setError(`Answer: ${unanswered.prompt}`);
+                return;
               }
-            />
-          ))}
+              if (hasNextQuestionPage) {
+                setIntakePageIndex((current) => current + 1);
+                return;
+              }
 
-          {error ? (
-            <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
-              {error}
-            </p>
-          ) : null}
+              const intake = buildPreAuthIntakeData(questions, answers);
 
-          <div style={flowActions}>
-            {intakePageIndex > 0 ? (
+              const unansweredAnyPage = questions.find(
+                (question) => !intakeAnswerComplete(question, answers[question.question_key]),
+              );
+              if (unansweredAnyPage) {
+                setError(`Answer: ${unansweredAnyPage.prompt}`);
+                return;
+              }
+              if (intake.for_self !== true) {
+                setError("This online flow currently supports patients booking for themselves.");
+                return;
+              }
+              if (!intake.service_state) {
+                setError("Select the state where you will receive care.");
+                return;
+              }
+              setStep("treatment");
+            }}
+          >
+            {questionPages.length > 1 ? (
+              <p style={{ margin: "-4px 0 2px", color: "#64748b", fontSize: 13, fontWeight: 700 }}>
+                Step {intakePageIndex + 1} of {questionPages.length}
+              </p>
+            ) : null}
+
+            {currentQuestions.map((question) => (
+              <QuestionField
+                key={question.id}
+                question={question}
+                answer={answers[question.question_key]}
+                onChange={(value) =>
+                  setAnswers((current) => ({
+                    ...current,
+                    [question.question_key]: value,
+                  }))
+                }
+              />
+            ))}
+
+            {error ? (
+              <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+                {error}
+              </p>
+            ) : null}
+
+            <div style={flowActions}>
+              {intakePageIndex > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError(null);
+                    setIntakePageIndex((current) => Math.max(0, current - 1));
+                  }}
+                  style={linkButton}
+                >
+                  ← Back to previous step
+                </button>
+              ) : (
+                <span aria-hidden="true" />
+              )}
               <button
-                type="button"
-                onClick={() => {
-                  setError(null);
-                  setIntakePageIndex((current) => Math.max(0, current - 1));
+                type="submit"
+                disabled={!currentPageComplete}
+                style={{
+                  ...primaryAction,
+                  marginLeft: "auto",
+                  cursor: currentPageComplete ? "pointer" : "not-allowed",
+                  opacity: currentPageComplete ? 1 : 0.55,
                 }}
-                style={linkButton}
               >
-                ← Back to previous step
+                {hasNextQuestionPage ? "Next step" : "Choose treatment"}
               </button>
-            ) : (
-              <span aria-hidden="true" />
-            )}
+            </div>
             <button
-              type="submit"
-              disabled={!currentPageComplete}
+              type="button"
+              onClick={() => {
+                setAccountMode("signin");
+                setStep("account");
+              }}
+              style={linkButton}
+            >
+              Already have an account? Sign in
+            </button>
+          </form>
+        ) : null}
+
+        {step === "treatment" ? (
+          <div style={{ display: "grid", gap: 18 }}>
+            <div
               style={{
-                ...primaryAction,
-                marginLeft: "auto",
-                cursor: currentPageComplete ? "pointer" : "not-allowed",
-                opacity: currentPageComplete ? 1 : 0.55,
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gap: 14,
               }}
             >
-              {hasNextQuestionPage ? "Next step" : "Continue"}
-            </button>
+              {TREATMENTS.map((treatment) => {
+                const selected = selectedTreatment === treatment.key;
+                return (
+                  <button
+                    key={treatment.key}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTreatment(treatment.key);
+                      setTreatmentAnswers({});
+                    }}
+                    style={{
+                      display: "grid",
+                      gap: 12,
+                      minHeight: 210,
+                      padding: 18,
+                      textAlign: "left",
+                      borderRadius: 8,
+                      border: `2px solid ${selected ? brand.blue : "#d9dddf"}`,
+                      background: selected ? "#fff" : "#fdfefe",
+                      color: brand.graphite,
+                      cursor: "pointer",
+                      boxShadow: selected ? "0 16px 38px rgba(47, 128, 237, 0.18)" : "none",
+                    }}
+                    aria-pressed={selected}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 52,
+                        height: 52,
+                        display: "grid",
+                        placeItems: "center",
+                        borderRadius: 8,
+                        background: selected ? brand.blue : brand.graphite,
+                        color: "#fff",
+                        fontSize: 26,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {treatment.accent}
+                    </span>
+                    <span style={{ display: "grid", gap: 5 }}>
+                      <strong style={{ fontSize: 20 }}>{treatment.name}</strong>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: brand.blue }}>
+                        {treatment.label}
+                      </span>
+                      <span style={{ fontSize: 14, lineHeight: 1.45, color: "#596064" }}>
+                        {treatment.summary}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {error ? (
+              <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+                {error}
+              </p>
+            ) : null}
+            <div style={flowActions}>
+              <button
+                type="button"
+                style={linkButton}
+                onClick={() => {
+                  setError(null);
+                  setStep("eligibility");
+                }}
+              >
+                ← Back to basics
+              </button>
+              <button
+                type="button"
+                disabled={!selectedTreatment}
+                style={{
+                  ...primaryAction,
+                  marginLeft: "auto",
+                  cursor: selectedTreatment ? "pointer" : "not-allowed",
+                  opacity: selectedTreatment ? 1 : 0.55,
+                }}
+                onClick={() => {
+                  if (!selectedTreatment) {
+                    setError("Select a treatment.");
+                    return;
+                  }
+                  setError(null);
+                  setStep("treatment_questions");
+                }}
+              >
+                Continue
+              </button>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setAccountMode("signin");
-              setStep("account");
+        ) : null}
+
+        {step === "treatment_questions" ? (
+          <form
+            style={{ display: "grid", gap: 14 }}
+            onSubmit={(event) => {
+              event.preventDefault();
+              setError(null);
+              const unanswered = medicationQuestions.find(
+                (question) => !intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
+              );
+              if (unanswered) {
+                setError(`Answer: ${unanswered.prompt}`);
+                return;
+              }
+              saveIntakeAndContinue();
             }}
-            style={linkButton}
           >
-            Already have an account? Sign in
-          </button>
-        </form>
+            {medicationQuestions.map((question) => (
+              <QuestionField
+                key={question.id}
+                question={question}
+                answer={treatmentAnswers[question.question_key]}
+                onChange={(value) =>
+                  setTreatmentAnswers((current) => ({
+                    ...current,
+                    [question.question_key]: value,
+                  }))
+                }
+              />
+            ))}
+            {error ? (
+              <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+                {error}
+              </p>
+            ) : null}
+            <div style={flowActions}>
+              <button
+                type="button"
+                style={linkButton}
+                onClick={() => {
+                  setError(null);
+                  setStep("treatment");
+                }}
+              >
+                ← Back to treatment
+              </button>
+              <button
+                type="submit"
+                disabled={!medicationQuestionsComplete}
+                style={{
+                  ...primaryAction,
+                  marginLeft: "auto",
+                  cursor: medicationQuestionsComplete ? "pointer" : "not-allowed",
+                  opacity: medicationQuestionsComplete ? 1 : 0.55,
+                }}
+              >
+                Create account
+              </button>
+            </div>
+          </form>
+        ) : null}
       </section>
     </main>
   );

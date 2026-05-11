@@ -80,7 +80,7 @@ export function AuthEntry({
     const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${origin}/auth/callback` },
+      options: { emailRedirectTo: `${origin}/auth/callback?next=/checkout` },
     });
     setLoading(false);
     if (err) {
@@ -95,7 +95,7 @@ export function AuthEntry({
     }
     if (data.session) {
       await syncStoredPreAuthIntake(supabase, data.session.user.id);
-      router.push("/post-login");
+      router.push(intakeReady ? "/checkout" : "/post-login");
       router.refresh();
       return;
     }
@@ -137,7 +137,7 @@ export function AuthEntry({
     if (user) {
       await syncStoredPreAuthIntake(supabase, user.id);
     }
-    router.push("/post-login");
+    router.push(intakeReady ? "/checkout" : "/post-login");
     router.refresh();
   }
 

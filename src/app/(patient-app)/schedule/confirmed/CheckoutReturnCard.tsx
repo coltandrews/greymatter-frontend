@@ -90,7 +90,7 @@ export function CheckoutReturnCard({
         setBookingIntent(latest);
         setPollError(null);
       } catch {
-        setPollError("Payment is confirmed in Stripe. We are syncing your appointment status.");
+        setPollError("Payment is confirmed in Stripe. We are syncing your medication request status.");
       }
     })();
   }, [checkoutSessionId, polling]);
@@ -128,7 +128,7 @@ export function CheckoutReturnCard({
       <p className={styles.hint}>{pollError ?? view.hint}</p>
       {polling && pollCount < MAX_POLLS ? (
         <p className={styles.statusNote} role="status">
-          Checking for booking updates...
+          Checking for request updates...
         </p>
       ) : null}
       {bookingIntent ? (
@@ -170,7 +170,7 @@ export function CheckoutReturnCard({
           href="/hub"
           className={`${styles.btn} ${action ? styles.secondaryBtn : ""}`}
         >
-          ← Back to Patient Hub
+          ← Back to Patient Portal
         </Link>
         {action ? (
           <Link href={action.href} className={styles.btn}>

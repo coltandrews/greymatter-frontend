@@ -23,5 +23,18 @@ export default async function PostLoginPage() {
     redirect("/dashboard");
   }
 
+  const { data: profileWithDemographics } = await supabase
+    .from("profiles")
+    .select("demographics")
+    .eq("id", user.id)
+    .maybeSingle();
+  const demographics = profileWithDemographics?.demographics as
+    | { selected_treatment?: unknown }
+    | null
+    | undefined;
+  if (typeof demographics?.selected_treatment === "string" && demographics.selected_treatment) {
+    redirect("/checkout");
+  }
+
   redirect("/hub");
 }

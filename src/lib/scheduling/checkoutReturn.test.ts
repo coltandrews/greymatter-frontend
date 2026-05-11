@@ -6,7 +6,7 @@ import {
 } from "./checkoutReturn";
 
 describe("checkoutReturnView", () => {
-  it("shows booked copy only after payment and Ola booking are complete", () => {
+  it("shows submitted copy only after payment and Ola handoff are complete", () => {
     expect(
       checkoutReturnView({
         booking_status: "booked",
@@ -21,8 +21,8 @@ describe("checkoutReturnView", () => {
       }),
     ).toMatchObject({
       tone: "success",
-      title: "Appointment booked",
-      lead: "Your payment was received and your appointment is booked.",
+      title: "Request submitted",
+      lead: "Your payment was received and your medication request was sent for provider review.",
     });
   });
 
@@ -41,7 +41,7 @@ describe("checkoutReturnView", () => {
     ).toMatchObject({
       tone: "pending",
       title: "Payment received",
-      lead: "We are finishing your appointment request.",
+      lead: "We are sending your medication request for provider review.",
     });
   });
 
@@ -61,7 +61,7 @@ describe("checkoutReturnView", () => {
     ).toMatchObject({
       tone: "action",
       title: "Next steps ready",
-      lead: "Your payment was received and your provider booking is ready.",
+      lead: "Your payment was received and provider next steps are ready.",
     });
   });
 
@@ -78,7 +78,7 @@ describe("checkoutReturnView", () => {
     ).toMatchObject({
       tone: "review",
       title: "Payment received",
-      lead: "We are reviewing your appointment request.",
+      lead: "We are reviewing your medication request.",
     });
   });
 

@@ -21,41 +21,6 @@ export type CheckoutReturnAction = {
   label: string;
 } | null;
 
-function selectedSlotSummary(selectedSlot: unknown): string {
-  if (!selectedSlot || typeof selectedSlot !== "object") {
-    return "We are checking your appointment details.";
-  }
-
-  const slot = selectedSlot as Record<string, unknown>;
-  const start = typeof slot.start === "string" ? slot.start : "";
-  const providerName =
-    typeof slot.providerName === "string" ? slot.providerName.trim() : "";
-
-  if (!start) {
-    return providerName
-      ? `Provider: ${providerName}`
-      : "We are checking your appointment details.";
-  }
-
-  const date = new Date(start);
-  if (Number.isNaN(date.getTime())) {
-    return providerName
-      ? `Provider: ${providerName}`
-      : "We are checking your appointment details.";
-  }
-
-  const when = date.toLocaleString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-
-  return providerName ? `${when} with ${providerName}` : when;
-}
-
 export function checkoutReturnView(
   bookingIntent: BookingIntentReturnRow | null,
 ): CheckoutReturnView {
@@ -64,13 +29,13 @@ export function checkoutReturnView(
       tone: "review",
       icon: "!",
       title: "We could not find that checkout",
-      lead: "Your appointment status is not available from this link.",
-      summary: "Return to your hub to check the latest appointment information.",
+      lead: "Your medication request status is not available from this link.",
+      summary: "Return to your portal to check the latest request information.",
       hint: "If payment went through, we can still reconcile the request from Stripe and Ola records.",
     };
   }
 
-  const summary = selectedSlotSummary(bookingIntent.selected_slot);
+  const summary = "You will receive SMS and email instructions from our care partner.";
 
   if (
     bookingIntent.booking_status === "booked" &&
@@ -80,10 +45,10 @@ export function checkoutReturnView(
     return {
       tone: "success",
       icon: "✓",
-      title: "Appointment booked",
-      lead: "Your payment was received and your appointment is booked.",
+      title: "Request submitted",
+      lead: "Your payment was received and your medication request was sent for provider review.",
       summary,
-      hint: "You can return to your hub to view visit details and next steps.",
+      hint: "Return to your patient portal any time to refresh medication status.",
     };
   }
 
@@ -92,9 +57,9 @@ export function checkoutReturnView(
       tone: "action",
       icon: "!",
       title: "Next steps ready",
-      lead: "Your payment was received and your provider booking is ready.",
+      lead: "Your payment was received and provider next steps are ready.",
       summary,
-      hint: "Review the provider next steps before continuing outside Greymatter.",
+      hint: "Review the next steps before continuing outside Greymatter.",
     };
   }
 
@@ -103,9 +68,9 @@ export function checkoutReturnView(
       tone: "review",
       icon: "!",
       title: "Payment received",
-      lead: "We are reviewing your appointment request.",
+      lead: "We are reviewing your medication request.",
       summary,
-      hint: "Your payment succeeded, but automatic provider booking did not finish. We will follow up with next steps.",
+      hint: "Your payment succeeded, but automatic provider handoff did not finish. We will follow up with next steps.",
     };
   }
 
@@ -113,9 +78,9 @@ export function checkoutReturnView(
     tone: "pending",
     icon: "...",
     title: "Payment received",
-    lead: "We are finishing your appointment request.",
+    lead: "We are sending your medication request for provider review.",
     summary,
-    hint: "This can take a moment after checkout. Refresh this page or return to your hub for the latest status.",
+    hint: "This can take a moment after checkout. Refresh this page or return to your portal for the latest status.",
   };
 }
 

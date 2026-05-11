@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildBookingIntentPayload, GREYMATTER_SERVICE_KEY } from "./bookingIntentPayload";
+import {
+  buildBookingIntentPayload,
+  buildTreatmentBookingIntentPayload,
+  GREYMATTER_SERVICE_KEY,
+} from "./bookingIntentPayload";
 
 describe("buildBookingIntentPayload", () => {
   it("maps schedule selections into the backend booking intent shape", () => {
@@ -37,5 +41,35 @@ describe("buildBookingIntentPayload", () => {
         providerName: "Dr Provider",
       },
     });
+  });
+
+  it("builds a no-schedule treatment booking intent from saved intake", () => {
+    const payload = buildTreatmentBookingIntentPayload({
+      legal_first_name: "Pat",
+      legal_last_name: "Patient",
+      service_state: "SC",
+      selected_treatment: "glp_1",
+      pre_signup_answers: {
+        service_state: "SC",
+        for_self: "yes",
+      },
+      treatment_answers: {
+        glp_1_current_weight: "210",
+        glp_1_prior_use: "no",
+      },
+    });
+
+    expect(payload).toMatchObject({
+      serviceState: "SC",
+      serviceKey: GREYMATTER_SERVICE_KEY,
+      serviceType: "initial",
+      appointmentAnswers: {
+        service_state: "SC",
+        for_self: "yes",
+        glp_1_current_weight: "210",
+        glp_1_prior_use: "no",
+      },
+    });
+    expect(payload.selectedSlot).toBeUndefined();
   });
 });

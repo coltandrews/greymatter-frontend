@@ -20,7 +20,7 @@ export function hubBookingIntentStatusView(
   ) {
     return {
       label: "Confirmed",
-      subtitle: "Initial semaglutide consultation",
+      subtitle: "Provider review received. Watch for medication updates.",
       tone: "confirmed",
     };
   }
@@ -28,7 +28,7 @@ export function hubBookingIntentStatusView(
   if (input.booking_status === "action_required") {
     return {
       label: "Next steps",
-      subtitle: "Provider booking is ready. Review the next steps.",
+      subtitle: "Provider next steps are ready. Review them before continuing.",
       tone: "action",
     };
   }
@@ -36,7 +36,7 @@ export function hubBookingIntentStatusView(
   if (input.booking_status === "needs_review") {
     return {
       label: "Needs review",
-      subtitle: "Payment received. We are confirming provider booking.",
+      subtitle: "Payment received. We are confirming provider handoff.",
       tone: "review",
     };
   }
@@ -44,7 +44,7 @@ export function hubBookingIntentStatusView(
   if (input.booking_status === "cancelled") {
     return {
       label: "Cancelled",
-      subtitle: "This appointment request was cancelled.",
+      subtitle: "This medication request was cancelled.",
       tone: "cancelled",
     };
   }
@@ -52,14 +52,14 @@ export function hubBookingIntentStatusView(
   if (input.payment_status === "paid") {
     return {
       label: "Processing",
-      subtitle: "Payment received. Provider booking is in progress.",
+      subtitle: "Payment received. Provider review is in progress.",
       tone: "pending",
     };
   }
 
   return {
     label: "Payment Pending",
-    subtitle: "Checkout is not complete. This appointment is not booked yet.",
+    subtitle: "Checkout is not complete. This medication request is not submitted yet.",
     tone: "pending",
   };
 }

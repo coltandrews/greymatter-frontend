@@ -26,6 +26,7 @@ export type HubBookingIntentRow = {
   payment_status: string;
   ola_status: string;
   selected_slot: unknown;
+  intake_data: unknown;
   stripe_checkout_session_id: string | null;
   created_at: string;
   updated_at: string;
@@ -216,6 +217,7 @@ function mapBookingIntentRows(data: unknown[]): HubBookingIntentRow[] {
       payment_status: String(o.payment_status),
       ola_status: String(o.ola_status),
       selected_slot: o.selected_slot,
+      intake_data: o.intake_data,
       stripe_checkout_session_id:
         o.stripe_checkout_session_id == null
           ? null
@@ -253,7 +255,7 @@ async function loadAppointmentsFromSupabase(): Promise<{
         .order("starts_at", { ascending: true }),
       supabase
         .from("booking_intents")
-        .select("id, booking_status, payment_status, ola_status, selected_slot, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
+        .select("id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
         .eq("user_id", user.id)
         .neq("booking_status", "draft")
         .order("created_at", { ascending: false }),
@@ -572,14 +574,14 @@ export function HubAppointments({
         <div className={styles.listToolbar}>
           <p className={styles.listHeading}>Your list</p>
           <span className={styles.badge}>
-            {visitCount} {visitCount === 1 ? "visit" : "visits"}
+            {visitCount} {visitCount === 1 ? "request" : "requests"}
           </span>
         </div>
       ) : null}
 
       {visitCount === 0 ? (
         <p className={styles.emptyState}>
-          No appointments yet.
+          No medication requests yet.
         </p>
       ) : (
         <ul className={styles.visitList}>
@@ -697,18 +699,18 @@ export function HubAppointments({
             onClick={(e) => e.stopPropagation()}
           >
             <h3 id="appt-detail-title" className={styles.modalTitle}>
-              Appointment details
+              Medication request details
             </h3>
 
             <dl className={styles.detailList}>
               {selected.kind === "bookingIntent" ? (
                 <>
                   <div className={styles.detailRow}>
-                    <dt>Scheduled</dt>
+                    <dt>Submitted</dt>
                     <dd>{formatWhen(bookingIntentStartsAt(selected.bookingIntent))}</dd>
                   </div>
                   <div className={styles.detailRow}>
-                    <dt>Clinician</dt>
+                    <dt>Provider</dt>
                     <dd>{bookingIntentProvider(selected.bookingIntent)}</dd>
                   </div>
                   <div className={styles.detailRow}>

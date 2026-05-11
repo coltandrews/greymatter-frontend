@@ -1,16 +1,20 @@
 "use client";
 
 import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
+import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
 import { createClient } from "@/lib/supabase/client";
+import { treatmentByKey } from "@/lib/treatments";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./hub.module.css";
-import type { HubAppointmentRow } from "./HubAppointments";
+import type { HubAppointmentRow, HubBookingIntentRow } from "./HubAppointments";
 
 type MedicationRow = {
   key: string;
   name: string;
   details: string | null;
   source: string | null;
+  status: string;
+  statusTone: string;
 };
 
 function stringValue(record: Record<string, unknown>, keys: string[]): string | null {
@@ -28,15 +32,17 @@ function stringValue(record: Record<string, unknown>, keys: string[]): string | 
 
 function prescriptionToMedication(
   prescription: unknown,
-  appointment: HubAppointmentRow,
+  sourceRow: { id: string; providerName: string | null },
   index: number,
 ): MedicationRow | null {
   if (typeof prescription === "string" && prescription.trim()) {
     return {
-      key: `${appointment.id}-${index}-${prescription}`,
+      key: `${sourceRow.id}-${index}-${prescription}`,
       name: prescription.trim(),
       details: null,
-      source: appointment.provider_name?.trim() || null,
+      source: sourceRow.providerName?.trim() || null,
+      status: "In review",
+      statusTone: "pending",
     };
   }
 
@@ -78,10 +84,12 @@ function prescriptionToMedication(
     .join(" · ");
 
   return {
-    key: `${appointment.id}-${index}-${name}`,
+    key: `${sourceRow.id}-${index}-${name}`,
     name,
     details: details || null,
-    source: appointment.provider_name?.trim() || null,
+    source: sourceRow.providerName?.trim() || null,
+    status: stringValue(record, ["status"]) ?? "In review",
+    statusTone: "pending",
   };
 }
 
@@ -98,6 +106,18 @@ function prescriptionsFromOrderDetails(json: unknown): unknown[] {
   return Array.isArray(prescriptions) ? prescriptions : [];
 }
 
+function selectedTreatmentName(row: HubBookingIntentRow): string {
+  const intake =
+    row.intake_data && typeof row.intake_data === "object"
+      ? (row.intake_data as Record<string, unknown>)
+      : {};
+  const treatmentKey =
+    typeof intake.selected_treatment === "string"
+      ? intake.selected_treatment
+      : null;
+  return treatmentByKey(treatmentKey)?.name ?? "Medication request";
+}
+
 function dedupeMedications(rows: MedicationRow[]): MedicationRow[] {
   const seen = new Set<string>();
   return rows.filter((row) => {
@@ -112,17 +132,56 @@ function dedupeMedications(rows: MedicationRow[]): MedicationRow[] {
 
 export function HubMedications({
   appointments,
+  bookingIntents,
   serverLoadError,
 }: {
   appointments: HubAppointmentRow[];
+  bookingIntents: HubBookingIntentRow[];
   serverLoadError: string | null;
 }) {
-  const orderAppointments = useMemo(
-    () => appointments.filter((appt) => appt.ola_order_guid),
-    [appointments],
+  const orderRows = useMemo(
+    () => [
+      ...bookingIntents
+        .filter((row) => row.ola_order_guid)
+        .map((row) => ({
+          id: row.id,
+          orderGuid: row.ola_order_guid as string,
+          providerName: null,
+        })),
+      ...appointments
+        .filter((appt) => appt.ola_order_guid)
+        .map((appt) => ({
+          id: appt.id,
+          orderGuid: appt.ola_order_guid as string,
+          providerName: appt.provider_name,
+        })),
+    ],
+    [appointments, bookingIntents],
+  );
+  const requestRows = useMemo(
+    () =>
+      bookingIntents.map((row): MedicationRow => {
+        const view = hubBookingIntentStatusView({
+          booking_status: row.booking_status,
+          payment_status: row.payment_status,
+          ola_status: row.ola_status,
+        });
+        return {
+          key: `request-${row.id}`,
+          name: selectedTreatmentName(row),
+          details: view.subtitle,
+          source: row.ola_order_guid ? `Ola ${row.ola_order_guid}` : null,
+          status:
+            row.booking_status === "booked" || row.booking_status === "action_required"
+              ? "Provider review"
+              : view.label,
+          statusTone: view.tone,
+        };
+      }),
+    [bookingIntents],
   );
   const [medications, setMedications] = useState<MedicationRow[]>([]);
-  const [loading, setLoading] = useState(orderAppointments.length > 0);
+  const [loading, setLoading] = useState(orderRows.length > 0);
   const [error, setError] = useState<string | null>(serverLoadError);
 
   useEffect(() => {
@@ -135,7 +194,7 @@ export function HubMedications({
         return;
       }
 
-      if (orderAppointments.length === 0) {
+      if (orderRows.length === 0) {
         setMedications([]);
         setLoading(false);
         return;
@@ -158,8 +217,8 @@ export function HubMedications({
       }
 
       const loaded = await Promise.all(
-        orderAppointments.map(async (appointment) => {
-          const orderGuid = appointment.ola_order_guid;
+        orderRows.map(async (row) => {
+          const orderGuid = row.orderGuid;
           if (!orderGuid) {
             return [];
           }
@@ -169,7 +228,7 @@ export function HubMedications({
           }
           const json = (await response.json().catch(() => null)) as unknown;
           return prescriptionsFromOrderDetails(json)
-            .map((item, index) => prescriptionToMedication(item, appointment, index))
+            .map((item, index) => prescriptionToMedication(item, row, index))
             .filter((item): item is MedicationRow => item != null);
         }),
       );
@@ -184,7 +243,9 @@ export function HubMedications({
     return () => {
       cancelled = true;
     };
-  }, [orderAppointments, serverLoadError]);
+  }, [orderRows, serverLoadError]);
+
+  const displayRows = dedupeMedications([...medications, ...requestRows]);
 
   return (
     <>
@@ -198,17 +259,22 @@ export function HubMedications({
         <p className={styles.emptyState}>Loading current medications...</p>
       ) : error ? (
         <p className={styles.error}>{error}</p>
-      ) : medications.length === 0 ? (
-        <p className={styles.emptyState}>No current prescriptions.</p>
+      ) : displayRows.length === 0 ? (
+        <p className={styles.emptyState}>No medication requests yet.</p>
       ) : (
         <ul className={styles.medList}>
-          {medications.map((med) => (
+          {displayRows.map((med) => (
             <li key={med.key} className={styles.medItem}>
               <div>
                 <p className={styles.medName}>{med.name}</p>
                 {med.details ? <p className={styles.medDetails}>{med.details}</p> : null}
               </div>
-              {med.source ? <span className={styles.medSource}>{med.source}</span> : null}
+              <div className={styles.medMeta}>
+                <span className={`${styles.statusPill} ${styles[`statusPill${med.statusTone}`]}`}>
+                  {med.status}
+                </span>
+                {med.source ? <span className={styles.medSource}>{med.source}</span> : null}
+              </div>
             </li>
           ))}
         </ul>
