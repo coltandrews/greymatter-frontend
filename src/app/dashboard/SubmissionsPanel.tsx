@@ -7,10 +7,10 @@ import {
 } from "@/lib/api/admin";
 import {
   bookingQueuePatientLabel,
-  bookingQueuePharmacyLabel,
   bookingQueueReference,
   bookingQueueSlotLabel,
   bookingQueueStatusView,
+  bookingQueueTreatmentLabel,
 } from "@/lib/dashboard/bookingQueue";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useMemo, useState } from "react";
@@ -35,7 +35,7 @@ type UnifiedSubmissionRow =
         color: string;
       };
       detail: string;
-      pharmacy: string;
+      treatment: string;
       updatedAt: string;
       reference: string;
     }
@@ -49,7 +49,7 @@ type UnifiedSubmissionRow =
         color: string;
       };
       detail: string;
-      pharmacy: string;
+      treatment: string;
       updatedAt: string;
       reference: string;
     };
@@ -84,7 +84,7 @@ function bookingRow(row: BookingQueueRow): UnifiedSubmissionRow {
       color: status.color,
     },
     detail: bookingQueueSlotLabel(row),
-    pharmacy: bookingQueuePharmacyLabel(row),
+    treatment: bookingQueueTreatmentLabel(row),
     updatedAt: row.updatedAt,
     reference: bookingQueueReference(row),
   };
@@ -101,7 +101,7 @@ function intakeRow(row: SubmissionRecord): UnifiedSubmissionRow {
       color: "#4338ca",
     },
     detail: "Intake record",
-    pharmacy: "Not selected",
+    treatment: "Not selected",
     updatedAt: row.updated_at,
     reference: row.id,
   };
@@ -199,7 +199,7 @@ export function SubmissionsPanel({
                 <th>Patient</th>
                 <th>Status</th>
                 <th>Details</th>
-                <th>Pharmacy</th>
+                <th>Treatment</th>
                 <th>Updated</th>
                 <th>Reference</th>
               </tr>
@@ -223,7 +223,7 @@ export function SubmissionsPanel({
                     </span>
                   </td>
                   <td>{row.detail}</td>
-                  <td>{row.pharmacy}</td>
+                  <td>{row.treatment}</td>
                   <td>{formatWhen(row.updatedAt)}</td>
                   <td className={styles.monoCell} title={row.reference}>
                     {row.reference}

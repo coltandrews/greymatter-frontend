@@ -1,3 +1,5 @@
+import { treatmentByKey } from "@/lib/treatments";
+
 export type StaffRecoveryBooking = {
   id: string;
   user_id: string;
@@ -7,6 +9,7 @@ export type StaffRecoveryBooking = {
   service_state: string | null;
   selected_slot: unknown;
   selected_pharmacy: unknown;
+  intake_data: unknown;
   vendor_metadata: unknown;
   ola_order_guid: string | null;
   ola_redirect_url: string | null;
@@ -80,6 +83,18 @@ export function recoveryPharmacySummary(row: StaffRecoveryBooking): string {
     phone ? `Phone ${phone}` : null,
   ].filter(Boolean);
   return parts.join(" · ") || "Pharmacy not selected";
+}
+
+export function recoveryTreatmentSummary(row: StaffRecoveryBooking): string {
+  const intake = asRecord(row.intake_data);
+  const treatmentKey = stringValue(intake, ["selected_treatment"]);
+  const treatment = treatmentByKey(treatmentKey);
+  const answers = asRecord(intake.treatment_answers);
+  const answerCount = Object.values(answers)
+    .filter((value) => typeof value === "string" && value.trim())
+    .length;
+  const name = treatment?.name ?? treatmentKey ?? "Treatment not selected";
+  return answerCount > 0 ? `${name} · ${answerCount} med Q&A` : name;
 }
 
 export function recoveryStateSummary(row: StaffRecoveryBooking): string {

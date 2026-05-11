@@ -6,6 +6,7 @@ import {
   bookingQueueReference,
   bookingQueueSlotLabel,
   bookingQueueStatusView,
+  bookingQueueTreatmentLabel,
 } from "./bookingQueue";
 
 const row: BookingQueueRow = {
@@ -22,6 +23,8 @@ const row: BookingQueueRow = {
   slotEnd: "2026-05-04T14:15:00.000Z",
   pharmacyName: "Test Pharmacy",
   pharmacyNcpdpId: "1234567",
+  treatmentKey: "glp_1",
+  treatmentAnswerCount: 3,
   olaOrderGuid: "ola-order-1",
   hasNextSteps: true,
   failureReason: null,
@@ -34,6 +37,7 @@ describe("booking queue helpers", () => {
     expect(bookingQueuePatientLabel(row)).toBe("Pat Patient · pat@example.com");
     expect(bookingQueueSlotLabel(row)).toContain("Dr Provider");
     expect(bookingQueuePharmacyLabel(row)).toBe("Test Pharmacy · NCPDP 1234567");
+    expect(bookingQueueTreatmentLabel(row)).toBe("GLP-1 · 3 med Q&A");
     expect(bookingQueueReference(row)).toBe("ola-order-1");
   });
 
@@ -52,12 +56,15 @@ describe("booking queue helpers", () => {
       slotStart: null,
       pharmacyName: null,
       pharmacyNcpdpId: null,
+      treatmentKey: null,
+      treatmentAnswerCount: 0,
       olaOrderGuid: null,
     };
 
     expect(bookingQueuePatientLabel(missing)).toBe("Pat Patient");
-    expect(bookingQueueSlotLabel(missing)).toBe("Provider pending");
+    expect(bookingQueueSlotLabel(missing)).toBe("Provider review · SC");
     expect(bookingQueuePharmacyLabel(missing)).toBe("Pharmacy pending");
+    expect(bookingQueueTreatmentLabel(missing)).toBe("Treatment not selected");
     expect(bookingQueueReference(missing)).toBe("booking-1");
   });
 });

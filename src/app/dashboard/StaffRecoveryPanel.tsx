@@ -6,8 +6,8 @@ import {
   recoveryDiagnosticDetails,
   recoveryBookingTime,
   recoveryBookingTitle,
-  recoveryPharmacySummary,
   recoveryStateSummary,
+  recoveryTreatmentSummary,
   type StaffRecoveryBooking,
 } from "@/lib/dashboard/recovery";
 import { createClient } from "@/lib/supabase/client";
@@ -178,10 +178,10 @@ export function StaffRecoveryPanel({
                 >
                   <div style={{ padding: 12, borderRadius: 8, background: "#fff", border: "1px solid #e5ebf5" }}>
                     <p style={{ margin: "0 0 6px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
-                      Pharmacy
+                      Treatment
                     </p>
                     <p style={{ margin: 0, fontSize: 13, color: "#172033", lineHeight: 1.45 }}>
-                      {recoveryPharmacySummary(row)}
+                      {recoveryTreatmentSummary(row)}
                     </p>
                   </div>
                   <div style={{ padding: 12, borderRadius: 8, background: "#fff", border: "1px solid #e5ebf5" }}>

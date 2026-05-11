@@ -4,8 +4,8 @@ import {
   recoveryDiagnosticDetails,
   recoveryBookingTime,
   recoveryBookingTitle,
-  recoveryPharmacySummary,
   recoveryStateSummary,
+  recoveryTreatmentSummary,
   type StaffRecoveryBooking,
 } from "./recovery";
 
@@ -24,6 +24,13 @@ const row: StaffRecoveryBooking = {
     name: "Test Pharmacy",
     ncpdpId: "1234567",
     phone: "555-555-5555",
+  },
+  intake_data: {
+    selected_treatment: "testosterone",
+    treatment_answers: {
+      symptoms: "Low energy",
+      empty: " ",
+    },
   },
   vendor_metadata: {
     message: "Provider schedule is no longer available.",
@@ -53,8 +60,8 @@ describe("staff recovery booking helpers", () => {
     expect(recoveryBookingTime({ ...row, selected_slot: null })).toContain("2026");
   });
 
-  it("summarizes pharmacy and status context", () => {
-    expect(recoveryPharmacySummary(row)).toBe("Test Pharmacy · NCPDP 1234567 · Phone 555-555-5555");
+  it("summarizes treatment and status context", () => {
+    expect(recoveryTreatmentSummary(row)).toBe("Testosterone · 1 med Q&A");
     expect(recoveryStateSummary(row)).toBe("Payment paid · Booking request needs_review · Provider handoff failed · State SC");
   });
 

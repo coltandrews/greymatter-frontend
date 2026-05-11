@@ -34,6 +34,8 @@ const patient: PatientLookupPatient = {
       slotEnd: "2026-05-04T14:15:00.000Z",
       pharmacyName: "Test Pharmacy",
       pharmacyNcpdpId: "1234567",
+      treatmentKey: "glp_1",
+      treatmentAnswerCount: 2,
       olaOrderGuid: "ola-order-1",
       hasNextSteps: true,
       failureReason: null,

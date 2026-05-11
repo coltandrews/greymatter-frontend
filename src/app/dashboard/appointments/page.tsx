@@ -16,7 +16,7 @@ export default async function AppointmentsPage() {
       .order("updated_at", { ascending: false }),
     supabase
       .from("booking_intents")
-      .select("id, user_id, payment_status, booking_status, ola_status, service_state, selected_slot, selected_pharmacy, vendor_metadata, ola_order_guid, ola_redirect_url, failure_reason, created_at, updated_at")
+        .select("id, user_id, payment_status, booking_status, ola_status, service_state, selected_slot, selected_pharmacy, intake_data, vendor_metadata, ola_order_guid, ola_redirect_url, failure_reason, created_at, updated_at")
       .eq("payment_status", "paid")
       .eq("booking_status", "needs_review")
       .order("updated_at", { ascending: false }),
@@ -54,6 +54,7 @@ export default async function AppointmentsPage() {
               service_state: row.service_state,
               selected_slot: row.selected_slot,
               selected_pharmacy: row.selected_pharmacy,
+              intake_data: row.intake_data,
               vendor_metadata: row.vendor_metadata,
               ola_order_guid: row.ola_order_guid,
               ola_redirect_url: row.ola_redirect_url,

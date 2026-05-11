@@ -35,6 +35,8 @@ export type BookingQueueRow = {
   slotEnd: string | null;
   pharmacyName: string | null;
   pharmacyNcpdpId: string | null;
+  treatmentKey: string | null;
+  treatmentAnswerCount: number;
   olaOrderGuid: string | null;
   hasNextSteps: boolean;
   failureReason: string | null;
