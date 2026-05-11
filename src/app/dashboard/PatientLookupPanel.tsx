@@ -6,9 +6,9 @@ import {
   type PatientLookupResponse,
 } from "@/lib/api/admin";
 import {
-  bookingQueuePharmacyLabel,
   bookingQueueSlotLabel,
   bookingQueueStatusView,
+  bookingQueueTreatmentLabel,
 } from "@/lib/dashboard/bookingQueue";
 import {
   patientLookupActivitySummary,
@@ -49,6 +49,10 @@ function latestPatientUpdate(patient: PatientLookupPatient): string | null {
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0] ?? null;
 }
 
+function latestTreatmentLabel(patient: PatientLookupPatient): string {
+  return patient.bookings[0] ? bookingQueueTreatmentLabel(patient.bookings[0]) : "None";
+}
+
 function patientMatchesFilter(patient: PatientLookupPatient, search: string, state: string): boolean {
   const normalized = search.trim().toLowerCase();
   const stateMatches = !state || patient.serviceState === state;
@@ -70,6 +74,8 @@ function patientMatchesFilter(patient: PatientLookupPatient, search: string, sta
     ageRangeForPatient(patient),
     patient.latestSubmission?.status,
     patientLookupActivitySummary(patient),
+    latestTreatmentLabel(patient),
+    ...patient.bookings.map(bookingQueueTreatmentLabel),
   ].some((value) => value?.toLowerCase().includes(normalized));
 }
 
@@ -350,7 +356,7 @@ function PatientTable({
           <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr style={{ background: "#f8fafc" }}>
-                {["Patient", "Age", "Gender", "State", "Intake form", "Booking requests", "Provider appts", "Latest activity"].map((header) => (
+                {["Patient", "Age", "Gender", "State", "Treatment", "Intake form", "Booking requests", "Provider appts", "Latest activity"].map((header) => (
                   <th
                     key={header}
                     scope="col"
@@ -398,6 +404,9 @@ function PatientTable({
                     </td>
                     <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155", fontWeight: 800 }}>
                       {patient.serviceState ?? "Unknown"}
+                    </td>
+                    <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155" }}>
+                      {latestTreatmentLabel(patient)}
                     </td>
                     <td style={{ padding: 12, borderBottom: "1px solid #f1f5f9", color: "#334155", textTransform: "capitalize" }}>
                       {statusLabel(patient.latestSubmission?.status)}
@@ -576,7 +585,7 @@ function PatientProfile({
                       </span>
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
-                      {bookingQueuePharmacyLabel(booking)}
+                      {bookingQueueTreatmentLabel(booking)}
                     </p>
                     <p style={{ margin: 0, fontSize: 11, color: "#94a3b8", fontFamily: "ui-monospace, monospace" }}>
                       {booking.olaOrderGuid || booking.id}
