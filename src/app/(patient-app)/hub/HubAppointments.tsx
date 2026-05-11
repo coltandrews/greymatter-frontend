@@ -265,7 +265,7 @@ async function loadAppointmentsFromSupabase(): Promise<{
     return {
       rows: [],
       bookingIntents: [],
-      error: error?.message ?? bookingError?.message ?? "Could not load appointments.",
+      error: error?.message ?? bookingError?.message ?? "Could not load medication requests.",
     };
   }
   return {

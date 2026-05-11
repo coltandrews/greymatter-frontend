@@ -28,18 +28,18 @@ export function patientBookingTimeline(
       label: "Payment",
       description: paymentComplete
         ? "Payment received"
-        : "Checkout is not complete. Appointment is not booked yet.",
+        : "Checkout is not complete. Medication request is not submitted yet.",
       state: paymentComplete ? "complete" : "current",
     },
     {
       key: "provider",
-      label: "Provider booking",
+      label: "Provider review",
       description: providerBooked
-        ? "Provider booking ready"
+        ? "Provider review ready"
         : needsReview
-          ? "Staff is reviewing this booking"
+          ? "Staff is reviewing this request"
           : paymentComplete
-            ? "Provider booking in progress"
+            ? "Provider review in progress"
             : "Starts after payment is complete",
       state: providerBooked
         ? "complete"
@@ -56,7 +56,7 @@ export function patientBookingTimeline(
         ? "Review next steps"
         : providerBooked
           ? "No extra handoff is available yet"
-          : "Available after provider booking",
+          : "Available after provider review",
       state: hasNextSteps
         ? "current"
         : providerBooked
@@ -65,12 +65,12 @@ export function patientBookingTimeline(
     },
     {
       key: "visit",
-      label: "Visit / review",
+      label: "Medication review",
       description: providerBooked
         ? "Follow provider instructions"
         : needsReview
           ? "We will follow up"
-          : "Pending provider booking",
+          : "Pending provider review",
       state: providerBooked && !hasNextSteps ? "current" : "pending",
     },
   ];

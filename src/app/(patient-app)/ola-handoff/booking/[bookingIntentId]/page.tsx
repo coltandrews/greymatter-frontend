@@ -73,18 +73,18 @@ export default async function OlaBookingHandoffPage({ params }: Props) {
           Continue with our care partner
         </h1>
         <p className={styles.lead}>
-          Greymatter uses Ola&apos;s provider network for secure visit documents and identity
+          Greymatter uses Ola&apos;s provider network for secure care documents and identity
           verification.
         </p>
         <p className={styles.body}>
           You may be asked to create or sign in to an Ola account before viewing the next step for
-          this appointment. That account is separate from your Greymatter login and helps the care
+          this medication request. That account is separate from your Greymatter login and helps the care
           team keep your clinical information protected.
         </p>
         <dl className={styles.details}>
           {when ? (
             <div>
-              <dt>Appointment</dt>
+              <dt>Submitted</dt>
               <dd>{when}</dd>
             </div>
           ) : null}

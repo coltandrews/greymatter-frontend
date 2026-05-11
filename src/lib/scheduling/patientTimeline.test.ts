@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { patientBookingTimeline } from "./patientTimeline";
 
 describe("patientBookingTimeline", () => {
-  it("shows provider booking current after payment while Ola is pending", () => {
+  it("shows provider review current after payment while Ola is pending", () => {
     expect(patientBookingTimeline({
       booking_status: "paid",
       payment_status: "paid",
@@ -29,7 +29,7 @@ describe("patientBookingTimeline", () => {
     ]);
   });
 
-  it("marks provider booking as attention when staff review is needed", () => {
+  it("marks provider review as attention when staff review is needed", () => {
     expect(patientBookingTimeline({
       booking_status: "needs_review",
       payment_status: "paid",
@@ -40,7 +40,7 @@ describe("patientBookingTimeline", () => {
     });
   });
 
-  it("makes clear that unpaid requests are not booked", () => {
+  it("makes clear that unpaid requests are not submitted", () => {
     const timeline = patientBookingTimeline({
       booking_status: "payment_pending",
       payment_status: "pending",
@@ -50,7 +50,7 @@ describe("patientBookingTimeline", () => {
     expect(timeline[0]).toMatchObject({
       key: "payment",
       state: "current",
-      description: "Checkout is not complete. Appointment is not booked yet.",
+      description: "Checkout is not complete. Medication request is not submitted yet.",
     });
     expect(timeline[1]).toMatchObject({
       key: "provider",
