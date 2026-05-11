@@ -16,6 +16,7 @@ import { buildTreatmentBookingIntentPayload } from "@/lib/scheduling/bookingInte
 import { createClient } from "@/lib/supabase/client";
 import { treatmentByKey } from "@/lib/treatments";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./checkout.module.css";
 
@@ -59,6 +60,7 @@ export function TreatmentCheckout({
   initialDraft: IntakeDraftData | null;
   initialProfile: IntakeDraftData | null;
 }) {
+  const searchParams = useSearchParams();
   const [intake, setIntake] = useState(() =>
     mergeIntakeAndProfileDemographics(initialDraft, initialProfile),
   );
@@ -208,6 +210,12 @@ export function TreatmentCheckout({
             email instructions for the next step.
           </p>
         </header>
+
+        {searchParams.get("payment") === "cancelled" ? (
+          <p className={styles.notice}>
+            Checkout was cancelled. Your medication request has not been submitted.
+          </p>
+        ) : null}
 
         <div className={styles.grid}>
           <section className={styles.panel} aria-labelledby="purchase-title">

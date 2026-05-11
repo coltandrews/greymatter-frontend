@@ -45,6 +45,17 @@
   line-height: 1.6;
 }
 
+.notice {
+  margin: 0;
+  padding: 13px 15px;
+  border-radius: 8px;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
