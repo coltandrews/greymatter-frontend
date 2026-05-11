@@ -1,5 +1,9 @@
 import type { IntakeDraftData } from "./draftData";
-import type { IntakeQuestionAnswers } from "./intakeQuestions";
+import {
+  normalizeIntakeAnswers,
+  type IntakeQuestion,
+  type IntakeQuestionAnswers,
+} from "./intakeQuestions";
 
 export const PRE_AUTH_INTAKE_STORAGE_KEY = "greymatter_pre_auth_intake";
 
@@ -79,4 +83,32 @@ export function serializePreAuthIntake(data: PreAuthIntakeData): string {
     for_self: data.for_self,
     pre_signup_answers: data.pre_signup_answers ?? {},
   });
+}
+
+function stringAnswer(
+  answers: IntakeQuestionAnswers,
+  key: keyof Pick<
+    PreAuthIntakeData,
+    "legal_first_name" | "legal_last_name" | "date_of_birth" | "gender" | "service_state"
+  >,
+): string {
+  const value = answers[key];
+  return typeof value === "string" ? value.trim() : "";
+}
+
+export function buildPreAuthIntakeData(
+  questions: Pick<IntakeQuestion, "question_key" | "question_type">[],
+  answers: IntakeQuestionAnswers,
+): PreAuthIntakeData {
+  const state = stringAnswer(answers, "service_state");
+  return {
+    legal_first_name: stringAnswer(answers, "legal_first_name"),
+    legal_last_name: stringAnswer(answers, "legal_last_name"),
+    date_of_birth: stringAnswer(answers, "date_of_birth"),
+    gender: stringAnswer(answers, "gender"),
+    service_state: state,
+    address_state: state,
+    for_self: answers.for_self === "yes",
+    pre_signup_answers: normalizeIntakeAnswers(questions, answers),
+  };
 }

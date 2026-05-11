@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { syncStoredPreAuthIntake } from "@/lib/intake/syncStoredPreAuthIntake";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -38,7 +39,13 @@ function isExistingUserSignupError(message: string) {
   );
 }
 
-export function AuthEntry({ initialMode = "signup" }: { initialMode?: Mode }) {
+export function AuthEntry({
+  initialMode = "signup",
+  intakeReady = false,
+}: {
+  initialMode?: Mode;
+  intakeReady?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -87,6 +94,7 @@ export function AuthEntry({ initialMode = "signup" }: { initialMode?: Mode }) {
       return;
     }
     if (data.session) {
+      await syncStoredPreAuthIntake(supabase, data.session.user.id);
       router.push("/post-login");
       router.refresh();
       return;
@@ -122,6 +130,12 @@ export function AuthEntry({ initialMode = "signup" }: { initialMode?: Mode }) {
     if (err) {
       setError(err.message);
       return;
+    }
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      await syncStoredPreAuthIntake(supabase, user.id);
     }
     router.push("/post-login");
     router.refresh();
@@ -188,6 +202,11 @@ export function AuthEntry({ initialMode = "signup" }: { initialMode?: Mode }) {
         <h1 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 600 }}>
           {mode === "signup" ? "Create account" : "Sign in"}
         </h1>
+        {intakeReady ? (
+          <p style={{ margin: "-8px 0 18px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
+            Your intake answers are ready. They will be saved to your account when you continue.
+          </p>
+        ) : null}
 
         <form
           onSubmit={mode === "signup" ? onSignUp : onSignIn}

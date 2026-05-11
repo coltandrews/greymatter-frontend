@@ -8,23 +8,10 @@ describe("buildBookingIntentPayload", () => {
         visit_format: "video",
         additional_notes: "Reduce appetite",
       },
-      insurance: {
-        insurance_member_id: " member-123 ",
-        insurance_plan_name: " Test Plan ",
-        payer_identification: " payer-1 ",
-        cover_type: " Primary ",
-      },
       patient: {
         legal_first_name: "Pat",
         legal_last_name: "Patient",
         service_state: "SC",
-      },
-      pharmacy: {
-        name: " Test Pharmacy ",
-        address: " 123 Main St ",
-        phone: " 555-555-1212 ",
-        fax: " 555-555-3434 ",
-        ncpdpId: " 1234567 ",
       },
       selectedSlot: {
         id: "slot-1",
@@ -45,19 +32,9 @@ describe("buildBookingIntentPayload", () => {
         "Preferred visit format": "Video visit",
         "Anything else we should know? (optional)": "Reduce appetite",
       },
-      selectedPharmacy: {
-        name: "Test Pharmacy",
-        ncpdpId: "1234567",
-      },
       selectedSlot: {
         providerGuid: "provider-guid",
         providerName: "Dr Provider",
-      },
-      insuranceDetails: {
-        memberId: "member-123",
-        planName: "Test Plan",
-        payerId: "payer-1",
-        coverageType: "Primary",
       },
     });
   });

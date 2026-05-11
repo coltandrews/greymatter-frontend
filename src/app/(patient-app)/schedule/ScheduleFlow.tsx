@@ -5,10 +5,7 @@ import {
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import {
-  fetchVendorOlaPharmacies,
-  fetchVendorOlaSchedules,
-} from "@/lib/api/vendorOla";
+import { fetchVendorOlaSchedules } from "@/lib/api/vendorOla";
 import {
   createBookingIntent,
   createBookingIntentCheckout,
@@ -26,7 +23,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./schedule.module.css";
 
-type Step = "intake" | "pharmacy" | "calendar";
+type Step = "intake" | "calendar";
 
 type EmbeddedCheckoutState = {
   bookingIntentId: string;
@@ -34,31 +31,8 @@ type EmbeddedCheckoutState = {
   clientSecret: string;
 };
 
-type InsuranceForm = {
-  insurance_member_id: string;
-  insurance_plan_name: string;
-  payer_identification: string;
-  cover_type: string;
-};
-
-const EMPTY_INSURANCE: InsuranceForm = {
-  insurance_member_id: "",
-  insurance_plan_name: "",
-  payer_identification: "",
-  cover_type: "Primary",
-};
-
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
-
-type PharmacyChoice = {
-  key: string;
-  name: string;
-  address: string;
-  phone: string;
-  fax: string;
-  ncpdpId: string;
-};
 
 function toIsoDate(d: Date): string {
   const y = d.getFullYear();
@@ -159,89 +133,6 @@ function stringFromRecord(record: Record<string, unknown>, keys: string[]): stri
   return "";
 }
 
-function stringValue(record: Record<string, unknown>, keys: string[]): string {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) {
-      return value.trim();
-    }
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return String(value);
-    }
-  }
-  return "";
-}
-
-function pharmacyChoicesFromResponse(json: unknown): PharmacyChoice[] {
-  if (!json || typeof json !== "object") {
-    return [];
-  }
-  const result = (json as Record<string, unknown>).result;
-  if (!Array.isArray(result)) {
-    return [];
-  }
-
-  return result.flatMap((item, index) => {
-    if (!item || typeof item !== "object") {
-      return [];
-    }
-    const record = item as Record<string, unknown>;
-    const name = stringValue(record, ["StoreName", "pharmacy_name", "name"]);
-    if (!name) {
-      return [];
-    }
-    const cityStateZip = [
-      stringValue(record, ["City"]),
-      stringValue(record, ["State"]),
-      stringValue(record, ["ZipCode"]),
-    ]
-      .filter(Boolean)
-      .join(", ");
-    const address = [
-      stringValue(record, ["Address1"]),
-      stringValue(record, ["Address2"]),
-      cityStateZip,
-    ]
-      .filter(Boolean)
-      .join(" ");
-    const ncpdpId = stringValue(record, ["NCPDPID", "pharmacy_ncpdp_id"]);
-
-    return [
-      {
-        key: ncpdpId || `${name}-${index}`,
-        name,
-        address,
-        phone: stringValue(record, ["PrimaryPhone", "pharmacy_phone"]),
-        fax: stringValue(record, ["PrimaryFax", "pharmacy_fax"]),
-        ncpdpId,
-      },
-    ];
-  });
-}
-
-async function pharmacyErrorMessage(res: Response): Promise<string> {
-  const raw = await res.text().catch(() => "");
-  if (!raw.trim()) {
-    return `Pharmacy search failed (${res.status}).`;
-  }
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (parsed && typeof parsed === "object") {
-      const obj = parsed as Record<string, unknown>;
-      const message =
-        typeof obj.message === "string"
-          ? obj.message
-          : typeof obj.error === "string"
-            ? obj.error
-            : raw;
-      return `Pharmacy search failed (${res.status}): ${message}`;
-    }
-  } catch {
-    /* use raw response text */
-  }
-  return `Pharmacy search failed (${res.status}): ${raw}`;
-}
-
 export function ScheduleFlow({
   patient,
   serviceState,
@@ -251,12 +142,6 @@ export function ScheduleFlow({
 }) {
   const [step, setStep] = useState<Step>("intake");
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [pharmacyName, setPharmacyName] = useState("");
-  const [pharmacyZip, setPharmacyZip] = useState(() => patient.zip?.trim() ?? "");
-  const [pharmacyLoading, setPharmacyLoading] = useState(false);
-  const [pharmacyError, setPharmacyError] = useState<string | null>(null);
-  const [pharmacyResults, setPharmacyResults] = useState<PharmacyChoice[]>([]);
-  const [selectedPharmacy, setSelectedPharmacy] = useState<PharmacyChoice | null>(null);
   const [monthCursor, setMonthCursor] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [scheduleResponse, setScheduleResponse] = useState<unknown | null>(null);
@@ -265,8 +150,6 @@ export function ScheduleFlow({
   const [slots, setSlots] = useState<SlotDisplay[]>([]);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-  const [insurance, setInsurance] = useState<InsuranceForm>(EMPTY_INSURANCE);
-  const [insuranceModalOpen, setInsuranceModalOpen] = useState(false);
   const [confirmSaving, setConfirmSaving] = useState(false);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [embeddedCheckout, setEmbeddedCheckout] = useState<EmbeddedCheckoutState | null>(null);
@@ -313,57 +196,10 @@ export function ScheduleFlow({
       if (!intakeValid || scheduleBlockedReason) {
         return;
       }
-      setStep("pharmacy");
+      setStep("calendar");
     },
     [intakeValid, scheduleBlockedReason],
   );
-
-  const onSearchPharmacies = useCallback(async () => {
-    const name = pharmacyName.trim();
-    const zip = pharmacyZip.trim();
-    if (name.length < 3 || !zip) {
-      setPharmacyError("Enter a pharmacy name and ZIP code.");
-      return;
-    }
-
-    setPharmacyLoading(true);
-    setPharmacyError(null);
-    setPharmacyResults([]);
-    setSelectedPharmacy(null);
-
-    try {
-      const supabase = createClient();
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session?.access_token) {
-        throw new Error("Sign in again to search pharmacies.");
-      }
-
-      const response = await fetchVendorOlaPharmacies(session.access_token, {
-        pharmacyName: name,
-        zipCode: zip,
-      });
-
-      if (!response.ok) {
-        throw new Error(await pharmacyErrorMessage(response));
-      }
-
-      const json = (await response.json().catch(() => null)) as unknown;
-      const rows = pharmacyChoicesFromResponse(json);
-      setPharmacyResults(rows);
-      if (rows.length === 0) {
-        setPharmacyError("No pharmacies found for that search.");
-      }
-    } catch (err) {
-      setPharmacyError(
-        err instanceof Error ? err.message : "Could not search pharmacies.",
-      );
-    } finally {
-      setPharmacyLoading(false);
-    }
-  }, [pharmacyName, pharmacyZip]);
 
   useEffect(() => {
     if (step !== "calendar") {
@@ -455,27 +291,8 @@ export function ScheduleFlow({
     [selectedSlotId, slots],
   );
 
-  const selectedSlotSummary = useMemo(() => {
-    if (!selectedDate || !selectedSlot) {
-      return null;
-    }
-    const day = new Date(`${selectedDate}T12:00:00`).toLocaleDateString(undefined, {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
-    return `${day} at ${selectedSlot.label}`;
-  }, [selectedDate, selectedSlot]);
-
-  const insuranceComplete = Boolean(
-    insurance.insurance_member_id.trim() &&
-      insurance.insurance_plan_name.trim() &&
-      insurance.payer_identification.trim() &&
-      insurance.cover_type.trim(),
-  );
-
   const onConfirmAppointment = useCallback(async () => {
-    if (!selectedDate || !selectedSlot || !selectedPharmacy || confirmSaving) {
+    if (!selectedDate || !selectedSlot || confirmSaving) {
       return;
     }
     setConfirmError(null);
@@ -499,9 +316,7 @@ export function ScheduleFlow({
         session.access_token,
         buildBookingIntentPayload({
           answers,
-          insurance,
           patient,
-          pharmacy: selectedPharmacy,
           selectedSlot,
           serviceState: serviceStateValue,
         }),
@@ -551,7 +366,6 @@ export function ScheduleFlow({
           ]) || null,
           clientSecret: checkoutClientSecret,
         });
-        setInsuranceModalOpen(false);
         return;
       }
 
@@ -559,7 +373,7 @@ export function ScheduleFlow({
     } finally {
       setConfirmSaving(false);
     }
-  }, [answers, insurance, patient, selectedDate, selectedPharmacy, selectedSlot, confirmSaving, serviceStateValue]);
+  }, [answers, patient, selectedDate, selectedSlot, confirmSaving, serviceStateValue]);
 
   const onEmbeddedCheckoutComplete = useCallback(() => {
     const checkoutSessionId = embeddedCheckout?.checkoutSessionId;
@@ -621,7 +435,7 @@ export function ScheduleFlow({
       <>
         <h1 className={styles.title}>Schedule appointment</h1>
         <p className={styles.stepHint}>
-          Step 1 of 3 — a few questions for this visit.
+          Step 1 of 2 — a few questions for this visit.
         </p>
         {scheduleBlockedReason ? (
           <p className={styles.stateNote} role="alert">
@@ -679,142 +493,10 @@ export function ScheduleFlow({
               className={styles.btnPrimary}
               disabled={!intakeValid || Boolean(scheduleBlockedReason)}
             >
-              Continue to pharmacy
+              Continue to calendar
             </button>
           </div>
         </form>
-      </>
-    );
-  }
-
-  if (step === "pharmacy") {
-    return (
-      <>
-        <h1 className={styles.title}>Choose pharmacy</h1>
-        <p className={styles.stepHint}>
-          Step 2 of 3 — select the pharmacy for this visit.
-        </p>
-        <div className={styles.pharmacyCard}>
-          <form
-            className={styles.pharmacySearchGrid}
-            onSubmit={(e) => {
-              e.preventDefault();
-              void onSearchPharmacies();
-            }}
-          >
-            <label className={styles.field}>
-              <span className={styles.label}>Pharmacy name</span>
-              <input
-                className={styles.input}
-                value={pharmacyName}
-                onChange={(e) => {
-                  setPharmacyName(e.target.value);
-                  setSelectedPharmacy(null);
-                }}
-                placeholder="CVS, Walgreens, Walmart"
-              />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>ZIP code</span>
-              <input
-                className={styles.input}
-                value={pharmacyZip}
-                onChange={(e) => {
-                  setPharmacyZip(e.target.value);
-                  setSelectedPharmacy(null);
-                }}
-                inputMode="numeric"
-                placeholder="ZIP"
-              />
-            </label>
-            <button
-              type="submit"
-              className={styles.pharmacySearchButton}
-              disabled={pharmacyLoading}
-            >
-              {pharmacyLoading ? "Searching..." : "Search"}
-            </button>
-          </form>
-
-          {selectedPharmacy ? (
-            <div className={styles.selectedPharmacy}>
-              <span className={styles.selectedPharmacyLabel}>Selected</span>
-              <strong>{selectedPharmacy.name}</strong>
-              <span>{selectedPharmacy.address}</span>
-            </div>
-          ) : null}
-
-          {pharmacyError ? (
-            <p className={styles.confirmError} role="alert">
-              {pharmacyError}
-            </p>
-          ) : null}
-
-          <div className={styles.pharmacyResultsPanel}>
-            {pharmacyResults.length > 0 ? (
-              <ul className={styles.pharmacyList}>
-                {pharmacyResults.map((pharmacy) => {
-                  const selected = selectedPharmacy?.key === pharmacy.key;
-                  return (
-                    <li key={pharmacy.key}>
-                      <button
-                        type="button"
-                        className={`${styles.pharmacyOption} ${selected ? styles.pharmacyOptionSelected : ""}`}
-                        onClick={() => setSelectedPharmacy(pharmacy)}
-                        aria-pressed={selected}
-                      >
-                        <span className={styles.pharmacyOptionName}>
-                          {pharmacy.name}
-                        </span>
-                        <span className={styles.pharmacyOptionAddress}>
-                          {pharmacy.address}
-                        </span>
-                        <span className={styles.pharmacyOptionMeta}>
-                          {[
-                            pharmacy.phone ? `Phone ${pharmacy.phone}` : null,
-                            pharmacy.fax ? `Fax ${pharmacy.fax}` : null,
-                            pharmacy.ncpdpId ? `NCPDP ${pharmacy.ncpdpId}` : null,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className={styles.pharmacyResultsEmpty}>
-                Search by pharmacy name and ZIP code to choose a location.
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.confirmBar}>
-          <button
-            type="button"
-            className={styles.btnGhost}
-            disabled={pharmacyLoading}
-            onClick={() => {
-              setStep("intake");
-              setPharmacyError(null);
-            }}
-          >
-            ← Back to questions
-          </button>
-          <button
-            type="button"
-            className={styles.btnConfirm}
-            disabled={!selectedPharmacy || pharmacyLoading}
-            onClick={() => {
-              setPharmacyError(null);
-              setStep("calendar");
-            }}
-          >
-            Continue to calendar
-          </button>
-        </div>
       </>
     );
   }
@@ -823,7 +505,7 @@ export function ScheduleFlow({
     <>
       <h1 className={styles.title}>Choose date &amp; time</h1>
       <p className={styles.stepHint}>
-        Step 3 of 3 — pick a day, then a time.
+        Step 2 of 2 — pick a day, then a time.
       </p>
       <div className={styles.calendarCard}>
         <div className={styles.calendarLayout}>
@@ -936,153 +618,23 @@ export function ScheduleFlow({
           className={styles.btnGhost}
           disabled={confirmSaving}
           onClick={() => {
-            setStep("pharmacy");
+            setStep("intake");
             setSelectedDate(null);
             setSelectedSlotId(null);
             setConfirmError(null);
           }}
         >
-          ← Back to pharmacy
+          ← Back to questions
         </button>
         <button
           type="button"
           className={styles.btnConfirm}
           disabled={!canConfirm || confirmSaving}
-          onClick={() => {
-            setConfirmError(null);
-            setInsuranceModalOpen(true);
-          }}
+          onClick={() => void onConfirmAppointment()}
         >
-          {confirmSaving ? "Saving…" : "Continue"}
+          {confirmSaving ? "Preparing checkout..." : "Continue to payment"}
         </button>
       </div>
-
-      {insuranceModalOpen ? (
-        <div
-          className={styles.modalBackdrop}
-          role="presentation"
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !confirmSaving) {
-              setInsuranceModalOpen(false);
-            }
-          }}
-        >
-          <form
-            className={styles.modalCard}
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!insuranceComplete || confirmSaving) {
-                return;
-              }
-              void onConfirmAppointment();
-            }}
-          >
-            <h2 className={styles.modalTitle}>Insurance details</h2>
-            <p className={styles.modalLead}>
-              Our service provider requires these details before booking. You can find them on your insurance card.
-            </p>
-            {selectedSlotSummary ? (
-              <p className={styles.selectedSummary}>
-                Selected time: <strong>{selectedSlotSummary}</strong>
-              </p>
-            ) : null}
-            {selectedPharmacy ? (
-              <p className={styles.selectedSummary}>
-                Pharmacy: <strong>{selectedPharmacy.name}</strong>
-              </p>
-            ) : null}
-
-            <div className={styles.modalFields}>
-              <label className={styles.field}>
-                <span className={styles.label}>Member ID *</span>
-                <input
-                  className={styles.input}
-                  required
-                  autoComplete="off"
-                  value={insurance.insurance_member_id}
-                  onChange={(e) =>
-                    setInsurance((p) => ({
-                      ...p,
-                      insurance_member_id: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className={styles.field}>
-                <span className={styles.label}>Insurance plan name *</span>
-                <input
-                  className={styles.input}
-                  required
-                  autoComplete="off"
-                  value={insurance.insurance_plan_name}
-                  onChange={(e) =>
-                    setInsurance((p) => ({
-                      ...p,
-                      insurance_plan_name: e.target.value,
-                    }))
-                  }
-                />
-              </label>
-              <label className={styles.field}>
-                <span className={styles.label}>Payer ID *</span>
-                <input
-                  className={styles.input}
-                  required
-                  autoComplete="off"
-                  value={insurance.payer_identification}
-                  onChange={(e) =>
-                    setInsurance((p) => ({
-                      ...p,
-                      payer_identification: e.target.value,
-                    }))
-                  }
-                />
-                <span className={styles.fieldHint}>
-                  Usually listed on the back of the card near claims or provider information.
-                </span>
-              </label>
-              <label className={styles.field}>
-                <span className={styles.label}>Coverage type *</span>
-                <select
-                  className={styles.select}
-                  required
-                  value={insurance.cover_type}
-                  onChange={(e) =>
-                    setInsurance((p) => ({ ...p, cover_type: e.target.value }))
-                  }
-                >
-                  <option value="Primary">Primary</option>
-                  <option value="Secondary">Secondary</option>
-                </select>
-              </label>
-            </div>
-
-            {confirmError ? (
-              <p className={styles.confirmError} role="alert">
-                {confirmError}
-              </p>
-            ) : null}
-
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.btnGhost}
-                disabled={confirmSaving}
-                onClick={() => setInsuranceModalOpen(false)}
-              >
-                Back
-              </button>
-              <button
-                type="submit"
-                className={styles.btnConfirm}
-                disabled={!insuranceComplete || confirmSaving}
-              >
-                {confirmSaving ? "Preparing checkout…" : "Continue to payment"}
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : null}
     </>
   );
 }

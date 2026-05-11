@@ -4,15 +4,14 @@ import { AuthEntry } from "./AuthEntry";
 import { US_STATES } from "./intake/usStates";
 import {
   intakeAnswerComplete,
-  isCorePreSignupQuestionKey,
   mergePreSignupQuestions,
-  normalizeIntakeAnswers,
   type IntakeQuestion,
   type IntakeQuestionAnswer,
   type IntakeQuestionAnswers,
 } from "@/lib/intake/intakeQuestions";
 import {
   PRE_AUTH_INTAKE_STORAGE_KEY,
+  buildPreAuthIntakeData,
   serializePreAuthIntake,
 } from "@/lib/intake/preAuthIntake";
 import { useSearchParams } from "next/navigation";
@@ -327,7 +326,7 @@ export function PreAuthEligibility() {
   );
 
   if (step === "account") {
-    return <AuthEntry initialMode={accountMode} />;
+    return <AuthEntry initialMode={accountMode} intakeReady />;
   }
 
   return (
@@ -345,7 +344,7 @@ export function PreAuthEligibility() {
           Check eligibility
         </h1>
         <p style={{ margin: "0 0 22px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
-          Start with the basics. If eligible, you&apos;ll create an account before pharmacy search.
+          Start with the basics. If eligible, you&apos;ll create an account before scheduling.
         </p>
 
         <form
@@ -365,12 +364,7 @@ export function PreAuthEligibility() {
               return;
             }
 
-            const firstName = stringAnswer(answers.legal_first_name).trim();
-            const lastName = stringAnswer(answers.legal_last_name).trim();
-            const dateOfBirth = stringAnswer(answers.date_of_birth).trim();
-            const gender = stringAnswer(answers.gender).trim();
-            const state = stringAnswer(answers.service_state).trim();
-            const forSelf = stringAnswer(answers.for_self) === "yes";
+            const intake = buildPreAuthIntakeData(questions, answers);
 
             const unansweredAnyPage = questions.find(
               (question) => !intakeAnswerComplete(question, answers[question.question_key]),
@@ -379,29 +373,17 @@ export function PreAuthEligibility() {
               setError(`Answer: ${unansweredAnyPage.prompt}`);
               return;
             }
-            if (!forSelf) {
+            if (intake.for_self !== true) {
               setError("This online flow currently supports patients booking for themselves.");
               return;
             }
-            if (!state) {
+            if (!intake.service_state) {
               setError("Select the state where you will receive care.");
               return;
             }
-            const extraQuestions = questions.filter(
-              (question) => !isCorePreSignupQuestionKey(question.question_key),
-            );
             window.localStorage.setItem(
               PRE_AUTH_INTAKE_STORAGE_KEY,
-              serializePreAuthIntake({
-                legal_first_name: firstName,
-                legal_last_name: lastName,
-                date_of_birth: dateOfBirth,
-                gender,
-                service_state: state,
-                address_state: state,
-                for_self: true,
-                pre_signup_answers: normalizeIntakeAnswers(extraQuestions, answers),
-              }),
+              serializePreAuthIntake(intake),
             );
             setAccountMode("signup");
             setStep("account");

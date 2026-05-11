@@ -8,14 +8,12 @@ The target patient experience is:
 
 1. Eligibility intake
 2. Account creation
-3. Pharmacy selection
-4. Appointment selection
-5. Insurance and review
-6. Stripe payment
-7. Backend-created Ola booking
-8. Confirmation and next steps
+3. Appointment selection
+4. Stripe payment
+5. Backend-created Ola booking
+6. Confirmation and next steps
 
-Patients should complete eligibility before creating an account. If eligible, they create or sign into a Greymatter account before pharmacy search. Payment happens before the backend creates the Ola schedule request.
+Patients should complete eligibility before creating an account. If eligible, they create or sign into a Greymatter account before scheduling. Payment happens before the backend creates the Ola schedule request.
 
 Confirmation and next-step copy should stay conservative until Ola confirms the expected handoff. The UI should support booked, pending, action-required, and needs-follow-up states.
 
