@@ -24,10 +24,9 @@ import { useState } from "react";
 
 const card = {
   width: "100%" as const,
-  maxWidth: 380,
-  minHeight: "calc(100vh - 56px)",
+  maxWidth: 408,
+  minHeight: "auto",
   display: "grid" as const,
-  gridTemplateRows: "auto minmax(0, 1fr)",
 };
 
 const brand = {
@@ -63,21 +62,19 @@ const input = {
 const flowActions = {
   display: "grid" as const,
   gap: 12,
-  marginTop: "auto",
-  paddingTop: 36,
+  marginTop: 32,
 };
 
 const primaryAction = {
   width: "100%",
-  minHeight: 50,
+  minHeight: 52,
   padding: "0 18px",
-  borderRadius: 0,
+  borderRadius: 7,
   border: "none",
   background: brand.accent,
   color: "#ffffff",
   fontSize: 15,
-  fontWeight: 500,
-  textTransform: "uppercase" as const,
+  fontWeight: 600,
 };
 
 const linkButton = {
@@ -98,7 +95,7 @@ const optionGrid = {
 
 const optionCard = {
   position: "relative" as const,
-  minHeight: 50,
+  minHeight: 52,
   display: "flex" as const,
   alignItems: "center",
   gap: 12,
@@ -140,9 +137,9 @@ const flowHeader = {
   position: "relative" as const,
   display: "grid" as const,
   justifyItems: "center",
-  gap: 28,
+  gap: 24,
   paddingTop: 8,
-  marginBottom: 56,
+  marginBottom: 44,
 };
 
 const backArrow = {
@@ -208,14 +205,16 @@ function groupQuestionsByPage(questions: IntakeQuestion[]): IntakeQuestion[][] {
 
 function QuestionField({
   answer,
+  hidePrompt = false,
   onChange,
   question,
 }: {
   answer: IntakeQuestionAnswer | undefined;
+  hidePrompt?: boolean;
   onChange: (value: IntakeQuestionAnswer) => void;
   question: IntakeQuestion;
 }) {
-  const label = (
+  const label = hidePrompt ? null : (
     <>
       {question.prompt}
       {question.required ? " *" : ""}
@@ -262,7 +261,7 @@ function QuestionField({
     const selected = arrayAnswer(answer);
     return (
       <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
-        <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend>
+        {label ? <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend> : null}
         {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
         <div style={optionGrid}>
           {question.options.map((option) => {
@@ -302,7 +301,7 @@ function QuestionField({
   if (question.question_type === "yes_no") {
     return (
       <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
-        <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend>
+        {label ? <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend> : null}
         {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
         <div style={optionGrid}>
           {[
@@ -430,13 +429,7 @@ export function PreAuthEligibility() {
       ? "Choose treatment"
       : step === "treatment_questions"
         ? `${TREATMENTS.find((treatment) => treatment.key === selectedTreatment)?.name ?? "Treatment"} intake`
-        : "Check eligibility";
-  const lead =
-    step === "treatment"
-      ? "Select the care path you want reviewed by a licensed provider."
-      : step === "treatment_questions"
-        ? "Answer the treatment-specific questions before creating your account."
-        : "Start with demographics and basic health information. Your answers attach to your account after signup.";
+        : (currentQuestions[0]?.prompt ?? "Check eligibility");
 
   return (
     <main
@@ -457,12 +450,12 @@ export function PreAuthEligibility() {
             </button>
           ) : null}
           <img
-            src="/brand/gmmd-logo-color-transparent.png"
+            src="/brand/gmmd-intake-logo.png"
             alt="GMMD"
             style={{
               display: "block",
-              width: 116,
-              maxWidth: "42%",
+              width: 132,
+              maxWidth: "46%",
               height: "auto",
             }}
           />
@@ -475,13 +468,10 @@ export function PreAuthEligibility() {
           <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: brand.text }}>
             {heading}
           </h1>
-          <p style={{ margin: "0 0 28px", fontSize: 15, color: brand.muted, lineHeight: 1.35 }}>
-            {lead}
-          </p>
 
         {step === "eligibility" ? (
           <form
-            style={{ display: "grid", gap: 0, minHeight: "52vh" }}
+            style={{ display: "grid", gap: 0 }}
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
@@ -517,16 +507,11 @@ export function PreAuthEligibility() {
               setStep("treatment");
             }}
           >
-            {questionPages.length > 1 ? (
-              <p style={{ margin: "-12px 0 20px", color: brand.quiet, fontSize: 13, fontWeight: 400 }}>
-                Question {intakePageIndex + 1} of {questionPages.length}
-              </p>
-            ) : null}
-
             {currentQuestions.map((question) => (
               <QuestionField
                 key={question.id}
                 question={question}
+                hidePrompt
                 answer={answers[question.question_key]}
                 onChange={(value) =>
                   setAnswers((current) => ({
@@ -549,8 +534,9 @@ export function PreAuthEligibility() {
                 disabled={!currentPageComplete}
                 style={{
                   ...primaryAction,
+                  background: currentPageComplete ? brand.accent : "#3f3f3f",
+                  color: currentPageComplete ? "#ffffff" : "#a9a9a9",
                   cursor: currentPageComplete ? "pointer" : "not-allowed",
-                  opacity: currentPageComplete ? 1 : 0.55,
                 }}
               >
                 {hasNextQuestionPage ? "Next step" : "Choose treatment"}
@@ -570,7 +556,7 @@ export function PreAuthEligibility() {
         ) : null}
 
         {step === "treatment" ? (
-          <div style={{ display: "grid", gap: 0, minHeight: "52vh" }}>
+          <div style={{ display: "grid", gap: 0 }}>
             <div
               style={{
                 display: "grid",
@@ -590,7 +576,7 @@ export function PreAuthEligibility() {
                     style={{
                       display: "grid",
                       gap: 0,
-                      minHeight: 50,
+                      minHeight: 52,
                       padding: "0 22px",
                       textAlign: "left",
                       borderRadius: 7,
@@ -603,7 +589,7 @@ export function PreAuthEligibility() {
                     }}
                     aria-pressed={selected}
                   >
-                    <strong style={{ fontSize: 15, fontWeight: 400 }}>{treatment.name}</strong>
+                    <strong style={{ fontSize: 15, fontWeight: 500 }}>{treatment.name}</strong>
                   </button>
                 );
               })}
@@ -619,8 +605,9 @@ export function PreAuthEligibility() {
                 disabled={!selectedTreatment}
                 style={{
                   ...primaryAction,
+                  background: selectedTreatment ? brand.accent : "#3f3f3f",
+                  color: selectedTreatment ? "#ffffff" : "#a9a9a9",
                   cursor: selectedTreatment ? "pointer" : "not-allowed",
-                  opacity: selectedTreatment ? 1 : 0.55,
                 }}
                 onClick={() => {
                   if (!selectedTreatment) {
@@ -639,7 +626,7 @@ export function PreAuthEligibility() {
 
         {step === "treatment_questions" ? (
           <form
-            style={{ display: "grid", gap: 0, minHeight: "52vh" }}
+            style={{ display: "grid", gap: 0 }}
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
@@ -677,8 +664,9 @@ export function PreAuthEligibility() {
                 disabled={!medicationQuestionsComplete}
                 style={{
                   ...primaryAction,
+                  background: medicationQuestionsComplete ? brand.accent : "#3f3f3f",
+                  color: medicationQuestionsComplete ? "#ffffff" : "#a9a9a9",
                   cursor: medicationQuestionsComplete ? "pointer" : "not-allowed",
-                  opacity: medicationQuestionsComplete ? 1 : 0.55,
                 }}
               >
                 Create account

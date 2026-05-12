@@ -157,7 +157,7 @@ export function CheckoutReturnCard({
   return (
     <div className={styles.card}>
       <header className={styles.flowHeader}>
-        <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" className={styles.logo} />
+        <img src="/brand/gmmd-intake-logo.png" alt="GMMD" className={styles.logo} />
         <div className={styles.progressTrack} />
       </header>
       <div className={`${styles.icon} ${styles[view.tone]}`} aria-hidden>
@@ -165,7 +165,7 @@ export function CheckoutReturnCard({
       </div>
       <h1 className={styles.title}>{view.title}</h1>
       <p className={styles.lead}>{view.lead}</p>
-      <p className={styles.summary}>{pollError ?? view.summary}</p>
+      {pollError ? <p className={styles.summary}>{pollError}</p> : null}
       {polling && pollCount < MAX_POLLS ? (
         <p className={styles.statusNote} role="status">
           Checking for updates...

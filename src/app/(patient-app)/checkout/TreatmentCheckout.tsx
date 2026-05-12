@@ -16,7 +16,6 @@ import { buildTreatmentBookingIntentPayload } from "@/lib/scheduling/bookingInte
 import { createClient } from "@/lib/supabase/client";
 import { treatmentByKey } from "@/lib/treatments";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./checkout.module.css";
 
@@ -60,7 +59,6 @@ export function TreatmentCheckout({
   initialDraft: IntakeDraftData | null;
   initialProfile: IntakeDraftData | null;
 }) {
-  const searchParams = useSearchParams();
   const [intake, setIntake] = useState(() =>
     mergeIntakeAndProfileDemographics(initialDraft, initialProfile),
   );
@@ -201,21 +199,9 @@ export function TreatmentCheckout({
     <main className={styles.page}>
       <div className={styles.shell}>
         <header className={styles.hero}>
-          <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" className={styles.logo} />
-          <p className={styles.eyebrow}>Secure payment</p>
-          <h1 className={styles.title}>Review and payment</h1>
-          <p className={styles.lead}>
-            Complete payment to submit your request for provider review. After payment,
-            Greymatter sends your intake to our care partner and you will receive SMS and
-            email instructions for the next step.
-          </p>
+          <img src="/brand/gmmd-intake-logo.png" alt="GMMD" className={styles.logo} />
+          <h1 className={styles.title}>Review payment</h1>
         </header>
-
-        {searchParams.get("payment") === "cancelled" ? (
-          <p className={styles.notice}>
-            Checkout was cancelled. Your medication request has not been submitted.
-          </p>
-        ) : null}
 
         <div className={styles.grid}>
           <section className={styles.panel} aria-labelledby="purchase-title">
@@ -228,20 +214,6 @@ export function TreatmentCheckout({
               <>
                 <p className={styles.treatmentName}>{treatment.name}</p>
                 <p className={styles.muted}>{treatment.priceLabel}</p>
-                <div className={styles.summaryList}>
-                  <div className={styles.summaryRow}>
-                    <span>Care path</span>
-                    <strong>{treatment.label}</strong>
-                  </div>
-                  <div className={styles.summaryRow}>
-                    <span>State</span>
-                    <strong>{intake.service_state ?? intake.address_state ?? "Not recorded"}</strong>
-                  </div>
-                  <div className={styles.summaryRow}>
-                    <span>Next step</span>
-                    <strong>SMS and email from care partner</strong>
-                  </div>
-                </div>
               </>
             ) : (
               <>
@@ -257,42 +229,19 @@ export function TreatmentCheckout({
             )}
           </section>
 
-          <section className={styles.darkPanel} aria-labelledby="checkout-title">
-            <h2 id="checkout-title" className={styles.sectionTitle}>
-              What happens after payment
-            </h2>
-            <p className={styles.muted}>
-              Your provider review is submitted after payment is confirmed. The patient
-              hub will show medication request status as it updates.
-            </p>
-            <div className={styles.summaryList}>
-              <div className={styles.summaryRow}>
-                <span>Payment</span>
-                <strong>Processed securely</strong>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Provider handoff</span>
-                <strong>Sent after payment</strong>
-              </div>
-              <div className={styles.summaryRow}>
-                <span>Status</span>
-                <strong>Available in portal</strong>
-              </div>
+          {!checkout ? (
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={styles.primary}
+                disabled={!treatment || loadingCheckout || loadingIntake}
+                onClick={() => void startCheckout()}
+              >
+                {loadingCheckout ? "Preparing payment..." : "Continue to payment"}
+              </button>
             </div>
-            {!checkout ? (
-              <div className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.primary}
-                  disabled={!treatment || loadingCheckout || loadingIntake}
-                  onClick={() => void startCheckout()}
-                >
-                  {loadingCheckout ? "Preparing checkout..." : "Continue to payment"}
-                </button>
-              </div>
-            ) : null}
-            {error ? <p className={styles.error}>{error}</p> : null}
-          </section>
+          ) : null}
+          {error ? <p className={styles.error}>{error}</p> : null}
         </div>
 
         {checkout ? (

@@ -27,18 +27,17 @@ const input = {
 
 const card = {
   width: "100%" as const,
-  maxWidth: 380,
-  minHeight: "calc(100vh - 56px)",
+  maxWidth: 408,
+  minHeight: "auto",
   display: "grid" as const,
-  gridTemplateRows: "auto minmax(0, 1fr)",
 };
 
 const logo = {
   display: "block" as const,
-  width: 116,
-  maxWidth: "42%",
+  width: 132,
+  maxWidth: "46%",
   height: "auto",
-  margin: "8px auto 28px",
+  margin: "8px auto 24px",
 };
 
 const pageBackground = "#121212";
@@ -48,7 +47,7 @@ const progressTrack = {
   height: 4,
   borderRadius: 999,
   background: "#666666",
-  marginBottom: 56,
+  marginBottom: 44,
 };
 
 function isExistingUserSignupError(message: string) {
@@ -199,7 +198,7 @@ export function AuthEntry({
       >
         <section style={card}>
           <header>
-            <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" style={logo} />
+            <img src="/brand/gmmd-intake-logo.png" alt="GMMD" style={logo} />
             <div style={progressTrack} />
           </header>
           <div style={{ display: "grid", minHeight: 0 }}>
@@ -213,17 +212,16 @@ export function AuthEntry({
             type="button"
             onClick={leaveCheckEmail}
             style={{
-              marginTop: "auto",
+              marginTop: 32,
               width: "100%",
-              minHeight: 50,
+              minHeight: 52,
               padding: "0 18px",
-              borderRadius: 0,
+              borderRadius: 7,
               border: "none",
               background: "#3487ed",
               color: "#ffffff",
               fontSize: 15,
-              fontWeight: 500,
-              textTransform: "uppercase",
+              fontWeight: 600,
               cursor: "pointer",
             }}
           >
@@ -248,22 +246,17 @@ export function AuthEntry({
     >
       <section style={card}>
         <header>
-          <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" style={logo} />
+          <img src="/brand/gmmd-intake-logo.png" alt="GMMD" style={logo} />
           <div style={progressTrack} />
         </header>
         <div style={{ display: "grid", minHeight: 0 }}>
           <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#f2f2f2" }}>
             {mode === "signup" ? "Create account" : "Sign in"}
           </h1>
-          {intakeReady ? (
-            <p style={{ margin: "0 0 28px", fontSize: 15, color: "#c9c9c9", lineHeight: 1.35 }}>
-              Save your intake and continue to payment.
-            </p>
-          ) : null}
 
         <form
           onSubmit={mode === "signup" ? onSignUp : onSignIn}
-          style={{ display: "grid", gap: 16, minHeight: "52vh" }}
+          style={{ display: "grid", gap: 16 }}
         >
           <label style={field}>
             Email
@@ -344,16 +337,15 @@ export function AuthEntry({
             disabled={loading}
             aria-busy={loading}
             style={{
-              marginTop: "auto",
-              minHeight: 50,
+              marginTop: 20,
+              minHeight: 52,
               padding: "0 18px",
-              borderRadius: 0,
+              borderRadius: 7,
               border: "none",
               background: loading ? "#454545" : "#3487ed",
               color: "#ffffff",
               fontSize: 15,
-              fontWeight: 500,
-              textTransform: "uppercase",
+              fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
               opacity: loading ? 0.78 : 1,
             }}

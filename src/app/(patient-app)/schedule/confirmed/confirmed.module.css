@@ -19,8 +19,8 @@
 }
 
 .logo {
-  width: 116px;
-  max-width: 42%;
+  width: 132px;
+  max-width: 46%;
   height: auto;
 }
 
@@ -178,14 +178,13 @@
   align-items: center;
   justify-content: center;
   min-width: 190px;
-  min-height: 50px;
+  min-height: 52px;
   padding: 0 22px;
-  border-radius: 0;
+  border-radius: 7px;
   background: #3487ed;
   color: #ffffff;
   font-size: 15px;
-  font-weight: 500;
-  text-transform: uppercase;
+  font-weight: 600;
   text-decoration: none;
 }
 

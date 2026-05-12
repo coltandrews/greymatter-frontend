@@ -29,13 +29,13 @@ export function checkoutReturnView(
       tone: "review",
       icon: "!",
       title: "We could not find that checkout",
-      lead: "We could not load this request status.",
+      lead: "Check your portal for the latest status.",
       summary: "Check your portal for the latest update.",
       hint: "If payment went through, support can reconcile the request.",
     };
   }
 
-  const summary = "You will receive SMS and email instructions from our care partner.";
+  const summary = "";
 
   if (
     bookingIntent.booking_status === "booked" &&
@@ -46,7 +46,7 @@ export function checkoutReturnView(
       tone: "success",
       icon: "✓",
       title: "Request submitted",
-      lead: "Your payment was received and your request was sent for provider review.",
+      lead: "Your request was sent for review.",
       summary,
       hint: "You can track updates from your portal.",
     };
@@ -57,7 +57,7 @@ export function checkoutReturnView(
       tone: "action",
       icon: "!",
       title: "Next steps ready",
-      lead: "Your payment was received and your provider next steps are ready.",
+      lead: "Your next steps are ready.",
       summary,
       hint: "Review the next steps when you are ready.",
     };
@@ -68,7 +68,7 @@ export function checkoutReturnView(
       tone: "review",
       icon: "...",
       title: "Under review",
-      lead: "We received your payment. Your request is being reviewed.",
+      lead: "Your request is being reviewed.",
       summary,
       hint: "We will follow up if anything else is needed.",
     };
@@ -78,7 +78,7 @@ export function checkoutReturnView(
     tone: "pending",
     icon: "...",
     title: "Processing request",
-    lead: "We received your payment and are sending your request for provider review.",
+    lead: "Sending your request for review.",
     summary,
     hint: "This can take a moment.",
   };
