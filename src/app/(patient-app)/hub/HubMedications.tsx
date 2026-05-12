@@ -4,6 +4,7 @@ import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
 import { createClient } from "@/lib/supabase/client";
 import { treatmentByKey } from "@/lib/treatments";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./hub.module.css";
 import type { HubAppointmentRow, HubBookingIntentRow } from "./HubAppointments";
@@ -15,6 +16,7 @@ type MedicationRow = {
   source: string | null;
   status: string;
   statusTone: string;
+  href: string;
 };
 
 function stringValue(record: Record<string, unknown>, keys: string[]): string | null {
@@ -32,7 +34,7 @@ function stringValue(record: Record<string, unknown>, keys: string[]): string | 
 
 function prescriptionToMedication(
   prescription: unknown,
-  sourceRow: { id: string; providerName: string | null },
+  sourceRow: { id: string; href: string; providerName: string | null },
   index: number,
 ): MedicationRow | null {
   if (typeof prescription === "string" && prescription.trim()) {
@@ -43,6 +45,7 @@ function prescriptionToMedication(
       source: sourceRow.providerName?.trim() || null,
       status: "In review",
       statusTone: "pending",
+      href: sourceRow.href,
     };
   }
 
@@ -90,6 +93,7 @@ function prescriptionToMedication(
     source: sourceRow.providerName?.trim() || null,
     status: stringValue(record, ["status"]) ?? "In review",
     statusTone: "pending",
+    href: sourceRow.href,
   };
 }
 
@@ -145,6 +149,7 @@ export function HubMedications({
         .filter((row) => row.ola_order_guid)
         .map((row) => ({
           id: row.id,
+          href: `/hub/medications/booking/${encodeURIComponent(row.id)}`,
           orderGuid: row.ola_order_guid as string,
           providerName: null,
         })),
@@ -152,6 +157,7 @@ export function HubMedications({
         .filter((appt) => appt.ola_order_guid)
         .map((appt) => ({
           id: appt.id,
+          href: `/hub/medications/appointment/${encodeURIComponent(appt.id)}`,
           orderGuid: appt.ola_order_guid as string,
           providerName: appt.provider_name,
         })),
@@ -176,6 +182,7 @@ export function HubMedications({
               ? "Provider review"
               : view.label,
           statusTone: view.tone,
+          href: `/hub/medications/booking/${encodeURIComponent(row.id)}`,
         };
       }),
     [bookingIntents],
@@ -264,17 +271,19 @@ export function HubMedications({
       ) : (
         <ul className={styles.medList}>
           {displayRows.map((med) => (
-            <li key={med.key} className={styles.medItem}>
-              <div>
-                <p className={styles.medName}>{med.name}</p>
-                {med.details ? <p className={styles.medDetails}>{med.details}</p> : null}
-              </div>
-              <div className={styles.medMeta}>
-                <span className={`${styles.statusPill} ${styles[`statusPill${med.statusTone}`]}`}>
-                  {med.status}
-                </span>
-                {med.source ? <span className={styles.medSource}>{med.source}</span> : null}
-              </div>
+            <li key={med.key}>
+              <Link href={med.href} className={styles.medItem}>
+                <div className={styles.medInfo}>
+                  <p className={styles.medName}>{med.name}</p>
+                  {med.details ? <p className={styles.medDetails}>{med.details}</p> : null}
+                </div>
+                <div className={styles.medMeta}>
+                  <span className={`${styles.statusPill} ${styles[`statusPill${med.statusTone}`]}`}>
+                    {med.status}
+                  </span>
+                  {med.source ? <span className={styles.medSource}>{med.source}</span> : null}
+                </div>
+              </Link>
             </li>
           ))}
         </ul>

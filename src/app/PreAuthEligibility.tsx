@@ -49,7 +49,7 @@ const field = {
 };
 
 const input = {
-  minHeight: 48,
+  minHeight: 54,
   padding: "0 20px",
   borderRadius: 7,
   border: `2px solid ${brand.border}`,
@@ -95,7 +95,7 @@ const optionGrid = {
 
 const optionCard = {
   position: "relative" as const,
-  minHeight: 52,
+  minHeight: 58,
   display: "flex" as const,
   alignItems: "center",
   gap: 12,

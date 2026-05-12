@@ -142,7 +142,7 @@ export function CheckoutReturnCard({
       ) : (
         <p className={styles.statusNote} aria-hidden="true" />
       )}
-      <div className={styles.actions}>
+      <div className={`${styles.actions} ${!polling ? styles.actionsReady : ""}`}>
         <Link
           href="/hub"
           className={`${styles.btn} ${action ? styles.secondaryBtn : ""}`}

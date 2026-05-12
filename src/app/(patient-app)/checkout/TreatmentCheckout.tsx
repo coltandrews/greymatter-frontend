@@ -6,6 +6,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import { US_STATES } from "@/app/intake/usStates";
+import type { AddressSuggestion } from "@/lib/addressSuggestions";
 import {
   createBookingIntent,
   createBookingIntentCheckout,
@@ -18,7 +19,7 @@ import { buildTreatmentBookingIntentPayload } from "@/lib/scheduling/bookingInte
 import { createClient } from "@/lib/supabase/client";
 import { treatmentByKey } from "@/lib/treatments";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./checkout.module.css";
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
@@ -35,7 +36,16 @@ type CheckoutState = {
   clientSecret: string;
 };
 
-type CheckoutStep = "address" | "id" | "payment";
+type CheckoutStep = "address" | "id" | "payment" | "mobilePayment";
+type IdSide = "front" | "back";
+
+type IdUploadState = {
+  file: File | null;
+  previewUrl: string | null;
+  error: string | null;
+};
+
+type IdUploads = Record<IdSide, IdUploadState>;
 
 type ShippingForm = {
   street_address: string;
@@ -111,6 +121,30 @@ function validateIdFile(file: File | null): string | null {
   return null;
 }
 
+function emptyIdUpload(): IdUploadState {
+  return {
+    file: null,
+    previewUrl: null,
+    error: null,
+  };
+}
+
+function validateIdUploads(uploads: IdUploads): string | null {
+  const frontError = validateIdFile(uploads.front.file);
+  if (frontError) {
+    return frontError === "Upload a government ID."
+      ? "Upload the front of your government ID."
+      : frontError;
+  }
+  const backError = validateIdFile(uploads.back.file);
+  if (backError) {
+    return backError === "Upload a government ID."
+      ? "Upload the back of your government ID."
+      : backError;
+  }
+  return null;
+}
+
 function fileSizeLabel(bytes: number): string {
   if (bytes < 1024 * 1024) {
     return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -176,9 +210,14 @@ export function TreatmentCheckout({
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [checkoutShippingKey, setCheckoutShippingKey] = useState<string | null>(null);
   const [step, setStep] = useState<CheckoutStep>("address");
-  const [idFile, setIdFile] = useState<File | null>(null);
-  const [idPreviewUrl, setIdPreviewUrl] = useState<string | null>(null);
-  const [idError, setIdError] = useState<string | null>(null);
+  const [idUploads, setIdUploads] = useState<IdUploads>({
+    front: emptyIdUpload(),
+    back: emptyIdUpload(),
+  });
+  const idPreviewUrls = useRef(new Set<string>());
+  const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
+  const [addressSuggestionsLoading, setAddressSuggestionsLoading] = useState(false);
+  const [addressSuggestionsOpen, setAddressSuggestionsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -230,28 +269,58 @@ export function TreatmentCheckout({
   );
   const isShippingComplete = shippingComplete(shipping);
   const activeShippingKey = shippingKey(shipping);
-  const idFileError = validateIdFile(idFile);
-  const paymentReady = isShippingComplete && !idFileError;
+  const idUploadError = validateIdUploads(idUploads);
+  const paymentReady = isShippingComplete && !idUploadError;
 
   function updateShipping(key: keyof ShippingForm, value: string) {
     setShipping((current) => ({ ...current, [key]: value }));
+    if (key === "street_address") {
+      setAddressSuggestionsOpen(Boolean(value.trim()));
+    }
     setCheckout(null);
     setCheckoutShippingKey(null);
     setError(null);
   }
 
-  function updateIdFile(file: File | null) {
+  function selectAddressSuggestion(suggestion: AddressSuggestion) {
+    setShipping({
+      street_address: suggestion.street,
+      address_line2: "",
+      city: suggestion.city,
+      address_state: suggestion.state,
+      zip: suggestion.postalCode,
+    });
+    setAddressSuggestions([]);
+    setAddressSuggestionsOpen(false);
+    setCheckout(null);
+    setCheckoutShippingKey(null);
+    setError(null);
+  }
+
+  function updateIdFile(side: IdSide, file: File | null) {
     const validationError = validateIdFile(file);
-    if (idPreviewUrl) {
-      URL.revokeObjectURL(idPreviewUrl);
-    }
-    setIdFile(file);
-    setIdPreviewUrl(
-      file && file.type.startsWith("image/") && !validationError
-        ? URL.createObjectURL(file)
-        : null,
-    );
-    setIdError(file ? validationError : null);
+    setIdUploads((current) => {
+      const currentSide = current[side];
+      if (currentSide.previewUrl) {
+        URL.revokeObjectURL(currentSide.previewUrl);
+        idPreviewUrls.current.delete(currentSide.previewUrl);
+      }
+      const nextPreviewUrl =
+        file && file.type.startsWith("image/") && !validationError
+          ? URL.createObjectURL(file)
+          : null;
+      if (nextPreviewUrl) {
+        idPreviewUrls.current.add(nextPreviewUrl);
+      }
+      return {
+        ...current,
+        [side]: {
+          file,
+          previewUrl: nextPreviewUrl,
+          error: file ? validationError : null,
+        },
+      };
+    });
     setCheckout(null);
     setCheckoutShippingKey(null);
     setError(null);
@@ -259,11 +328,54 @@ export function TreatmentCheckout({
 
   useEffect(() => {
     return () => {
-      if (idPreviewUrl) {
-        URL.revokeObjectURL(idPreviewUrl);
-      }
+      idPreviewUrls.current.forEach((url) => URL.revokeObjectURL(url));
+      idPreviewUrls.current.clear();
     };
-  }, [idPreviewUrl]);
+  }, []);
+
+  useEffect(() => {
+    const query = shipping.street_address.trim();
+    if (step !== "address" || query.length < 4) {
+      setAddressSuggestions([]);
+      setAddressSuggestionsLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    setAddressSuggestionsLoading(true);
+    const timeout = window.setTimeout(() => {
+      fetch(`/api/address-suggestions?query=${encodeURIComponent(query)}`, {
+        signal: controller.signal,
+      })
+        .then((response) => (response.ok ? response.json() : { suggestions: [] }))
+        .then((payload: unknown) => {
+          const record =
+            payload && typeof payload === "object"
+              ? (payload as Record<string, unknown>)
+              : {};
+          setAddressSuggestions(
+            Array.isArray(record.suggestions)
+              ? (record.suggestions as AddressSuggestion[])
+              : [],
+          );
+        })
+        .catch((err: unknown) => {
+          if (!(err instanceof DOMException && err.name === "AbortError")) {
+            setAddressSuggestions([]);
+          }
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setAddressSuggestionsLoading(false);
+          }
+        });
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [shipping.street_address, step]);
 
   function continueFromAddress() {
     setError(null);
@@ -275,10 +387,10 @@ export function TreatmentCheckout({
   }
 
   function continueFromId() {
-    const validationError = validateIdFile(idFile);
-    setIdError(validationError);
+    const validationError = validateIdUploads(idUploads);
     setError(null);
     if (validationError) {
+      setError(validationError);
       return;
     }
     setStep("payment");
@@ -287,14 +399,16 @@ export function TreatmentCheckout({
   async function saveGovernmentIdDocument({
     bookingIntentId,
     file,
+    side,
     userId,
   }: {
     bookingIntentId: string;
     file: File;
+    side: IdSide;
     userId: string;
   }) {
     const supabase = createClient();
-    const storagePath = `${userId}/${bookingIntentId}/government-id.${idFileExtension(file)}`;
+    const storagePath = `${userId}/${bookingIntentId}/government-id-${side}.${idFileExtension(file)}`;
     const { error: uploadError } = await supabase.storage
       .from(ID_BUCKET)
       .upload(storagePath, file, {
@@ -311,7 +425,7 @@ export function TreatmentCheckout({
         {
           booking_intent_id: bookingIntentId,
           user_id: userId,
-          kind: "government_id",
+          kind: `government_id_${side}`,
           storage_path: storagePath,
           mime_type: file.type,
           size_bytes: file.size,
@@ -336,13 +450,14 @@ export function TreatmentCheckout({
       if (!shippingComplete(shipping)) {
         throw new Error("Enter your shipping address.");
       }
-      const file = idFile;
-      const validationError = validateIdFile(idFile);
+      const validationError = validateIdUploads(idUploads);
       if (validationError) {
         throw new Error(validationError);
       }
-      if (!file) {
-        throw new Error("Upload a government ID.");
+      const frontFile = idUploads.front.file;
+      const backFile = idUploads.back.file;
+      if (!frontFile || !backFile) {
+        throw new Error("Upload the front and back of your government ID.");
       }
 
       const supabase = createClient();
@@ -406,11 +521,20 @@ export function TreatmentCheckout({
         throw new Error("Could not prepare this medication request for payment.");
       }
 
-      await saveGovernmentIdDocument({
-        bookingIntentId,
-        file,
-        userId: user.id,
-      });
+      await Promise.all([
+        saveGovernmentIdDocument({
+          bookingIntentId,
+          file: frontFile,
+          side: "front",
+          userId: user.id,
+        }),
+        saveGovernmentIdDocument({
+          bookingIntentId,
+          file: backFile,
+          side: "back",
+          userId: user.id,
+        }),
+      ]);
 
       const checkoutRes = await createBookingIntentCheckout(
         session.access_token,
@@ -448,7 +572,7 @@ export function TreatmentCheckout({
 
   useEffect(() => {
     if (
-      step !== "payment" ||
+      (step !== "payment" && step !== "mobilePayment") ||
       loadingIntake ||
       loadingCheckout ||
       checkout ||
@@ -504,15 +628,37 @@ export function TreatmentCheckout({
               </div>
               {error ? <p className={styles.error}>{error}</p> : null}
               <div className={styles.formStack}>
-                <label className={styles.field}>
-                  Address
+                <div className={styles.field}>
+                  <label htmlFor="shipping-address">Address</label>
                   <input
+                    id="shipping-address"
                     className={styles.input}
                     value={shipping.street_address}
                     onChange={(event) => updateShipping("street_address", event.target.value)}
+                    onFocus={() => setAddressSuggestionsOpen(true)}
                     autoComplete="shipping street-address"
                   />
-                </label>
+                  {addressSuggestionsOpen &&
+                  (addressSuggestions.length > 0 || addressSuggestionsLoading) ? (
+                    <div className={styles.addressSuggestions}>
+                      {addressSuggestionsLoading ? (
+                        <div className={styles.addressSuggestionMuted}>
+                          Finding addresses...
+                        </div>
+                      ) : null}
+                      {addressSuggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.id}
+                          type="button"
+                          className={styles.addressSuggestion}
+                          onClick={() => selectAddressSuggestion(suggestion)}
+                        >
+                          {suggestion.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
                 <label className={styles.field}>
                   Apt, suite, etc.
                   <input
@@ -583,27 +729,60 @@ export function TreatmentCheckout({
                   verification.
                 </p>
               </div>
-              <label className={styles.uploadBox}>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,application/pdf"
-                  onChange={(event) => updateIdFile(event.target.files?.[0] ?? null)}
-                />
-                {idPreviewUrl ? (
-                  <img
-                    src={idPreviewUrl}
-                    alt="Selected government ID preview"
-                    className={styles.uploadPreview}
-                  />
-                ) : null}
-                <span className={styles.uploadTitle}>
-                  {idFile ? idFile.name : "Upload government ID"}
-                </span>
-                <span className={styles.uploadMeta}>
-                  {idFile ? fileSizeLabel(idFile.size) : "JPG, PNG, or PDF up to 10 MB"}
-                </span>
-              </label>
-              {idError ? <p className={styles.error}>{idError}</p> : null}
+              <div className={styles.uploadGrid}>
+                {(["front", "back"] as const).map((side) => {
+                  const upload = idUploads[side];
+                  return (
+                    <div key={side} className={styles.uploadPanel}>
+                      <label className={styles.uploadBox}>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,application/pdf"
+                          capture="environment"
+                          onChange={(event) => updateIdFile(side, event.target.files?.[0] ?? null)}
+                        />
+                        {upload.previewUrl ? (
+                          <img
+                            src={upload.previewUrl}
+                            alt={`Selected government ID ${side} preview`}
+                            className={styles.uploadPreview}
+                          />
+                        ) : null}
+                        <span className={styles.uploadTitle}>
+                          {upload.file
+                            ? upload.file.name
+                            : `${side === "front" ? "Front" : "Back"} of ID`}
+                        </span>
+                        <span className={styles.uploadMeta}>
+                          {upload.file ? fileSizeLabel(upload.file.size) : "JPG, PNG, or PDF up to 10 MB"}
+                        </span>
+                      </label>
+                      {upload.error ? <p className={styles.inlineError}>{upload.error}</p> : null}
+                      {upload.file ? (
+                        <div className={styles.uploadActions}>
+                          <label className={styles.retakeButton}>
+                            Retake
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,application/pdf"
+                              capture="environment"
+                              onChange={(event) => updateIdFile(side, event.target.files?.[0] ?? null)}
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            className={styles.removeButton}
+                            onClick={() => updateIdFile(side, null)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+              {error ? <p className={styles.error}>{error}</p> : null}
               <div className={styles.actions}>
                 <button type="button" className={styles.secondaryButton} onClick={() => setStep("address")}>
                   Back
@@ -611,7 +790,7 @@ export function TreatmentCheckout({
                 <button
                   type="button"
                   className={styles.primary}
-                  disabled={Boolean(idFileError)}
+                  disabled={Boolean(idUploadError)}
                   onClick={continueFromId}
                 >
                   Continue
@@ -663,17 +842,45 @@ export function TreatmentCheckout({
                 </div>
                 <div>
                   <dt>ID upload</dt>
-                  <dd>{idFile ? idFile.name : "Missing"}</dd>
+                  <dd>
+                    {idUploads.front.file && idUploads.back.file
+                      ? `${idUploads.front.file.name}, ${idUploads.back.file.name}`
+                      : "Missing front or back"}
+                  </dd>
                 </div>
               </dl>
               <button type="button" className={styles.textButton} onClick={() => setStep("id")}>
                 Edit details
               </button>
+              <div className={styles.mobilePaymentAction}>
+                <button
+                  type="button"
+                  className={styles.primary}
+                  disabled={!paymentReady}
+                  onClick={() => setStep("mobilePayment")}
+                >
+                  Continue to payment
+                </button>
+              </div>
             </section>
           ) : null}
 
-          {step === "payment" ? (
-            <section className={styles.paymentColumn} aria-label="Payment form">
+          {step === "payment" || step === "mobilePayment" ? (
+            <section
+              className={`${styles.paymentColumn} ${
+                step === "payment" ? styles.desktopPaymentColumn : ""
+              }`}
+              aria-label="Payment form"
+            >
+              {step === "mobilePayment" ? (
+                <button
+                  type="button"
+                  className={styles.mobileBackButton}
+                  onClick={() => setStep("payment")}
+                >
+                  Back to details
+                </button>
+              ) : null}
               {error ? <p className={styles.error}>{error}</p> : null}
               {loadingCheckout || !checkout ? (
                 <div className={styles.paymentSkeleton}>Preparing payment...</div>

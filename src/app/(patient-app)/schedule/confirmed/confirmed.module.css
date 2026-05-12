@@ -155,6 +155,10 @@
   gap: 12px;
 }
 
+.actionsReady {
+  margin-top: 18px;
+}
+
 .actions > :last-child {
   margin-left: 0;
 }
