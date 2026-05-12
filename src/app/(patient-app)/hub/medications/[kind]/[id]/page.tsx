@@ -34,34 +34,6 @@ function formatDate(value: string | null | undefined) {
   });
 }
 
-function treatmentEducation(treatmentName: string) {
-  if (treatmentName === "GLP-1") {
-    return [
-      "GLP-1 medications support appetite regulation and metabolic care planning.",
-      "Your provider reviews your intake, BMI, health history, and contraindications before deciding next steps.",
-      "Common follow-up topics include nausea, hydration, dose changes, and progress tracking.",
-    ];
-  }
-  if (treatmentName === "Testosterone") {
-    return [
-      "Testosterone care starts with symptom review, medical history, and lab planning.",
-      "Your provider may request recent labs or follow-up testing before prescribing.",
-      "Ongoing monitoring commonly includes energy, mood, libido, hematocrit, and hormone levels.",
-    ];
-  }
-  if (treatmentName === "Peptides") {
-    return [
-      "Peptide protocols vary by goal, history, and provider assessment.",
-      "Your provider reviews recovery, performance, and medical history before recommending a protocol.",
-      "Follow-up often focuses on tolerability, consistency, and measurable progress.",
-    ];
-  }
-  return [
-    "Your provider reviews your intake before deciding whether this medication is appropriate.",
-    "Status updates appear here as the request moves through review and fulfillment.",
-  ];
-}
-
 function selectedTreatmentName(intakeData: unknown) {
   const intake = asRecord(intakeData);
   const treatmentKey =
@@ -152,8 +124,6 @@ export default async function MedicationDetailPage({ params }: Props) {
     notFound();
   }
 
-  const education = treatmentEducation(treatmentName);
-
   return (
     <>
       <PatientTopBar
@@ -163,7 +133,8 @@ export default async function MedicationDetailPage({ params }: Props) {
       <main className={styles.detailPage}>
         <div className={styles.detailShell}>
           <Link href="/hub" className={styles.detailBack}>
-            Back to hub
+            <span aria-hidden="true">←</span>
+            Patient Hub
           </Link>
           <header className={styles.detailHero}>
             <p className={styles.detailKicker}>Medication</p>
@@ -196,15 +167,6 @@ export default async function MedicationDetailPage({ params }: Props) {
                   Continue next steps
                 </Link>
               ) : null}
-            </section>
-
-            <section className={styles.detailPanelPage}>
-              <h2>Education</h2>
-              <ul className={styles.educationList}>
-                {education.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
             </section>
           </div>
         </div>

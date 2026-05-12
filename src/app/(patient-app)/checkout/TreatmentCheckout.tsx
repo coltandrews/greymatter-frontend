@@ -23,12 +23,17 @@ import styles from "./checkout.module.css";
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
+const ID_BUCKET = "patient-documents";
+const ID_MAX_BYTES = 10 * 1024 * 1024;
+const ID_MIME_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
 
 type CheckoutState = {
   bookingIntentId: string;
   checkoutSessionId: string | null;
   clientSecret: string;
 };
+
+type CheckoutStep = "address" | "id" | "payment";
 
 type ShippingForm = {
   street_address: string;
@@ -81,6 +86,44 @@ function shippingKey(form: ShippingForm): string {
   ].join("|");
 }
 
+function idFileExtension(file: File): string {
+  if (file.type === "application/pdf") {
+    return "pdf";
+  }
+  if (file.type === "image/png") {
+    return "png";
+  }
+  return "jpg";
+}
+
+function validateIdFile(file: File | null): string | null {
+  if (!file) {
+    return "Upload a government ID.";
+  }
+  if (!ID_MIME_TYPES.has(file.type)) {
+    return "Use a JPG, PNG, or PDF.";
+  }
+  if (file.size <= 0 || file.size > ID_MAX_BYTES) {
+    return "File must be 10 MB or less.";
+  }
+  return null;
+}
+
+function fileSizeLabel(bytes: number): string {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function shippingSummary(form: ShippingForm): string {
+  return [
+    form.street_address.trim(),
+    form.address_line2.trim(),
+    [form.city.trim(), form.address_state.trim(), form.zip.trim()].filter(Boolean).join(", "),
+  ].filter(Boolean).join(" ");
+}
+
 function responseErrorMessage(prefix: string, res: Response): Promise<string> {
   return res.text().then((raw) => {
     if (!raw.trim()) {
@@ -122,6 +165,9 @@ export function TreatmentCheckout({
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [checkoutShippingKey, setCheckoutShippingKey] = useState<string | null>(null);
+  const [step, setStep] = useState<CheckoutStep>("address");
+  const [idFile, setIdFile] = useState<File | null>(null);
+  const [idError, setIdError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -173,12 +219,81 @@ export function TreatmentCheckout({
   );
   const isShippingComplete = shippingComplete(shipping);
   const activeShippingKey = shippingKey(shipping);
+  const idFileError = validateIdFile(idFile);
+  const paymentReady = isShippingComplete && !idFileError;
 
   function updateShipping(key: keyof ShippingForm, value: string) {
     setShipping((current) => ({ ...current, [key]: value }));
     setCheckout(null);
     setCheckoutShippingKey(null);
     setError(null);
+  }
+
+  function updateIdFile(file: File | null) {
+    const validationError = validateIdFile(file);
+    setIdFile(file);
+    setIdError(file ? validationError : null);
+    setCheckout(null);
+    setCheckoutShippingKey(null);
+    setError(null);
+  }
+
+  function continueFromAddress() {
+    setError(null);
+    if (!shippingComplete(shipping)) {
+      setError("Enter your shipping address.");
+      return;
+    }
+    setStep("id");
+  }
+
+  function continueFromId() {
+    const validationError = validateIdFile(idFile);
+    setIdError(validationError);
+    setError(null);
+    if (validationError) {
+      return;
+    }
+    setStep("payment");
+  }
+
+  async function saveGovernmentIdDocument({
+    bookingIntentId,
+    file,
+    userId,
+  }: {
+    bookingIntentId: string;
+    file: File;
+    userId: string;
+  }) {
+    const supabase = createClient();
+    const storagePath = `${userId}/${bookingIntentId}/government-id.${idFileExtension(file)}`;
+    const { error: uploadError } = await supabase.storage
+      .from(ID_BUCKET)
+      .upload(storagePath, file, {
+        contentType: file.type,
+        upsert: true,
+      });
+    if (uploadError) {
+      throw new Error(`Could not upload ID: ${uploadError.message}`);
+    }
+
+    const { error: documentError } = await supabase
+      .from("booking_intent_documents")
+      .upsert(
+        {
+          booking_intent_id: bookingIntentId,
+          user_id: userId,
+          kind: "government_id",
+          storage_path: storagePath,
+          mime_type: file.type,
+          size_bytes: file.size,
+        },
+        { onConflict: "booking_intent_id,kind" },
+      );
+    if (documentError) {
+      throw new Error(`Could not save ID upload: ${documentError.message}`);
+    }
   }
 
   async function startCheckout() {
@@ -193,6 +308,14 @@ export function TreatmentCheckout({
       }
       if (!shippingComplete(shipping)) {
         throw new Error("Enter your shipping address.");
+      }
+      const file = idFile;
+      const validationError = validateIdFile(idFile);
+      if (validationError) {
+        throw new Error(validationError);
+      }
+      if (!file) {
+        throw new Error("Upload a government ID.");
       }
 
       const supabase = createClient();
@@ -256,6 +379,12 @@ export function TreatmentCheckout({
         throw new Error("Could not prepare this medication request for payment.");
       }
 
+      await saveGovernmentIdDocument({
+        bookingIntentId,
+        file,
+        userId: user.id,
+      });
+
       const checkoutRes = await createBookingIntentCheckout(
         session.access_token,
         bookingIntentId,
@@ -292,12 +421,13 @@ export function TreatmentCheckout({
 
   useEffect(() => {
     if (
+      step !== "payment" ||
       loadingIntake ||
       loadingCheckout ||
       checkout ||
       error ||
       !treatment ||
-      !isShippingComplete ||
+      !paymentReady ||
       checkoutShippingKey === activeShippingKey
     ) {
       return;
@@ -312,9 +442,10 @@ export function TreatmentCheckout({
     checkout,
     checkoutShippingKey,
     error,
-    isShippingComplete,
     loadingCheckout,
     loadingIntake,
+    paymentReady,
+    step,
     treatment,
   ]);
 
@@ -335,26 +466,11 @@ export function TreatmentCheckout({
           <h1 className={styles.title}>Review payment</h1>
         </header>
 
-        <div className={styles.grid}>
-          <section className={styles.panel} aria-labelledby="purchase-title">
-            <h2 id="purchase-title" className={styles.sectionTitle}>Purchase summary</h2>
-            {loadingIntake ? (
-              <p className={styles.muted}>Loading...</p>
-            ) : treatment ? (
-              <div className={styles.summaryLine}>
-                <span>{treatment.name}</span>
-              </div>
-            ) : (
-              <div className={styles.emptyState}>
-                <p className={styles.muted}>No treatment selected.</p>
-                <Link href="/" className={styles.secondary}>
-                  Return to intake
-                </Link>
-              </div>
-            )}
-
-            <div className={styles.shippingBlock}>
-              <h2 className={styles.sectionTitle}>Shipping address</h2>
+        <div className={step === "payment" ? styles.grid : styles.singleGrid}>
+          {step === "address" ? (
+            <section className={styles.panel} aria-labelledby="shipping-title">
+              <h2 id="shipping-title" className={styles.sectionTitle}>Shipping address</h2>
+              {error ? <p className={styles.error}>{error}</p> : null}
               <label className={styles.field}>
                 Address
                 <input
@@ -410,30 +526,106 @@ export function TreatmentCheckout({
                   inputMode="numeric"
                 />
               </label>
-            </div>
-          </section>
-
-          <section className={styles.panel} aria-labelledby="payment-title">
-            <h2 id="payment-title" className={styles.sectionTitle}>Payment</h2>
-            {error ? <p className={styles.error}>{error}</p> : null}
-            {!isShippingComplete ? (
-              <p className={styles.muted}>Enter shipping address to load payment.</p>
-            ) : loadingCheckout || !checkout ? (
-              <div className={styles.paymentSkeleton}>Preparing payment...</div>
-            ) : checkout ? (
-              <div className={styles.checkoutFrame}>
-                <EmbeddedCheckoutProvider
-                  stripe={stripePromise}
-                  options={{
-                    clientSecret: checkout.clientSecret,
-                    onComplete: onCheckoutComplete,
-                  }}
+              <div className={styles.actions}>
+                <button
+                  type="button"
+                  className={styles.primary}
+                  disabled={!isShippingComplete}
+                  onClick={continueFromAddress}
                 >
-                  <EmbeddedCheckout />
-                </EmbeddedCheckoutProvider>
+                  Continue
+                </button>
               </div>
-            ) : null}
-          </section>
+            </section>
+          ) : null}
+
+          {step === "id" ? (
+            <section className={styles.panel} aria-labelledby="id-title">
+              <h2 id="id-title" className={styles.sectionTitle}>Verify identity</h2>
+              <label className={styles.uploadBox}>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,application/pdf"
+                  onChange={(event) => updateIdFile(event.target.files?.[0] ?? null)}
+                />
+                <span className={styles.uploadTitle}>
+                  {idFile ? idFile.name : "Upload government ID"}
+                </span>
+                <span className={styles.uploadMeta}>
+                  {idFile ? fileSizeLabel(idFile.size) : "JPG, PNG, or PDF up to 10 MB"}
+                </span>
+              </label>
+              {idError ? <p className={styles.error}>{idError}</p> : null}
+              <div className={styles.actions}>
+                <button type="button" className={styles.secondaryButton} onClick={() => setStep("address")}>
+                  Back
+                </button>
+                <button
+                  type="button"
+                  className={styles.primary}
+                  disabled={Boolean(idFileError)}
+                  onClick={continueFromId}
+                >
+                  Continue
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {step === "payment" ? (
+            <section className={styles.panel} aria-labelledby="purchase-title">
+              <h2 id="purchase-title" className={styles.sectionTitle}>Payment details</h2>
+              {loadingIntake ? (
+                <p className={styles.muted}>Loading...</p>
+              ) : treatment ? (
+                <div className={styles.summaryLine}>
+                  <span>{treatment.name}</span>
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  <p className={styles.muted}>No treatment selected.</p>
+                  <Link href="/" className={styles.secondary}>
+                    Return to intake
+                  </Link>
+                </div>
+              )}
+              <dl className={styles.reviewList}>
+                <div>
+                  <dt>Shipping</dt>
+                  <dd>{shippingSummary(shipping)}</dd>
+                </div>
+                <div>
+                  <dt>ID upload</dt>
+                  <dd>{idFile ? idFile.name : "Missing"}</dd>
+                </div>
+              </dl>
+              <button type="button" className={styles.textButton} onClick={() => setStep("id")}>
+                Edit details
+              </button>
+            </section>
+          ) : null}
+
+          {step === "payment" ? (
+            <section className={styles.panel} aria-labelledby="payment-title">
+              <h2 id="payment-title" className={styles.sectionTitle}>Payment</h2>
+              {error ? <p className={styles.error}>{error}</p> : null}
+              {loadingCheckout || !checkout ? (
+                <div className={styles.paymentSkeleton}>Preparing payment...</div>
+              ) : checkout ? (
+                <div className={styles.checkoutFrame}>
+                  <EmbeddedCheckoutProvider
+                    stripe={stripePromise}
+                    options={{
+                      clientSecret: checkout.clientSecret,
+                      onComplete: onCheckoutComplete,
+                    }}
+                  >
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
         </div>
       </div>
     </main>

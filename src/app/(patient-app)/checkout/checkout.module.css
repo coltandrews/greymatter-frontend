@@ -61,6 +61,12 @@
   gap: 18px;
 }
 
+.singleGrid {
+  width: min(408px, 100%);
+  margin: 0 auto;
+  display: grid;
+}
+
 .panel {
   border: none;
   border-radius: 7px;
@@ -97,16 +103,6 @@
 .emptyState {
   display: grid;
   gap: 14px;
-}
-
-.shippingBlock {
-  display: grid;
-  gap: 14px;
-  margin-top: 22px;
-}
-
-.shippingBlock .sectionTitle {
-  margin-bottom: 0;
 }
 
 .field {
@@ -153,6 +149,122 @@
   font-weight: 600;
 }
 
+.actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.actions:has(.secondaryButton) {
+  grid-template-columns: 0.42fr 1fr;
+}
+
+.primary,
+.secondaryButton {
+  min-height: 52px;
+  border-radius: 7px;
+  padding: 0 18px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.primary {
+  border: none;
+  background: #3487ed;
+  color: #ffffff;
+}
+
+.primary:disabled {
+  cursor: not-allowed;
+  background: #3f3f3f;
+  color: #a9a9a9;
+}
+
+.secondaryButton {
+  border: 1px solid #575757;
+  background: transparent;
+  color: #f2f2f2;
+}
+
+.textButton {
+  justify-self: start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #8dbfff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.reviewList {
+  display: grid;
+  gap: 14px;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.reviewList div {
+  display: grid;
+  gap: 5px;
+  padding-top: 14px;
+  border-top: 1px solid #3a3a3a;
+}
+
+.reviewList dt {
+  color: #8f9ba8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.reviewList dd {
+  margin: 0;
+  color: #f2f2f2;
+  font-size: 14px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.uploadBox {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  min-height: 180px;
+  place-content: center;
+  padding: 24px;
+  border: 1px dashed #686868;
+  border-radius: 7px;
+  background: #151515;
+  color: #f2f2f2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.uploadBox:hover {
+  border-color: #3487ed;
+}
+
+.uploadBox input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.uploadTitle {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.uploadMeta {
+  color: #c9c9c9;
+  font-size: 13px;
+}
+
 .error {
   margin: 0 0 14px;
   color: #fca5a5;
@@ -189,6 +301,10 @@
   }
 
   .addressGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions:has(.secondaryButton) {
     grid-template-columns: 1fr;
   }
 }

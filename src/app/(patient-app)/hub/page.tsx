@@ -83,7 +83,7 @@ export default async function HubPage() {
       />
       <main className={styles.page}>
         <header className={styles.pageHeader}>
-          <h1>Patient hub</h1>
+          <h1>Patient Hub</h1>
         </header>
 
         <div className={styles.stack}>
