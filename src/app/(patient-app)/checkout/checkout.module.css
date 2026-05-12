@@ -293,7 +293,8 @@
   color: #f2f2f2;
 }
 
-.textButton {
+.textButton,
+.textLink {
   justify-self: start;
   padding: 0;
   border: none;
@@ -303,6 +304,7 @@
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .reviewList {
@@ -460,11 +462,53 @@
   display: grid;
   min-height: 520px;
   place-items: center;
+  align-content: center;
+  gap: 12px;
   border-radius: 7px;
   background: #151515;
   color: #c9c9c9;
   font-size: 15px;
   font-weight: 500;
+  text-align: center;
+}
+
+.paymentSkeleton small {
+  color: #8f9ba8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.paymentLoader {
+  position: relative;
+  width: 46px;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #303030;
+}
+
+.paymentLoader::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 48%;
+  border-radius: inherit;
+  background: #3487ed;
+  animation: paymentLoading 1.05s ease-in-out infinite;
+}
+
+@keyframes paymentLoading {
+  0% {
+    transform: translateX(-115%);
+  }
+
+  50% {
+    transform: translateX(82%);
+  }
+
+  100% {
+    transform: translateX(240%);
+  }
 }
 
 @media (max-width: 760px) {

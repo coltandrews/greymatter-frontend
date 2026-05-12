@@ -250,10 +250,13 @@ function responseErrorMessage(prefix: string, res: Response): Promise<string> {
 export function TreatmentCheckout({
   initialDraft,
   initialProfile,
+  resumeBookingIntentId,
 }: {
   initialDraft: IntakeDraftData | null;
   initialProfile: IntakeDraftData | null;
+  resumeBookingIntentId?: string | null;
 }) {
+  const isResumePayment = Boolean(resumeBookingIntentId);
   const [intake, setIntake] = useState(() =>
     mergeIntakeAndProfileDemographics(initialDraft, initialProfile),
   );
@@ -264,7 +267,7 @@ export function TreatmentCheckout({
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [checkoutShippingKey, setCheckoutShippingKey] = useState<string | null>(null);
-  const [step, setStep] = useState<CheckoutStep>("address");
+  const [step, setStep] = useState<CheckoutStep>(isResumePayment ? "payment" : "address");
   const [idUploads, setIdUploads] = useState<IdUploads>({
     front: emptyIdUpload(),
     back: emptyIdUpload(),
@@ -325,7 +328,7 @@ export function TreatmentCheckout({
   const isShippingComplete = shippingComplete(shipping);
   const activeShippingKey = shippingKey(shipping);
   const idUploadError = validateIdUploads(idUploads);
-  const paymentReady = isShippingComplete && !idUploadError;
+  const paymentReady = isResumePayment || (isShippingComplete && !idUploadError);
 
   function updateShipping(key: keyof ShippingForm, value: string) {
     setShipping((current) => ({ ...current, [key]: value }));
@@ -510,16 +513,16 @@ export function TreatmentCheckout({
       if (!stripePublishableKey) {
         throw new Error("Payment is not configured yet.");
       }
-      if (!shippingComplete(shipping)) {
+      if (!isResumePayment && !shippingComplete(shipping)) {
         throw new Error("Enter your shipping address.");
       }
-      const validationError = validateIdUploads(idUploads);
-      if (validationError) {
+      const validationError = isResumePayment ? null : validateIdUploads(idUploads);
+      if (!isResumePayment && validationError) {
         throw new Error(validationError);
       }
       const frontFile = idUploads.front.file;
       const backFile = idUploads.back.file;
-      if (!frontFile || !backFile) {
+      if (!isResumePayment && (!frontFile || !backFile)) {
         throw new Error("Upload the front and back of your government ID.");
       }
 
@@ -538,64 +541,69 @@ export function TreatmentCheckout({
         throw new Error("Sign in again to continue to payment.");
       }
 
-      const intakeForCheckout: IntakeDraftData = {
+      const intakeForCheckout: IntakeDraftData = isResumePayment ? intake : {
         ...intake,
         ...shippingPatch(shipping),
       };
       setIntake(intakeForCheckout);
 
-      const { error: draftError } = await supabase.from("intake_drafts").upsert(
-        {
-          user_id: user.id,
-          step: "checkout",
-          data: intakeForCheckout,
-        },
-        { onConflict: "user_id" },
-      );
-      if (draftError) {
-        throw new Error(draftError.message);
-      }
+      let bookingIntentId = resumeBookingIntentId ?? "";
+      if (!isResumePayment) {
+        const { error: draftError } = await supabase.from("intake_drafts").upsert(
+          {
+            user_id: user.id,
+            step: "checkout",
+            data: intakeForCheckout,
+          },
+          { onConflict: "user_id" },
+        );
+        if (draftError) {
+          throw new Error(draftError.message);
+        }
 
-      const { error: profileError } = await syncProfileDemographics(
-        supabase,
-        user.id,
-        intakeForCheckout,
-      );
-      if (profileError) {
-        throw new Error(`Could not save shipping address: ${profileError}`);
-      }
+        const { error: profileError } = await syncProfileDemographics(
+          supabase,
+          user.id,
+          intakeForCheckout,
+        );
+        if (profileError) {
+          throw new Error(`Could not save shipping address: ${profileError}`);
+        }
 
-      const bookingRes = await createBookingIntent(
-        session.access_token,
-        buildTreatmentBookingIntentPayload(intakeForCheckout),
-      );
-      if (!bookingRes.ok) {
-        throw new Error(await responseErrorMessage("Medication request", bookingRes));
-      }
+        const bookingRes = await createBookingIntent(
+          session.access_token,
+          buildTreatmentBookingIntentPayload(intakeForCheckout),
+        );
+        if (!bookingRes.ok) {
+          throw new Error(await responseErrorMessage("Medication request", bookingRes));
+        }
 
-      const bookingJson = (await bookingRes.json().catch(() => ({}))) as Record<string, unknown>;
-      const bookingIntent =
-        bookingJson.bookingIntent && typeof bookingJson.bookingIntent === "object"
-          ? (bookingJson.bookingIntent as Record<string, unknown>)
-          : null;
-      const bookingIntentId =
-        typeof bookingIntent?.id === "string" ? bookingIntent.id : "";
+        const bookingJson = (await bookingRes.json().catch(() => ({}))) as Record<string, unknown>;
+        const bookingIntent =
+          bookingJson.bookingIntent && typeof bookingJson.bookingIntent === "object"
+            ? (bookingJson.bookingIntent as Record<string, unknown>)
+            : null;
+        bookingIntentId =
+          typeof bookingIntent?.id === "string" ? bookingIntent.id : "";
+      }
       if (!bookingIntentId) {
         throw new Error("Could not prepare this medication request for payment.");
       }
 
-      await saveGovernmentIdDocument({
-        bookingIntentId,
-        file: frontFile,
-        side: "front",
-        userId: user.id,
-      });
-      await saveGovernmentIdDocument({
-        bookingIntentId,
-        file: backFile,
-        side: "back",
-        userId: user.id,
-      });
+      if (!isResumePayment && frontFile && backFile) {
+        await saveGovernmentIdDocument({
+          bookingIntentId,
+          file: frontFile,
+          side: "front",
+          userId: user.id,
+        });
+        await saveGovernmentIdDocument({
+          bookingIntentId,
+          file: backFile,
+          side: "back",
+          userId: user.id,
+        });
+      }
 
       const checkoutRes = await createBookingIntentCheckout(
         session.access_token,
@@ -904,15 +912,23 @@ export function TreatmentCheckout({
                 <div>
                   <dt>ID upload</dt>
                   <dd>
-                    {idUploads.front.file && idUploads.back.file
-                      ? `${idUploads.front.file.name}, ${idUploads.back.file.name}`
-                      : "Missing front or back"}
+                    {isResumePayment
+                      ? "Already submitted"
+                      : idUploads.front.file && idUploads.back.file
+                        ? `${idUploads.front.file.name}, ${idUploads.back.file.name}`
+                        : "Missing front or back"}
                   </dd>
                 </div>
               </dl>
-              <button type="button" className={styles.textButton} onClick={() => setStep("id")}>
-                Edit details
-              </button>
+              {isResumePayment ? (
+                <Link href="/hub" className={styles.textLink}>
+                  Back to request
+                </Link>
+              ) : (
+                <button type="button" className={styles.textButton} onClick={() => setStep("id")}>
+                  Edit details
+                </button>
+              )}
               <div className={styles.mobilePaymentAction}>
                 <button
                   type="button"
@@ -944,7 +960,11 @@ export function TreatmentCheckout({
               ) : null}
               {error ? <p className={styles.error}>{error}</p> : null}
               {loadingCheckout || !checkout ? (
-                <div className={styles.paymentSkeleton}>Preparing payment...</div>
+                <div className={styles.paymentSkeleton} role="status">
+                  <span className={styles.paymentLoader} aria-hidden="true" />
+                  <span>Preparing secure payment...</span>
+                  <small>This can take a few seconds.</small>
+                </div>
               ) : checkout ? (
                 <div className={styles.checkoutFrame}>
                   <EmbeddedCheckoutProvider

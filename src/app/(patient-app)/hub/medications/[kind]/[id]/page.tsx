@@ -76,6 +76,7 @@ export default async function MedicationDetailPage({ params }: Props) {
   let updatedAt = "";
   let orderGuid: string | null = null;
   let nextStepsHref: string | null = null;
+  let payNowHref: string | null = null;
 
   if (kind === "booking") {
     const { data: row } = await supabase
@@ -98,6 +99,10 @@ export default async function MedicationDetailPage({ params }: Props) {
     nextStepsHref = row.ola_redirect_url
       ? `/ola-handoff/booking/${encodeURIComponent(row.id)}`
       : null;
+    payNowHref =
+      row.payment_status === "paid"
+        ? null
+        : `/checkout?booking_intent_id=${encodeURIComponent(row.id)}`;
   } else if (kind === "appointment") {
     const { data: row } = await supabase
       .from("appointments")
@@ -165,6 +170,11 @@ export default async function MedicationDetailPage({ params }: Props) {
               {nextStepsHref ? (
                 <Link href={nextStepsHref} className={styles.detailPrimary}>
                   Continue next steps
+                </Link>
+              ) : null}
+              {payNowHref ? (
+                <Link href={payNowHref} className={styles.detailPrimary}>
+                  Pay now
                 </Link>
               ) : null}
             </section>
