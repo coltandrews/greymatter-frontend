@@ -201,7 +201,7 @@ export function TreatmentCheckout({
     <main className={styles.page}>
       <div className={styles.shell}>
         <header className={styles.hero}>
-          <img src="/brand/gmmd-logo-white-transparent.png" alt="GMMD" className={styles.logo} />
+          <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" className={styles.logo} />
           <p className={styles.eyebrow}>Secure payment</p>
           <h1 className={styles.title}>Review and payment</h1>
           <p className={styles.lead}>

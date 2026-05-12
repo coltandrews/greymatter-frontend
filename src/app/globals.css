@@ -1,8 +1,8 @@
 :root {
   color-scheme: dark;
   font-family: Inter, Arial, sans-serif;
-  background: #07090d;
-  color: #eef3f8;
+  background: #121212;
+  color: #f2f2f2;
 }
 
 * {
@@ -11,7 +11,7 @@
 
 body {
   margin: 0;
-  background: #07090d;
+  background: #121212;
   color: inherit;
 }
 

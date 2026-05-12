@@ -9,41 +9,47 @@ type Mode = "signup" | "signin";
 
 const field = {
   display: "grid" as const,
-  gap: 6,
+  gap: 12,
   fontSize: 14,
-  color: "#eef3f8",
-  fontWeight: 700,
+  color: "#f2f2f2",
+  fontWeight: 400,
 };
 
 const input = {
-  padding: "11px 12px",
-  borderRadius: 8,
-  border: "1px solid rgba(148, 163, 184, 0.18)",
-  background: "#090d12",
-  color: "#eef3f8",
+  minHeight: 48,
+  padding: "0 20px",
+  borderRadius: 7,
+  border: "2px solid #d8d8d8",
+  background: "transparent",
+  color: "#f2f2f2",
   fontSize: 16,
 };
 
 const card = {
   width: "100%" as const,
   maxWidth: 380,
-  padding: 28,
-  background: "rgba(12, 17, 22, 0.94)",
-  borderRadius: 8,
-  border: "1px solid rgba(148, 163, 184, 0.18)",
-  boxShadow: "0 34px 90px rgba(0, 0, 0, 0.42)",
+  minHeight: "calc(100vh - 56px)",
+  display: "grid" as const,
+  gridTemplateRows: "auto minmax(0, 1fr)",
 };
 
 const logo = {
   display: "block" as const,
-  width: 164,
-  maxWidth: "62%",
+  width: 116,
+  maxWidth: "42%",
   height: "auto",
-  margin: "0 auto 24px",
+  margin: "8px auto 28px",
 };
 
-const pageBackground =
-  "linear-gradient(180deg, rgba(7, 9, 13, 0.86), rgba(7, 9, 13, 0.96)), url('/textures/graphite-texture.jpeg') center / cover fixed";
+const pageBackground = "#121212";
+
+const progressTrack = {
+  width: "100%",
+  height: 4,
+  borderRadius: 999,
+  background: "#666666",
+  marginBottom: 56,
+};
 
 function isExistingUserSignupError(message: string) {
   const m = message.toLowerCase();
@@ -184,38 +190,46 @@ export function AuthEntry({
       <main
         style={{
           display: "grid",
-          placeItems: "center",
-          padding: "32px 20px",
+          justifyItems: "center",
+          alignItems: "start",
+          padding: "28px 20px",
           minHeight: "100vh",
           background: pageBackground,
         }}
       >
         <section style={card}>
-          <img src="/brand/gmmd-logo-white-transparent.png" alt="GMMD" style={logo} />
-          <h1 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 800, color: "#eef3f8" }}>
-            Check your email
-          </h1>
-          <p style={{ margin: 0, fontSize: 14, color: "#8f9ba8", lineHeight: 1.5 }}>
-            We sent a link to <strong>{email}</strong>. Open it to finish.
-          </p>
+          <header>
+            <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" style={logo} />
+            <div style={progressTrack} />
+          </header>
+          <div style={{ display: "grid", minHeight: 0 }}>
+            <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#f2f2f2" }}>
+              Check your email
+            </h1>
+            <p style={{ margin: 0, fontSize: 15, color: "#c9c9c9", lineHeight: 1.45 }}>
+              We sent a link to <strong>{email}</strong>. Open it to finish.
+            </p>
           <button
             type="button"
             onClick={leaveCheckEmail}
             style={{
-              marginTop: 20,
+              marginTop: "auto",
               width: "100%",
-              padding: "12px 16px",
-              borderRadius: 8,
-              border: "1px solid rgba(148, 163, 184, 0.22)",
-              background: "#111922",
-              color: "#eef3f8",
-              fontSize: 16,
-              fontWeight: 600,
+              minHeight: 50,
+              padding: "0 18px",
+              borderRadius: 0,
+              border: "none",
+              background: "#3487ed",
+              color: "#ffffff",
+              fontSize: 15,
+              fontWeight: 500,
+              textTransform: "uppercase",
               cursor: "pointer",
             }}
           >
             Back
           </button>
+          </div>
         </section>
       </main>
     );
@@ -225,26 +239,31 @@ export function AuthEntry({
     <main
       style={{
         display: "grid",
-        placeItems: "center",
-        padding: "32px 20px",
+        justifyItems: "center",
+        alignItems: "start",
+        padding: "28px 20px",
         minHeight: "100vh",
         background: pageBackground,
       }}
     >
       <section style={card}>
-        <img src="/brand/gmmd-logo-white-transparent.png" alt="GMMD" style={logo} />
-        <h1 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 800, color: "#eef3f8" }}>
-          {mode === "signup" ? "Create account" : "Sign in"}
-        </h1>
-        {intakeReady ? (
-          <p style={{ margin: "-8px 0 18px", fontSize: 14, color: "#8f9ba8", lineHeight: 1.5 }}>
-            Your intake answers are ready. They will be saved to your account when you continue.
-          </p>
-        ) : null}
+        <header>
+          <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" style={logo} />
+          <div style={progressTrack} />
+        </header>
+        <div style={{ display: "grid", minHeight: 0 }}>
+          <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#f2f2f2" }}>
+            {mode === "signup" ? "Create account" : "Sign in"}
+          </h1>
+          {intakeReady ? (
+            <p style={{ margin: "0 0 28px", fontSize: 15, color: "#c9c9c9", lineHeight: 1.35 }}>
+              Save your intake and continue to payment.
+            </p>
+          ) : null}
 
         <form
           onSubmit={mode === "signup" ? onSignUp : onSignIn}
-          style={{ display: "grid", gap: 14 }}
+          style={{ display: "grid", gap: 16, minHeight: "52vh" }}
         >
           <label style={field}>
             Email
@@ -325,14 +344,16 @@ export function AuthEntry({
             disabled={loading}
             aria-busy={loading}
             style={{
-              marginTop: 4,
-              padding: "12px 16px",
-              borderRadius: 8,
+              marginTop: "auto",
+              minHeight: 50,
+              padding: "0 18px",
+              borderRadius: 0,
               border: "none",
-              background: loading ? "#334155" : "#73d2ff",
-              color: "#061016",
-              fontSize: 16,
-              fontWeight: 600,
+              background: loading ? "#454545" : "#3487ed",
+              color: "#ffffff",
+              fontSize: 15,
+              fontWeight: 500,
+              textTransform: "uppercase",
               cursor: loading ? "not-allowed" : "pointer",
               opacity: loading ? 0.78 : 1,
             }}
@@ -349,9 +370,9 @@ export function AuthEntry({
 
         <p
           style={{
-            margin: "20px 0 0",
+            margin: "18px 0 0",
             fontSize: 14,
-            color: "#8f9ba8",
+            color: "#c9c9c9",
             textAlign: "center",
           }}
         >
@@ -371,8 +392,8 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#73d2ff",
-                  fontWeight: 600,
+                  color: "#3487ed",
+                  fontWeight: 500,
                   fontSize: 14,
                   cursor: "pointer",
                 }}
@@ -396,8 +417,8 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#73d2ff",
-                  fontWeight: 600,
+                  color: "#3487ed",
+                  fontWeight: 500,
                   fontSize: 14,
                   cursor: "pointer",
                 }}
@@ -407,6 +428,7 @@ export function AuthEntry({
             </>
           )}
         </p>
+        </div>
       </section>
     </main>
   );

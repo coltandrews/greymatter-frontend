@@ -1,27 +1,44 @@
 .page {
-  max-width: 500px;
+  max-width: 380px;
   margin: 0 auto;
-  padding: 56px 24px;
-  color: #eef3f8;
+  padding: 28px 20px 56px;
+  color: #f2f2f2;
 }
 
 .card {
   text-align: center;
-  background: rgba(10, 15, 20, 0.94);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
-  padding: 34px 28px 30px;
-  box-shadow: 0 34px 90px rgba(0, 0, 0, 0.42);
+  min-height: calc(100vh - 84px);
+  display: grid;
+}
+
+.flowHeader {
+  display: grid;
+  justify-items: center;
+  gap: 28px;
+  margin-bottom: 56px;
+}
+
+.logo {
+  width: 116px;
+  max-width: 42%;
+  height: auto;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: #666666;
 }
 
 .icon {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 20px;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 18px;
   border-radius: 50%;
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 56px;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 44px;
 }
 
 .success {
@@ -47,32 +64,32 @@
 
 .title {
   margin: 0 0 8px;
-  font-size: 1.75rem;
-  font-weight: 850;
-  color: #eef3f8;
+  font-size: 1.55rem;
+  font-weight: 400;
+  color: #f2f2f2;
 }
 
 .lead {
   margin: 0 auto 10px;
   max-width: 360px;
   font-size: 16px;
-  font-weight: 650;
-  color: #d7dee6;
-  line-height: 1.5;
+  font-weight: 400;
+  color: #d8d8d8;
+  line-height: 1.45;
 }
 
 .summary {
   margin: 0 auto 22px;
   max-width: 340px;
   font-size: 15px;
-  color: #8f9ba8;
-  line-height: 1.5;
+  color: #c9c9c9;
+  line-height: 1.45;
 }
 
 .hint {
   margin: 0 0 24px;
   font-size: 13px;
-  color: #8f9ba8;
+  color: #c9c9c9;
   line-height: 1.5;
 }
 
@@ -87,7 +104,7 @@
   padding: 6px 0;
   display: grid;
   gap: 0;
-  border-block: 1px solid rgba(148, 163, 184, 0.18);
+  border-block: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .statusRow {
@@ -100,14 +117,14 @@
 }
 
 .statusRow + .statusRow {
-  border-top: 1px solid rgba(148, 163, 184, 0.12);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .statusRow dt {
   margin: 0;
-  color: #8f9ba8;
+  color: #c9c9c9;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 400;
 }
 
 .statusRow dd {
@@ -115,9 +132,9 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #eef3f8;
+  color: #f2f2f2;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 500;
   text-align: right;
 }
 
@@ -161,12 +178,14 @@
   align-items: center;
   justify-content: center;
   min-width: 190px;
-  padding: 13px 22px;
-  border-radius: 8px;
-  background: #73d2ff;
-  color: #061016;
-  font-size: 14px;
-  font-weight: 850;
+  min-height: 50px;
+  padding: 0 22px;
+  border-radius: 0;
+  background: #3487ed;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: uppercase;
   text-decoration: none;
 }
 

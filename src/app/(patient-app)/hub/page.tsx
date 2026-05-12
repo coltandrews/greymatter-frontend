@@ -92,6 +92,7 @@ export default async function HubPage() {
       ) : null}
       <main className={styles.page}>
         <header className={styles.hero}>
+          <img src="/brand/gmmd-logo-color-transparent.png" alt="GMMD" className={styles.logo} />
           <h1>Patient Hub</h1>
         </header>
 

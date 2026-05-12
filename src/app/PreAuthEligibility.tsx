@@ -24,69 +24,69 @@ import { useState } from "react";
 
 const card = {
   width: "100%" as const,
-  maxWidth: 760,
-  padding: 30,
-  background: "rgba(12, 17, 22, 0.94)",
-  borderRadius: 8,
-  border: "1px solid rgba(148, 163, 184, 0.18)",
-  boxShadow: "0 34px 90px rgba(0, 0, 0, 0.42)",
+  maxWidth: 380,
+  minHeight: "calc(100vh - 56px)",
+  display: "grid" as const,
+  gridTemplateRows: "auto minmax(0, 1fr)",
 };
 
 const brand = {
-  graphite: "#07090d",
-  surface: "#0c1116",
-  surface2: "#111922",
-  text: "#eef3f8",
-  muted: "#8f9ba8",
-  border: "rgba(148, 163, 184, 0.18)",
-  accent: "#73d2ff",
-  mint: "#7dd3b0",
+  graphite: "#121212",
+  surface: "#171717",
+  surface2: "#454545",
+  text: "#f2f2f2",
+  muted: "#c9c9c9",
+  quiet: "#858585",
+  border: "#d8d8d8",
+  accent: "#3487ed",
 };
 
 const field = {
   display: "grid" as const,
-  gap: 6,
-  fontSize: 14,
-  fontWeight: 600,
+  gap: 12,
+  fontSize: 15,
+  fontWeight: 400,
   color: brand.text,
 };
 
 const input = {
-  padding: "11px 12px",
-  borderRadius: 8,
-  border: `1px solid ${brand.border}`,
+  minHeight: 48,
+  padding: "0 20px",
+  borderRadius: 7,
+  border: `2px solid ${brand.border}`,
   fontSize: 16,
-  background: "#090d12",
+  background: "transparent",
   color: brand.text,
   outlineColor: brand.accent,
 };
 
 const flowActions = {
-  display: "flex" as const,
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: 16,
-  flexWrap: "wrap" as const,
-  marginTop: 4,
+  display: "grid" as const,
+  gap: 12,
+  marginTop: "auto",
+  paddingTop: 36,
 };
 
 const primaryAction = {
-  padding: "12px 16px",
-  borderRadius: 8,
+  width: "100%",
+  minHeight: 50,
+  padding: "0 18px",
+  borderRadius: 0,
   border: "none",
   background: brand.accent,
-  color: "#061016",
-  fontSize: 16,
-  fontWeight: 800,
+  color: "#ffffff",
+  fontSize: 15,
+  fontWeight: 500,
+  textTransform: "uppercase" as const,
 };
 
 const linkButton = {
   padding: 0,
   border: "none",
   background: "transparent",
-  color: brand.accent,
+  color: brand.muted,
   fontSize: 14,
-  fontWeight: 700,
+  fontWeight: 500,
   cursor: "pointer",
 };
 
@@ -98,30 +98,29 @@ const optionGrid = {
 
 const optionCard = {
   position: "relative" as const,
-  minHeight: 46,
+  minHeight: 50,
   display: "flex" as const,
   alignItems: "center",
-  gap: 10,
-  padding: "11px 12px",
-  borderRadius: 8,
-  border: `1px solid ${brand.border}`,
+  gap: 12,
+  padding: "0 22px",
+  borderRadius: 7,
+  border: "none",
   background: brand.surface2,
   color: brand.text,
-  fontSize: 14,
-  fontWeight: 700,
+  fontSize: 15,
+  fontWeight: 400,
   cursor: "pointer",
 };
 
 const selectedOptionCard = {
-  borderColor: brand.accent,
-  background: "#101d27",
-  boxShadow: "0 0 0 1px rgba(115, 210, 255, 0.22)",
+  background: brand.accent,
+  boxShadow: "none",
 };
 
 const optionMark = {
-  width: 20,
-  height: 20,
-  display: "inline-grid" as const,
+  width: 0,
+  height: 0,
+  display: "none" as const,
   placeItems: "center",
   flexShrink: 0,
   borderRadius: 999,
@@ -133,11 +132,45 @@ const optionMark = {
 };
 
 const selectedOptionMark = {
-  borderColor: brand.accent,
-  background: brand.accent,
+  borderColor: "#ffffff",
+  background: "#ffffff",
 };
 
-const pageSize = 1000;
+const flowHeader = {
+  position: "relative" as const,
+  display: "grid" as const,
+  justifyItems: "center",
+  gap: 28,
+  paddingTop: 8,
+  marginBottom: 56,
+};
+
+const backArrow = {
+  position: "absolute" as const,
+  left: 0,
+  top: 64,
+  border: "none",
+  background: "transparent",
+  color: brand.text,
+  fontSize: 25,
+  lineHeight: 1,
+  cursor: "pointer",
+};
+
+const progressTrack = {
+  width: "100%",
+  height: 4,
+  borderRadius: 999,
+  background: "#666666",
+  overflow: "hidden",
+};
+
+const progressFill = {
+  height: "100%",
+  borderRadius: 999,
+  background: brand.accent,
+  transition: "width 160ms ease",
+};
 
 const genderOptions = [
   { value: "male", label: "Male" },
@@ -167,19 +200,10 @@ function optionsForQuestion(question: IntakeQuestion) {
   return question.options;
 }
 
-function pageForPosition(position: number): number {
-  return Math.max(1, Math.floor(Math.max(position, 0) / pageSize) + 1);
-}
-
 function groupQuestionsByPage(questions: IntakeQuestion[]): IntakeQuestion[][] {
-  const groups = new Map<number, IntakeQuestion[]>();
-  questions.forEach((question) => {
-    const page = pageForPosition(question.position);
-    groups.set(page, [...(groups.get(page) ?? []), question]);
-  });
-  return [...groups.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([, pageQuestions]) => pageQuestions);
+  return [...questions]
+    .sort((a, b) => a.position - b.position)
+    .map((question) => [question]);
 }
 
 function QuestionField({
@@ -205,9 +229,9 @@ function QuestionField({
         <textarea
           value={stringAnswer(answer)}
           onChange={(e) => onChange(e.target.value)}
-          style={{ ...input, minHeight: 86, resize: "vertical" }}
+          style={{ ...input, minHeight: 134, paddingTop: 16, resize: "vertical" }}
         />
-        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
+        {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
       </label>
     );
   }
@@ -222,14 +246,14 @@ function QuestionField({
           onChange={(e) => onChange(e.target.value)}
           style={input}
         >
-          <option value="">Select...</option>
+          <option value="">Select</option>
           {options.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>
           ))}
         </select>
-        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
+        {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
       </label>
     );
   }
@@ -237,9 +261,9 @@ function QuestionField({
   if (question.question_type === "multi_select") {
     const selected = arrayAnswer(answer);
     return (
-      <fieldset style={{ ...field, border: `1px solid ${brand.border}`, borderRadius: 8, padding: 14, background: "#090d12" }}>
-        <legend style={{ padding: "0 4px", fontWeight: 800 }}>{label}</legend>
-        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
+      <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
+        <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend>
+        {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
         <div style={optionGrid}>
           {question.options.map((option) => {
             const checked = selected.includes(option.value);
@@ -264,7 +288,7 @@ function QuestionField({
                   style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
                 />
                 <span style={{ ...optionMark, ...(checked ? selectedOptionMark : {}) }}>
-                  {checked ? "✓" : ""}
+                  {checked ? "" : ""}
                 </span>
                 <span>{option.label}</span>
               </label>
@@ -277,10 +301,10 @@ function QuestionField({
 
   if (question.question_type === "yes_no") {
     return (
-      <fieldset style={{ ...field, border: `1px solid ${brand.border}`, borderRadius: 8, padding: 14, background: "#090d12" }}>
-        <legend style={{ padding: "0 4px", fontWeight: 800 }}>{label}</legend>
-        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
-        <div style={{ ...optionGrid, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
+      <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
+        <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend>
+        {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
+        <div style={optionGrid}>
           {[
             ["yes", "Yes"],
             ["no", "No"],
@@ -291,7 +315,6 @@ function QuestionField({
                 key={value}
                 style={{
                   ...optionCard,
-                  justifyContent: "center",
                   ...(checked ? selectedOptionCard : {}),
                 }}
               >
@@ -304,7 +327,7 @@ function QuestionField({
                   style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
                 />
                 <span style={{ ...optionMark, ...(checked ? selectedOptionMark : {}) }}>
-                  {checked ? "✓" : ""}
+                  {checked ? "" : ""}
                 </span>
                 <span>{text}</span>
               </label>
@@ -324,7 +347,7 @@ function QuestionField({
         onChange={(e) => onChange(e.target.value)}
         style={input}
       />
-      {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
+      {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
     </label>
   );
 }
@@ -352,6 +375,37 @@ export function PreAuthEligibility() {
   const medicationQuestionsComplete = medicationQuestions.every((question) =>
     intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
   );
+  const totalFlowSteps = questionPages.length + 3;
+  const currentFlowStep =
+    step === "eligibility"
+      ? intakePageIndex + 1
+      : step === "treatment"
+        ? questionPages.length + 1
+        : step === "treatment_questions"
+          ? questionPages.length + 2
+          : totalFlowSteps;
+  const progressPercent = Math.min(
+    100,
+    Math.max(8, (currentFlowStep / totalFlowSteps) * 100),
+  );
+  const canGoBack =
+    (step === "eligibility" && intakePageIndex > 0) ||
+    step === "treatment" ||
+    step === "treatment_questions";
+
+  function goBack() {
+    setError(null);
+    if (step === "treatment_questions") {
+      setStep("treatment");
+      return;
+    }
+    if (step === "treatment") {
+      setStep("eligibility");
+      setIntakePageIndex(Math.max(0, questionPages.length - 1));
+      return;
+    }
+    setIntakePageIndex((current) => Math.max(0, current - 1));
+  }
 
   function saveIntakeAndContinue() {
     const intake = buildPreAuthIntakeData(questions, answers, {
@@ -388,34 +442,46 @@ export function PreAuthEligibility() {
     <main
       style={{
         display: "grid",
-        placeItems: "center",
-        padding: "32px 20px",
+        justifyItems: "center",
+        alignItems: "start",
+        padding: "28px 20px",
         minHeight: "100vh",
-        background: `linear-gradient(180deg, rgba(7, 9, 13, 0.86), rgba(7, 9, 13, 0.96)), url('/textures/graphite-texture.jpeg') center / cover fixed`,
+        background: brand.graphite,
       }}
     >
       <section style={card}>
-        <img
-          src="/brand/gmmd-logo-white-transparent.png"
-          alt="GMMD"
-          style={{
-            display: "block",
-            width: 188,
-            maxWidth: "62%",
-            height: "auto",
-            margin: "0 auto 28px",
-          }}
-        />
-        <h1 style={{ margin: "0 0 8px", fontSize: 30, fontWeight: 850, color: brand.text }}>
-          {heading}
-        </h1>
-        <p style={{ margin: "0 0 22px", fontSize: 15, color: brand.muted, lineHeight: 1.55 }}>
-          {lead}
-        </p>
+        <header style={flowHeader}>
+          {canGoBack ? (
+            <button type="button" onClick={goBack} style={backArrow} aria-label="Back">
+              ←
+            </button>
+          ) : null}
+          <img
+            src="/brand/gmmd-logo-color-transparent.png"
+            alt="GMMD"
+            style={{
+              display: "block",
+              width: 116,
+              maxWidth: "42%",
+              height: "auto",
+            }}
+          />
+          <div style={progressTrack} aria-hidden="true">
+            <div style={{ ...progressFill, width: `${progressPercent}%` }} />
+          </div>
+        </header>
+
+        <div style={{ display: "grid", minHeight: 0 }}>
+          <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: brand.text }}>
+            {heading}
+          </h1>
+          <p style={{ margin: "0 0 28px", fontSize: 15, color: brand.muted, lineHeight: 1.35 }}>
+            {lead}
+          </p>
 
         {step === "eligibility" ? (
           <form
-            style={{ display: "grid", gap: 14 }}
+            style={{ display: "grid", gap: 0, minHeight: "52vh" }}
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
@@ -452,8 +518,8 @@ export function PreAuthEligibility() {
             }}
           >
             {questionPages.length > 1 ? (
-              <p style={{ margin: "-4px 0 2px", color: brand.muted, fontSize: 13, fontWeight: 700 }}>
-                Step {intakePageIndex + 1} of {questionPages.length}
+              <p style={{ margin: "-12px 0 20px", color: brand.quiet, fontSize: 13, fontWeight: 400 }}>
+                Question {intakePageIndex + 1} of {questionPages.length}
               </p>
             ) : null}
 
@@ -478,26 +544,11 @@ export function PreAuthEligibility() {
             ) : null}
 
             <div style={flowActions}>
-              {intakePageIndex > 0 ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setError(null);
-                    setIntakePageIndex((current) => Math.max(0, current - 1));
-                  }}
-                  style={linkButton}
-                >
-                  ← Back to previous step
-                </button>
-              ) : (
-                <span aria-hidden="true" />
-              )}
               <button
                 type="submit"
                 disabled={!currentPageComplete}
                 style={{
                   ...primaryAction,
-                  marginLeft: "auto",
                   cursor: currentPageComplete ? "pointer" : "not-allowed",
                   opacity: currentPageComplete ? 1 : 0.55,
                 }}
@@ -511,7 +562,7 @@ export function PreAuthEligibility() {
                 setAccountMode("signin");
                 setStep("account");
               }}
-              style={linkButton}
+              style={{ ...linkButton, justifySelf: "center", marginTop: 14 }}
             >
               Already have an account? Sign in
             </button>
@@ -519,12 +570,11 @@ export function PreAuthEligibility() {
         ) : null}
 
         {step === "treatment" ? (
-          <div style={{ display: "grid", gap: 18 }}>
+          <div style={{ display: "grid", gap: 0, minHeight: "52vh" }}>
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: 14,
+                gap: 12,
               }}
             >
               {TREATMENTS.map((treatment) => {
@@ -539,44 +589,21 @@ export function PreAuthEligibility() {
                     }}
                     style={{
                       display: "grid",
-                      gap: 12,
-                      minHeight: 210,
-                      padding: 18,
+                      gap: 0,
+                      minHeight: 50,
+                      padding: "0 22px",
                       textAlign: "left",
-                      borderRadius: 8,
-                      border: `1px solid ${selected ? brand.accent : brand.border}`,
-                      background: selected ? "#101d27" : brand.surface2,
+                      borderRadius: 7,
+                      border: "none",
+                      background: selected ? brand.accent : brand.surface2,
                       color: brand.text,
                       cursor: "pointer",
-                      boxShadow: selected ? "0 0 0 1px rgba(115, 210, 255, 0.22)" : "none",
+                      boxShadow: "none",
+                      alignItems: "center",
                     }}
                     aria-pressed={selected}
                   >
-                    <span
-                      aria-hidden="true"
-                      style={{
-                        width: 52,
-                        height: 52,
-                        display: "grid",
-                        placeItems: "center",
-                        borderRadius: 8,
-                        background: selected ? brand.accent : "#07090d",
-                        color: selected ? "#061016" : brand.text,
-                        fontSize: 26,
-                        fontWeight: 900,
-                      }}
-                    >
-                      {treatment.accent}
-                    </span>
-                    <span style={{ display: "grid", gap: 5 }}>
-                      <strong style={{ fontSize: 20 }}>{treatment.name}</strong>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: selected ? brand.accent : brand.mint }}>
-                        {treatment.label}
-                      </span>
-                      <span style={{ fontSize: 14, lineHeight: 1.45, color: brand.muted }}>
-                        {treatment.summary}
-                      </span>
-                    </span>
+                    <strong style={{ fontSize: 15, fontWeight: 400 }}>{treatment.name}</strong>
                   </button>
                 );
               })}
@@ -589,20 +616,9 @@ export function PreAuthEligibility() {
             <div style={flowActions}>
               <button
                 type="button"
-                style={linkButton}
-                onClick={() => {
-                  setError(null);
-                  setStep("eligibility");
-                }}
-              >
-                ← Back to basics
-              </button>
-              <button
-                type="button"
                 disabled={!selectedTreatment}
                 style={{
                   ...primaryAction,
-                  marginLeft: "auto",
                   cursor: selectedTreatment ? "pointer" : "not-allowed",
                   opacity: selectedTreatment ? 1 : 0.55,
                 }}
@@ -623,7 +639,7 @@ export function PreAuthEligibility() {
 
         {step === "treatment_questions" ? (
           <form
-            style={{ display: "grid", gap: 14 }}
+            style={{ display: "grid", gap: 0, minHeight: "52vh" }}
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
@@ -657,21 +673,10 @@ export function PreAuthEligibility() {
             ) : null}
             <div style={flowActions}>
               <button
-                type="button"
-                style={linkButton}
-                onClick={() => {
-                  setError(null);
-                  setStep("treatment");
-                }}
-              >
-                ← Back to treatment
-              </button>
-              <button
                 type="submit"
                 disabled={!medicationQuestionsComplete}
                 style={{
                   ...primaryAction,
-                  marginLeft: "auto",
                   cursor: medicationQuestionsComplete ? "pointer" : "not-allowed",
                   opacity: medicationQuestionsComplete ? 1 : 0.55,
                 }}
@@ -681,6 +686,7 @@ export function PreAuthEligibility() {
             </div>
           </form>
         ) : null}
+        </div>
       </section>
     </main>
   );
