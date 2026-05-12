@@ -1,8 +1,8 @@
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   font-family: Inter, Arial, sans-serif;
-  background: #f7f8fb;
-  color: #172033;
+  background: #07090d;
+  color: #eef3f8;
 }
 
 * {
@@ -11,7 +11,7 @@
 
 body {
   margin: 0;
-  background: linear-gradient(180deg, #f7f8fb 0%, #eef4ff 100%);
+  background: #07090d;
   color: inherit;
 }
 

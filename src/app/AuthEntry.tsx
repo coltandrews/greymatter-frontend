@@ -11,12 +11,16 @@ const field = {
   display: "grid" as const,
   gap: 6,
   fontSize: 14,
+  color: "#eef3f8",
+  fontWeight: 700,
 };
 
 const input = {
-  padding: "10px 12px",
+  padding: "11px 12px",
   borderRadius: 8,
-  border: "1px solid #cbd5e1",
+  border: "1px solid rgba(148, 163, 184, 0.18)",
+  background: "#090d12",
+  color: "#eef3f8",
   fontSize: 16,
 };
 
@@ -24,9 +28,10 @@ const card = {
   width: "100%" as const,
   maxWidth: 380,
   padding: 28,
-  background: "#fff",
-  borderRadius: 12,
-  border: "1px solid #e5ebf5",
+  background: "rgba(12, 17, 22, 0.94)",
+  borderRadius: 8,
+  border: "1px solid rgba(148, 163, 184, 0.18)",
+  boxShadow: "0 34px 90px rgba(0, 0, 0, 0.42)",
 };
 
 function isExistingUserSignupError(message: string) {
@@ -157,13 +162,14 @@ export function AuthEntry({
           placeItems: "center",
           padding: "32px 20px",
           minHeight: "100vh",
+          background: "#07090d",
         }}
       >
         <section style={card}>
-          <h1 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 600 }}>
+          <h1 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 800, color: "#eef3f8" }}>
             Check your email
           </h1>
-          <p style={{ margin: 0, fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
+          <p style={{ margin: 0, fontSize: 14, color: "#8f9ba8", lineHeight: 1.5 }}>
             We sent a link to <strong>{email}</strong>. Open it to finish.
           </p>
           <button
@@ -174,9 +180,9 @@ export function AuthEntry({
               width: "100%",
               padding: "12px 16px",
               borderRadius: 8,
-              border: "1px solid #cbd5e1",
-              background: "#fff",
-              color: "#172033",
+              border: "1px solid rgba(148, 163, 184, 0.22)",
+              background: "#111922",
+              color: "#eef3f8",
               fontSize: 16,
               fontWeight: 600,
               cursor: "pointer",
@@ -196,14 +202,15 @@ export function AuthEntry({
         placeItems: "center",
         padding: "32px 20px",
         minHeight: "100vh",
+        background: "#07090d",
       }}
     >
       <section style={card}>
-        <h1 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 600 }}>
+        <h1 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 800, color: "#eef3f8" }}>
           {mode === "signup" ? "Create account" : "Sign in"}
         </h1>
         {intakeReady ? (
-          <p style={{ margin: "-8px 0 18px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
+          <p style={{ margin: "-8px 0 18px", fontSize: 14, color: "#8f9ba8", lineHeight: 1.5 }}>
             Your intake answers are ready. They will be saved to your account when you continue.
           </p>
         ) : null}
@@ -255,12 +262,12 @@ export function AuthEntry({
             </label>
           ) : null}
           {error ? (
-            <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+            <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
               {error}
             </p>
           ) : null}
           {existingEmailError ? (
-            <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+            <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
               That email is already in use.{" "}
               <button
                 type="button"
@@ -275,7 +282,7 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#2563eb",
+                  color: "#73d2ff",
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: "pointer",
@@ -295,8 +302,8 @@ export function AuthEntry({
               padding: "12px 16px",
               borderRadius: 8,
               border: "none",
-              background: loading ? "#94a3b8" : "#172033",
-              color: "#fff",
+              background: loading ? "#334155" : "#73d2ff",
+              color: "#061016",
               fontSize: 16,
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
@@ -310,7 +317,7 @@ export function AuthEntry({
           style={{
             margin: "20px 0 0",
             fontSize: 14,
-            color: "#64748b",
+            color: "#8f9ba8",
             textAlign: "center",
           }}
         >
@@ -330,7 +337,7 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#2563eb",
+                  color: "#73d2ff",
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: "pointer",
@@ -355,7 +362,7 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#2563eb",
+                  color: "#73d2ff",
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: "pointer",

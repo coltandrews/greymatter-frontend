@@ -25,18 +25,22 @@ import { useState } from "react";
 const card = {
   width: "100%" as const,
   maxWidth: 760,
-  padding: 28,
-  background: "#f5f7fa",
+  padding: 30,
+  background: "rgba(12, 17, 22, 0.94)",
   borderRadius: 8,
-  border: "1px solid #d9dddf",
-  boxShadow: "0 24px 70px rgba(43, 47, 52, 0.14)",
+  border: "1px solid rgba(148, 163, 184, 0.18)",
+  boxShadow: "0 34px 90px rgba(0, 0, 0, 0.42)",
 };
 
 const brand = {
-  graphite: "#2B2F34",
-  offWhite: "#F5F7FA",
-  steel: "#B1B5B6",
-  blue: "#2F80ED",
+  graphite: "#07090d",
+  surface: "#0c1116",
+  surface2: "#111922",
+  text: "#eef3f8",
+  muted: "#8f9ba8",
+  border: "rgba(148, 163, 184, 0.18)",
+  accent: "#73d2ff",
+  mint: "#7dd3b0",
 };
 
 const field = {
@@ -44,15 +48,17 @@ const field = {
   gap: 6,
   fontSize: 14,
   fontWeight: 600,
-  color: "#172033",
+  color: brand.text,
 };
 
 const input = {
-  padding: "10px 12px",
+  padding: "11px 12px",
   borderRadius: 8,
-  border: "1px solid #c7cccf",
+  border: `1px solid ${brand.border}`,
   fontSize: 16,
-  background: "#fff",
+  background: "#090d12",
+  color: brand.text,
+  outlineColor: brand.accent,
 };
 
 const flowActions = {
@@ -68,19 +74,19 @@ const primaryAction = {
   padding: "12px 16px",
   borderRadius: 8,
   border: "none",
-  background: brand.graphite,
-  color: "#fff",
+  background: brand.accent,
+  color: "#061016",
   fontSize: 16,
-  fontWeight: 700,
+  fontWeight: 800,
 };
 
 const linkButton = {
   padding: 0,
   border: "none",
   background: "transparent",
-  color: brand.blue,
+  color: brand.accent,
   fontSize: 14,
-  fontWeight: 600,
+  fontWeight: 700,
   cursor: "pointer",
 };
 
@@ -97,19 +103,19 @@ const optionCard = {
   alignItems: "center",
   gap: 10,
   padding: "11px 12px",
-  borderRadius: 12,
-  border: "1px solid #d9dddf",
-  background: "#fff",
-  color: brand.graphite,
+  borderRadius: 8,
+  border: `1px solid ${brand.border}`,
+  background: brand.surface2,
+  color: brand.text,
   fontSize: 14,
   fontWeight: 700,
   cursor: "pointer",
 };
 
 const selectedOptionCard = {
-  borderColor: brand.blue,
-  background: "#ffffff",
-  boxShadow: "0 6px 18px rgba(23, 32, 51, 0.08)",
+  borderColor: brand.accent,
+  background: "#101d27",
+  boxShadow: "0 0 0 1px rgba(115, 210, 255, 0.22)",
 };
 
 const optionMark = {
@@ -119,16 +125,16 @@ const optionMark = {
   placeItems: "center",
   flexShrink: 0,
   borderRadius: 999,
-  border: "1px solid #cbd5e1",
-  background: "#fff",
-  color: "#fff",
+  border: "1px solid rgba(148, 163, 184, 0.34)",
+  background: "#080c11",
+  color: "#061016",
   fontSize: 12,
   fontWeight: 900,
 };
 
 const selectedOptionMark = {
-  borderColor: brand.blue,
-  background: brand.blue,
+  borderColor: brand.accent,
+  background: brand.accent,
 };
 
 const pageSize = 1000;
@@ -201,7 +207,7 @@ function QuestionField({
           onChange={(e) => onChange(e.target.value)}
           style={{ ...input, minHeight: 86, resize: "vertical" }}
         />
-        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
       </label>
     );
   }
@@ -223,7 +229,7 @@ function QuestionField({
             </option>
           ))}
         </select>
-        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
       </label>
     );
   }
@@ -231,9 +237,9 @@ function QuestionField({
   if (question.question_type === "multi_select") {
     const selected = arrayAnswer(answer);
     return (
-      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 14, padding: 14, background: "#ffffff" }}>
+      <fieldset style={{ ...field, border: `1px solid ${brand.border}`, borderRadius: 8, padding: 14, background: "#090d12" }}>
         <legend style={{ padding: "0 4px", fontWeight: 800 }}>{label}</legend>
-        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
         <div style={optionGrid}>
           {question.options.map((option) => {
             const checked = selected.includes(option.value);
@@ -271,9 +277,9 @@ function QuestionField({
 
   if (question.question_type === "yes_no") {
     return (
-      <fieldset style={{ ...field, border: "1px solid #e5ebf5", borderRadius: 14, padding: 14, background: "#ffffff" }}>
+      <fieldset style={{ ...field, border: `1px solid ${brand.border}`, borderRadius: 8, padding: 14, background: "#090d12" }}>
         <legend style={{ padding: "0 4px", fontWeight: 800 }}>{label}</legend>
-        {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+        {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
         <div style={{ ...optionGrid, gridTemplateColumns: "repeat(2, minmax(0, 1fr))" }}>
           {[
             ["yes", "Yes"],
@@ -318,7 +324,7 @@ function QuestionField({
         onChange={(e) => onChange(e.target.value)}
         style={input}
       />
-      {question.help_text ? <span style={{ color: "#64748b", fontSize: 12 }}>{question.help_text}</span> : null}
+      {question.help_text ? <span style={{ color: brand.muted, fontSize: 12 }}>{question.help_text}</span> : null}
     </label>
   );
 }
@@ -385,7 +391,7 @@ export function PreAuthEligibility() {
         placeItems: "center",
         padding: "32px 20px",
         minHeight: "100vh",
-        background: `${brand.graphite} url('/textures/graphite-texture.jpeg') center / cover fixed`,
+        background: `linear-gradient(180deg, rgba(7, 9, 13, 0.86), rgba(7, 9, 13, 0.96)), url('/textures/graphite-texture.jpeg') center / cover fixed`,
       }}
     >
       <section style={card}>
@@ -394,10 +400,10 @@ export function PreAuthEligibility() {
           alt="GMMD"
           style={{ display: "block", width: 176, maxWidth: "100%", marginBottom: 28 }}
         />
-        <h1 style={{ margin: "0 0 8px", fontSize: 30, fontWeight: 800, color: brand.graphite }}>
+        <h1 style={{ margin: "0 0 8px", fontSize: 30, fontWeight: 850, color: brand.text }}>
           {heading}
         </h1>
-        <p style={{ margin: "0 0 22px", fontSize: 15, color: "#596064", lineHeight: 1.55 }}>
+        <p style={{ margin: "0 0 22px", fontSize: 15, color: brand.muted, lineHeight: 1.55 }}>
           {lead}
         </p>
 
@@ -440,7 +446,7 @@ export function PreAuthEligibility() {
             }}
           >
             {questionPages.length > 1 ? (
-              <p style={{ margin: "-4px 0 2px", color: "#64748b", fontSize: 13, fontWeight: 700 }}>
+              <p style={{ margin: "-4px 0 2px", color: brand.muted, fontSize: 13, fontWeight: 700 }}>
                 Step {intakePageIndex + 1} of {questionPages.length}
               </p>
             ) : null}
@@ -460,7 +466,7 @@ export function PreAuthEligibility() {
             ))}
 
             {error ? (
-              <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+              <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
                 {error}
               </p>
             ) : null}
@@ -532,11 +538,11 @@ export function PreAuthEligibility() {
                       padding: 18,
                       textAlign: "left",
                       borderRadius: 8,
-                      border: `2px solid ${selected ? brand.blue : "#d9dddf"}`,
-                      background: selected ? "#fff" : "#fdfefe",
-                      color: brand.graphite,
+                      border: `1px solid ${selected ? brand.accent : brand.border}`,
+                      background: selected ? "#101d27" : brand.surface2,
+                      color: brand.text,
                       cursor: "pointer",
-                      boxShadow: selected ? "0 16px 38px rgba(47, 128, 237, 0.18)" : "none",
+                      boxShadow: selected ? "0 0 0 1px rgba(115, 210, 255, 0.22)" : "none",
                     }}
                     aria-pressed={selected}
                   >
@@ -548,8 +554,8 @@ export function PreAuthEligibility() {
                         display: "grid",
                         placeItems: "center",
                         borderRadius: 8,
-                        background: selected ? brand.blue : brand.graphite,
-                        color: "#fff",
+                        background: selected ? brand.accent : "#07090d",
+                        color: selected ? "#061016" : brand.text,
                         fontSize: 26,
                         fontWeight: 900,
                       }}
@@ -558,10 +564,10 @@ export function PreAuthEligibility() {
                     </span>
                     <span style={{ display: "grid", gap: 5 }}>
                       <strong style={{ fontSize: 20 }}>{treatment.name}</strong>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: brand.blue }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: selected ? brand.accent : brand.mint }}>
                         {treatment.label}
                       </span>
-                      <span style={{ fontSize: 14, lineHeight: 1.45, color: "#596064" }}>
+                      <span style={{ fontSize: 14, lineHeight: 1.45, color: brand.muted }}>
                         {treatment.summary}
                       </span>
                     </span>
@@ -570,7 +576,7 @@ export function PreAuthEligibility() {
               })}
             </div>
             {error ? (
-              <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+              <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
                 {error}
               </p>
             ) : null}
@@ -639,7 +645,7 @@ export function PreAuthEligibility() {
               />
             ))}
             {error ? (
-              <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 14 }}>
+              <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
                 {error}
               </p>
             ) : null}

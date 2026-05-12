@@ -1,7 +1,9 @@
 .page {
   min-height: 100%;
   padding: 44px 20px 72px;
-  background: #f5f7fa;
+  background:
+    linear-gradient(180deg, rgba(7, 9, 13, 0.88), rgba(7, 9, 13, 0.98)),
+    url("/textures/graphite-texture.jpeg") center / cover fixed;
 }
 
 .shell {
@@ -23,7 +25,7 @@
 
 .eyebrow {
   margin: 0;
-  color: #2f80ed;
+  color: #73d2ff;
   font-size: 12px;
   font-weight: 900;
   text-transform: uppercase;
@@ -31,7 +33,7 @@
 
 .title {
   margin: 0;
-  color: #2b2f34;
+  color: #eef3f8;
   font-size: clamp(30px, 5vw, 48px);
   line-height: 1;
   font-weight: 900;
@@ -40,7 +42,7 @@
 .lead {
   max-width: 680px;
   margin: 0;
-  color: #596064;
+  color: #8f9ba8;
   font-size: 16px;
   line-height: 1.6;
 }
@@ -49,9 +51,9 @@
   margin: 0;
   padding: 13px 15px;
   border-radius: 8px;
-  border: 1px solid #fed7aa;
-  background: #fff7ed;
-  color: #9a3412;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  background: rgba(120, 53, 15, 0.24);
+  color: #fde68a;
   font-size: 14px;
   font-weight: 700;
 }
@@ -63,19 +65,19 @@
 }
 
 .panel {
-  border: 1px solid #d9dddf;
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 8px;
-  background: #fff;
+  background: rgba(12, 17, 22, 0.94);
   padding: 22px;
+  color: #eef3f8;
 }
 
 .darkPanel {
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 8px;
   padding: 22px;
-  color: #fff;
-  background:
-    linear-gradient(0deg, rgba(43, 47, 52, 0.84), rgba(43, 47, 52, 0.84)),
-    url("/textures/graphite-texture.jpeg") center / cover;
+  color: #eef3f8;
+  background: #0f171f;
 }
 
 .sectionTitle {
@@ -87,23 +89,23 @@
 
 .treatmentName {
   margin: 0;
-  color: #2b2f34;
+  color: #eef3f8;
   font-size: 28px;
   font-weight: 900;
 }
 
 .darkPanel .treatmentName {
-  color: #fff;
+  color: #eef3f8;
 }
 
 .muted {
   margin: 8px 0 0;
-  color: #596064;
+  color: #8f9ba8;
   line-height: 1.55;
 }
 
 .darkPanel .muted {
-  color: rgba(255, 255, 255, 0.76);
+  color: #8f9ba8;
 }
 
 .summaryList {
@@ -117,16 +119,16 @@
   justify-content: space-between;
   gap: 18px;
   padding-top: 12px;
-  border-top: 1px solid rgba(177, 181, 182, 0.36);
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
   color: inherit;
 }
 
 .summaryRow span {
-  color: #596064;
+  color: #8f9ba8;
 }
 
 .darkPanel .summaryRow span {
-  color: rgba(255, 255, 255, 0.68);
+  color: #8f9ba8;
 }
 
 .summaryRow strong {
@@ -144,8 +146,8 @@
 .primary {
   border: none;
   border-radius: 8px;
-  background: #2f80ed;
-  color: #fff;
+  background: #73d2ff;
+  color: #061016;
   padding: 13px 18px;
   font-size: 15px;
   font-weight: 900;
@@ -158,10 +160,10 @@
 }
 
 .secondary {
-  border: 1px solid #c7cccf;
+  border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 8px;
-  background: #fff;
-  color: #2b2f34;
+  background: #111922;
+  color: #eef3f8;
   padding: 12px 16px;
   font-size: 15px;
   font-weight: 800;
@@ -169,7 +171,7 @@
 
 .error {
   margin: 14px 0 0;
-  color: #b91c1c;
+  color: #fca5a5;
   font-size: 14px;
 }
 
