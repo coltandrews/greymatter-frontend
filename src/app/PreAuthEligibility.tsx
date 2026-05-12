@@ -188,6 +188,9 @@ const genderOptions = [
   { value: "prefer_not", label: "Prefer Not To Say" },
 ];
 
+const heightFeetOptions = Array.from({ length: 7 }, (_, index) => index + 3);
+const heightInchOptions = Array.from({ length: 12 }, (_, index) => index);
+
 function stringAnswer(value: IntakeQuestionAnswer | undefined): string {
   return typeof value === "string" ? value : "";
 }
@@ -286,6 +289,71 @@ function BmiPreview({ answers }: { answers: IntakeQuestionAnswers }) {
   );
 }
 
+function HeightPicker({
+  answer,
+  label,
+  onChange,
+}: {
+  answer: IntakeQuestionAnswer | undefined;
+  label: React.ReactNode;
+  onChange: (value: IntakeQuestionAnswer) => void;
+}) {
+  const totalInches = parseHeightInches(answer);
+  const selectedFeet = totalInches ? Math.floor(totalInches / 12) : "";
+  const selectedInches = totalInches ? totalInches % 12 : "";
+  const inchOptions =
+    selectedFeet === 9 ? [0] : heightInchOptions;
+
+  function updateHeight(feetValue: string, inchesValue: string) {
+    if (!feetValue) {
+      onChange("");
+      return;
+    }
+    const feet = Number(feetValue);
+    const inches = Math.min(Number(inchesValue || "0"), feet === 9 ? 0 : 11);
+    onChange(String(feet * 12 + inches));
+  }
+
+  return (
+    <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
+      {label ? <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend> : null}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+        <label style={{ ...field, gap: 8, fontSize: 13, color: brand.muted }}>
+          Feet
+          <select
+            value={selectedFeet}
+            onChange={(e) => updateHeight(e.target.value, String(selectedInches))}
+            style={input}
+          >
+            <option value="">Feet</option>
+            {heightFeetOptions.map((feet) => (
+              <option key={feet} value={feet}>
+                {feet}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label style={{ ...field, gap: 8, fontSize: 13, color: brand.muted }}>
+          Inches
+          <select
+            value={selectedInches}
+            onChange={(e) => updateHeight(String(selectedFeet), e.target.value)}
+            style={input}
+            disabled={!selectedFeet}
+          >
+            <option value="">Inches</option>
+            {inchOptions.map((inches) => (
+              <option key={inches} value={inches}>
+                {inches}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </fieldset>
+  );
+}
+
 function QuestionField({
   answer,
   hidePrompt = false,
@@ -303,6 +371,16 @@ function QuestionField({
       {question.required ? " *" : ""}
     </>
   );
+
+  if (question.question_key === "glp_1_current_height") {
+    return (
+      <HeightPicker
+        answer={answer}
+        label={label}
+        onChange={onChange}
+      />
+    );
+  }
 
   if (question.question_type === "textarea") {
     return (

@@ -469,63 +469,70 @@ export function TreatmentCheckout({
         <div className={step === "payment" ? styles.grid : styles.singleGrid}>
           {step === "address" ? (
             <section className={styles.panel} aria-labelledby="shipping-title">
-              <h2 id="shipping-title" className={styles.sectionTitle}>Shipping address</h2>
+              <div className={styles.sectionIntro}>
+                <h2 id="shipping-title" className={styles.sectionTitle}>Shipping address</h2>
+                <p className={styles.sectionSubtitle}>
+                  This is where your medication will be shipped after provider approval.
+                </p>
+              </div>
               {error ? <p className={styles.error}>{error}</p> : null}
-              <label className={styles.field}>
-                Address
-                <input
-                  className={styles.input}
-                  value={shipping.street_address}
-                  onChange={(event) => updateShipping("street_address", event.target.value)}
-                  autoComplete="shipping street-address"
-                />
-              </label>
-              <label className={styles.field}>
-                Apt, suite, etc.
-                <input
-                  className={styles.input}
-                  value={shipping.address_line2}
-                  onChange={(event) => updateShipping("address_line2", event.target.value)}
-                  autoComplete="shipping address-line2"
-                />
-              </label>
-              <div className={styles.addressGrid}>
+              <div className={styles.formStack}>
                 <label className={styles.field}>
-                  City
+                  Address
                   <input
                     className={styles.input}
-                    value={shipping.city}
-                    onChange={(event) => updateShipping("city", event.target.value)}
-                    autoComplete="shipping address-level2"
+                    value={shipping.street_address}
+                    onChange={(event) => updateShipping("street_address", event.target.value)}
+                    autoComplete="shipping street-address"
                   />
                 </label>
                 <label className={styles.field}>
-                  State
-                  <select
+                  Apt, suite, etc.
+                  <input
                     className={styles.input}
-                    value={shipping.address_state}
-                    onChange={(event) => updateShipping("address_state", event.target.value)}
-                    autoComplete="shipping address-level1"
-                  >
-                    <option value="">Select</option>
-                    {US_STATES.map((state) => (
-                      <option key={state.code} value={state.code}>
-                        {state.code}
-                      </option>
-                    ))}
-                  </select>
+                    value={shipping.address_line2}
+                    onChange={(event) => updateShipping("address_line2", event.target.value)}
+                    autoComplete="shipping address-line2"
+                  />
+                </label>
+                <div className={styles.addressGrid}>
+                  <label className={styles.field}>
+                    City
+                    <input
+                      className={styles.input}
+                      value={shipping.city}
+                      onChange={(event) => updateShipping("city", event.target.value)}
+                      autoComplete="shipping address-level2"
+                    />
+                  </label>
+                  <label className={styles.field}>
+                    State
+                    <select
+                      className={styles.input}
+                      value={shipping.address_state}
+                      onChange={(event) => updateShipping("address_state", event.target.value)}
+                      autoComplete="shipping address-level1"
+                    >
+                      <option value="">Select</option>
+                      {US_STATES.map((state) => (
+                        <option key={state.code} value={state.code}>
+                          {state.code}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <label className={styles.field}>
+                  ZIP
+                  <input
+                    className={styles.input}
+                    value={shipping.zip}
+                    onChange={(event) => updateShipping("zip", event.target.value)}
+                    autoComplete="shipping postal-code"
+                    inputMode="numeric"
+                  />
                 </label>
               </div>
-              <label className={styles.field}>
-                ZIP
-                <input
-                  className={styles.input}
-                  value={shipping.zip}
-                  onChange={(event) => updateShipping("zip", event.target.value)}
-                  autoComplete="shipping postal-code"
-                  inputMode="numeric"
-                />
-              </label>
               <div className={styles.actions}>
                 <button
                   type="button"
@@ -578,9 +585,21 @@ export function TreatmentCheckout({
               {loadingIntake ? (
                 <p className={styles.muted}>Loading...</p>
               ) : treatment ? (
-                <div className={styles.summaryLine}>
-                  <span>{treatment.name}</span>
-                </div>
+                <>
+                  <div className={styles.summaryLine}>
+                    <span>{treatment.name}</span>
+                  </div>
+                  <dl className={styles.purchaseList} aria-label="Purchase breakdown">
+                    <div>
+                      <dt>Consultation fee</dt>
+                      <dd>Provider review and treatment eligibility</dd>
+                    </div>
+                    <div>
+                      <dt>Medication fee</dt>
+                      <dd>Medication cost will be added here</dd>
+                    </div>
+                  </dl>
+                </>
               ) : (
                 <div className={styles.emptyState}>
                   <p className={styles.muted}>No treatment selected.</p>
@@ -606,8 +625,7 @@ export function TreatmentCheckout({
           ) : null}
 
           {step === "payment" ? (
-            <section className={styles.panel} aria-labelledby="payment-title">
-              <h2 id="payment-title" className={styles.sectionTitle}>Payment</h2>
+            <section className={styles.paymentColumn} aria-label="Payment form">
               {error ? <p className={styles.error}>{error}</p> : null}
               {loadingCheckout || !checkout ? (
                 <div className={styles.paymentSkeleton}>Preparing payment...</div>

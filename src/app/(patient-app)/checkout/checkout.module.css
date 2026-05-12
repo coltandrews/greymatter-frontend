@@ -71,15 +71,33 @@
   border: none;
   border-radius: 7px;
   background: #202020;
-  padding: 22px;
+  padding: 24px;
   color: #f2f2f2;
 }
 
 .sectionTitle {
-  margin: 0 0 16px;
+  margin: 0;
   color: inherit;
   font-size: 17px;
   font-weight: 500;
+}
+
+.sectionIntro {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.sectionSubtitle {
+  margin: 0;
+  color: #c9c9c9;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.formStack {
+  display: grid;
+  gap: 14px;
 }
 
 .summaryLine {
@@ -92,6 +110,32 @@
   color: #f2f2f2;
   font-size: 18px;
   font-weight: 500;
+}
+
+.purchaseList {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 0 0 18px;
+  border-bottom: 1px solid #3a3a3a;
+}
+
+.purchaseList div {
+  display: grid;
+  gap: 4px;
+}
+
+.purchaseList dt {
+  color: #f2f2f2;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.purchaseList dd {
+  margin: 0;
+  color: #c9c9c9;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .muted {
@@ -107,7 +151,7 @@
 
 .field {
   display: grid;
-  gap: 8px;
+  gap: 7px;
   color: #d7d7d7;
   font-size: 14px;
   font-weight: 500;
@@ -153,7 +197,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
-  margin-top: 18px;
+  margin-top: 22px;
 }
 
 .actions:has(.secondaryButton) {
@@ -272,7 +316,6 @@
 }
 
 .checkoutFrame {
-  margin-top: 4px;
   min-height: 520px;
   overflow: hidden;
   border-radius: 7px;
@@ -280,9 +323,13 @@
   color-scheme: dark;
 }
 
+.paymentColumn {
+  min-width: 0;
+}
+
 .paymentSkeleton {
   display: grid;
-  min-height: 220px;
+  min-height: 520px;
   place-items: center;
   border-radius: 7px;
   background: #151515;
