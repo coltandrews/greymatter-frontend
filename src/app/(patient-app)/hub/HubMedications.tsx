@@ -283,7 +283,10 @@ export function HubMedications({
                   </span>
                   {med.source ? <span className={styles.medSource}>{med.source}</span> : null}
                 </div>
-                <span className={styles.medChevron} aria-hidden="true" />
+                <span className={styles.medMobileCta}>
+                  View details
+                  <span className={styles.medChevron} aria-hidden="true" />
+                </span>
               </Link>
             </li>
           ))}
