@@ -37,3 +37,18 @@ select {
 select::-ms-expand {
   display: none;
 }
+
+input[type="date"] {
+  min-height: 58px;
+  height: 58px;
+  line-height: 58px;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  font-size: 16px;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  min-height: 58px;
+  line-height: 58px;
+  text-align: left;
+}

@@ -658,7 +658,7 @@ export function PreAuthEligibility() {
                 return;
               }
               if (intake.for_self !== true) {
-                setError("This online flow currently supports patients booking for themselves.");
+                setError("Please continue only if you are completing this intake for yourself.");
                 return;
               }
               if (!intake.service_state) {
