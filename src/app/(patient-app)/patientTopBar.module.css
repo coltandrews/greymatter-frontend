@@ -21,7 +21,7 @@
 
 .logo {
   display: block;
-  width: 118px;
+  width: 172px;
   height: auto;
 }
 
@@ -38,6 +38,6 @@
   }
 
   .logo {
-    width: 104px;
+    width: 150px;
   }
 }
