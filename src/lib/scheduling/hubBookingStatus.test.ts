@@ -51,7 +51,7 @@ describe("hubBookingIntentStatusView", () => {
         ola_status: "failed",
       }),
     ).toMatchObject({
-      label: "Needs review",
+      label: "Under review",
       tone: "review",
     });
   });

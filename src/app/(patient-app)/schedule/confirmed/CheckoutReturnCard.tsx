@@ -9,12 +9,17 @@ import {
   shouldPollCheckoutReturn,
   type BookingIntentReturnRow,
 } from "@/lib/scheduling/checkoutReturn";
-import { patientBookingTimeline } from "@/lib/scheduling/patientTimeline";
 import { createClient } from "@/lib/supabase/client";
 import styles from "./confirmed.module.css";
 
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLLS = 15;
+
+type StatusRow = {
+  label: string;
+  value: string;
+  state: "complete" | "current" | "pending" | "attention";
+};
 
 async function loadBookingIntentByCheckoutSession(
   checkoutSessionId: string,
@@ -33,6 +38,49 @@ async function loadBookingIntentByCheckoutSession(
   return data as BookingIntentReturnRow | null;
 }
 
+function statusRows(bookingIntent: BookingIntentReturnRow | null): StatusRow[] {
+  const paid = bookingIntent?.payment_status === "paid";
+  const booked =
+    bookingIntent?.booking_status === "booked" &&
+    bookingIntent?.ola_status === "booked";
+  const actionRequired = bookingIntent?.booking_status === "action_required";
+  const underReview = bookingIntent?.booking_status === "needs_review";
+
+  return [
+    {
+      label: "Payment",
+      value: paid ? "Received" : "Pending",
+      state: paid ? "complete" : "current",
+    },
+    {
+      label: "Provider review",
+      value: booked
+        ? "Submitted"
+        : actionRequired
+          ? "Next steps ready"
+          : underReview
+            ? "Under review"
+            : paid
+              ? "Processing"
+              : "Pending",
+      state: booked
+        ? "complete"
+        : actionRequired
+          ? "current"
+          : underReview
+            ? "attention"
+            : paid
+              ? "current"
+              : "pending",
+    },
+    {
+      label: "Updates",
+      value: paid ? "SMS and email" : "After payment",
+      state: paid ? "pending" : "pending",
+    },
+  ];
+}
+
 export function CheckoutReturnCard({
   checkoutSessionId,
   initialBookingIntent,
@@ -48,18 +96,7 @@ export function CheckoutReturnCard({
   const view = useMemo(() => checkoutReturnView(bookingIntent), [bookingIntent]);
   const action = useMemo(() => checkoutReturnAction(bookingIntent), [bookingIntent]);
   const polling = Boolean(checkoutSessionId) && shouldPollCheckoutReturn(bookingIntent);
-  const timeline = useMemo(
-    () =>
-      bookingIntent
-        ? patientBookingTimeline({
-            booking_status: bookingIntent.booking_status,
-            payment_status: bookingIntent.payment_status,
-            ola_status: bookingIntent.ola_status,
-            has_next_steps: Boolean(bookingIntent.ola_redirect_url),
-          })
-        : [],
-    [bookingIntent],
-  );
+  const rows = useMemo(() => statusRows(bookingIntent), [bookingIntent]);
 
   useEffect(() => {
     if (!checkoutSessionId || !polling || reconcileAttempted.current) {
@@ -124,53 +161,32 @@ export function CheckoutReturnCard({
       </div>
       <h1 className={styles.title}>{view.title}</h1>
       <p className={styles.lead}>{view.lead}</p>
-      <p className={styles.summary}>{view.summary}</p>
-      <p className={styles.hint}>{pollError ?? view.hint}</p>
+      <p className={styles.summary}>{pollError ?? view.summary}</p>
       {polling && pollCount < MAX_POLLS ? (
         <p className={styles.statusNote} role="status">
-          Checking for request updates...
+          Checking for updates...
         </p>
       ) : null}
-      {bookingIntent ? (
-        <>
-          <ol className={styles.timeline} aria-label="Booking progress">
-            {timeline.map((step) => (
-              <li
-                key={step.key}
-                className={`${styles.timelineItem} ${styles[`timeline${step.state}`]}`}
-              >
-                <span className={styles.timelineMarker} aria-hidden="true" />
-                <span className={styles.timelineText}>
-                  <span className={styles.timelineLabel}>{step.label}</span>
-                  <span className={styles.timelineDescription}>
-                    {step.description}
-                  </span>
-                </span>
-              </li>
-            ))}
-          </ol>
-          <dl className={styles.requestDetails}>
-            <div>
-              <dt>Request ID</dt>
-              <dd className={styles.mono}>{bookingIntent.id}</dd>
-            </div>
-            <div>
-              <dt>Payment</dt>
-              <dd>{bookingIntent.payment_status ?? "Pending"}</dd>
-            </div>
-            <div>
-              <dt>Provider booking</dt>
-              <dd>{bookingIntent.ola_status ?? "Pending"}</dd>
-            </div>
-          </dl>
-        </>
-      ) : null}
+      <dl className={styles.statusList} aria-label="Request status">
+        {rows.map((row) => (
+          <div key={row.label} className={styles.statusRow}>
+            <dt>{row.label}</dt>
+            <dd>
+              <span
+                className={`${styles.statusDot} ${styles[`status${row.state}`]}`}
+                aria-hidden="true"
+              />
+              {row.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
       <div className={styles.actions}>
         <Link
           href="/hub"
           className={`${styles.btn} ${action ? styles.secondaryBtn : ""}`}
         >
-          ← Back to Patient Portal
+          Continue to portal
         </Link>
         {action ? (
           <Link href={action.href} className={styles.btn}>

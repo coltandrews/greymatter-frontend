@@ -22,7 +22,7 @@ describe("checkoutReturnView", () => {
     ).toMatchObject({
       tone: "success",
       title: "Request submitted",
-      lead: "Your payment was received and your medication request was sent for provider review.",
+      lead: "Your payment was received and your request was sent for provider review.",
     });
   });
 
@@ -40,8 +40,8 @@ describe("checkoutReturnView", () => {
       }),
     ).toMatchObject({
       tone: "pending",
-      title: "Payment received",
-      lead: "We are sending your medication request for provider review.",
+      title: "Processing request",
+      lead: "We received your payment and are sending your request for provider review.",
     });
   });
 
@@ -61,7 +61,7 @@ describe("checkoutReturnView", () => {
     ).toMatchObject({
       tone: "action",
       title: "Next steps ready",
-      lead: "Your payment was received and provider next steps are ready.",
+      lead: "Your payment was received and your provider next steps are ready.",
     });
   });
 
@@ -77,8 +77,8 @@ describe("checkoutReturnView", () => {
       }),
     ).toMatchObject({
       tone: "review",
-      title: "Payment received",
-      lead: "We are reviewing your medication request.",
+      title: "Under review",
+      lead: "We received your payment. Your request is being reviewed.",
     });
   });
 

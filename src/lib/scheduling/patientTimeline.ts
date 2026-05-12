@@ -37,7 +37,7 @@ export function patientBookingTimeline(
       description: providerBooked
         ? "Provider review ready"
         : needsReview
-          ? "Staff is reviewing this request"
+          ? "Under review"
           : paymentComplete
             ? "Provider review in progress"
             : "Starts after payment is complete",

@@ -35,8 +35,8 @@ export function hubBookingIntentStatusView(
 
   if (input.booking_status === "needs_review") {
     return {
-      label: "Needs review",
-      subtitle: "Payment received. We are confirming provider handoff.",
+      label: "Under review",
+      subtitle: "Payment received. Your request is being reviewed.",
       tone: "review",
     };
   }

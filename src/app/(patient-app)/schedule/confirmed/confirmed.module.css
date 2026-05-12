@@ -1,16 +1,16 @@
 .page {
-  max-width: 520px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 48px 28px 56px;
+  padding: 56px 24px;
   color: #eef3f8;
 }
 
 .card {
   text-align: center;
-  background: rgba(12, 17, 22, 0.94);
+  background: rgba(10, 15, 20, 0.94);
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 8px;
-  padding: 36px 28px 40px;
+  padding: 34px 28px 30px;
   box-shadow: 0 34px 90px rgba(0, 0, 0, 0.42);
 }
 
@@ -46,22 +46,24 @@
 }
 
 .title {
-  margin: 0 0 10px;
-  font-size: 1.65rem;
-  font-weight: 700;
+  margin: 0 0 8px;
+  font-size: 1.75rem;
+  font-weight: 850;
   color: #eef3f8;
-  letter-spacing: -0.02em;
 }
 
 .lead {
-  margin: 0 0 12px;
+  margin: 0 auto 10px;
+  max-width: 360px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 650;
   color: #d7dee6;
+  line-height: 1.5;
 }
 
 .summary {
-  margin: 0 0 20px;
+  margin: 0 auto 22px;
+  max-width: 340px;
   font-size: 15px;
   color: #8f9ba8;
   line-height: 1.5;
@@ -80,127 +82,91 @@
   color: #8f9ba8;
 }
 
-.timeline {
-  list-style: none;
-  margin: 0 0 22px;
-  padding: 18px;
+.statusList {
+  margin: 0 0 26px;
+  padding: 6px 0;
   display: grid;
-  gap: 12px;
-  text-align: left;
-  background: #090d12;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 8px;
+  gap: 0;
+  border-block: 1px solid rgba(148, 163, 184, 0.18);
 }
 
-.timelineItem {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
-  color: #8f9ba8;
-}
-
-.timelineMarker {
-  width: 10px;
-  height: 10px;
-  margin-top: 5px;
-  border-radius: 50%;
-  background: #334155;
-  border: 2px solid #090d12;
-  box-shadow: 0 0 0 1px #334155;
-}
-
-.timelinecomplete .timelineMarker {
-  background: #7dd3b0;
-  box-shadow: 0 0 0 1px #7dd3b0;
-}
-
-.timelinecurrent .timelineMarker {
-  background: #73d2ff;
-  box-shadow: 0 0 0 1px #73d2ff;
-}
-
-.timelineattention .timelineMarker {
-  background: #f97316;
-  box-shadow: 0 0 0 1px #f97316;
-}
-
-.timelineText {
+.statusRow {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.timelineLabel {
-  font-size: 13px;
-  font-weight: 700;
-  color: #eef3f8;
-}
-
-.timelineDescription {
-  font-size: 12px;
-  line-height: 1.4;
-  color: #8f9ba8;
-}
-
-.requestDetails {
-  margin: 0 0 24px;
-  padding: 0;
-  display: grid;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 13px 2px;
   text-align: left;
 }
 
-.requestDetails div {
-  margin: 0;
+.statusRow + .statusRow {
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
-.requestDetails dt {
-  margin: 0 0 3px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.statusRow dt {
+  margin: 0;
   color: #8f9ba8;
-}
-
-.requestDetails dd {
-  margin: 0;
   font-size: 13px;
-  line-height: 1.4;
-  color: #d7dee6;
-  text-transform: capitalize;
+  font-weight: 700;
 }
 
-.requestDetails .mono {
-  word-break: break-all;
-  font-family: ui-monospace, monospace;
-  text-transform: none;
+.statusRow dd {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #eef3f8;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #334155;
+}
+
+.statuscomplete {
+  background: #7dd3b0;
+}
+
+.statuscurrent {
+  background: #73d2ff;
+}
+
+.statusattention {
+  background: #fdba74;
+}
+
+.statuspending {
+  background: #334155;
 }
 
 .actions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: center;
+  gap: 12px;
 }
 
 .actions > :last-child {
-  margin-left: auto;
+  margin-left: 0;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 24px;
-  border-radius: 10px;
+  min-width: 190px;
+  padding: 13px 22px;
+  border-radius: 8px;
   background: #73d2ff;
   color: #061016;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 850;
   text-decoration: none;
 }
 

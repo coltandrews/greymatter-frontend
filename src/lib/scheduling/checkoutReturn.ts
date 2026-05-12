@@ -29,9 +29,9 @@ export function checkoutReturnView(
       tone: "review",
       icon: "!",
       title: "We could not find that checkout",
-      lead: "Your medication request status is not available from this link.",
-      summary: "Return to your portal to check the latest request information.",
-      hint: "If payment went through, we can still reconcile the request from Stripe and Ola records.",
+      lead: "We could not load this request status.",
+      summary: "Check your portal for the latest update.",
+      hint: "If payment went through, support can reconcile the request.",
     };
   }
 
@@ -46,9 +46,9 @@ export function checkoutReturnView(
       tone: "success",
       icon: "✓",
       title: "Request submitted",
-      lead: "Your payment was received and your medication request was sent for provider review.",
+      lead: "Your payment was received and your request was sent for provider review.",
       summary,
-      hint: "Return to your patient portal any time to refresh medication status.",
+      hint: "You can track updates from your portal.",
     };
   }
 
@@ -57,30 +57,30 @@ export function checkoutReturnView(
       tone: "action",
       icon: "!",
       title: "Next steps ready",
-      lead: "Your payment was received and provider next steps are ready.",
+      lead: "Your payment was received and your provider next steps are ready.",
       summary,
-      hint: "Review the next steps before continuing outside Greymatter.",
+      hint: "Review the next steps when you are ready.",
     };
   }
 
   if (bookingIntent.booking_status === "needs_review") {
     return {
       tone: "review",
-      icon: "!",
-      title: "Payment received",
-      lead: "We are reviewing your medication request.",
+      icon: "...",
+      title: "Under review",
+      lead: "We received your payment. Your request is being reviewed.",
       summary,
-      hint: "Your payment succeeded, but automatic provider handoff did not finish. We will follow up with next steps.",
+      hint: "We will follow up if anything else is needed.",
     };
   }
 
   return {
     tone: "pending",
     icon: "...",
-    title: "Payment received",
-    lead: "We are sending your medication request for provider review.",
+    title: "Processing request",
+    lead: "We received your payment and are sending your request for provider review.",
     summary,
-    hint: "This can take a moment after checkout. Refresh this page or return to your portal for the latest status.",
+    hint: "This can take a moment.",
   };
 }
 
