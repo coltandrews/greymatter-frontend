@@ -20,19 +20,6 @@ export async function fetchVendorOlaValidateToken(supabaseAccessToken: string) {
   });
 }
 
-export async function fetchVendorOlaSchedules(
-  supabaseAccessToken: string,
-  state: string,
-) {
-  const path = `${apiBase()}/api/vendor/ola/schedules/${encodeURIComponent(state)}`;
-  return fetch(path, {
-    headers: {
-      Authorization: `Bearer ${supabaseAccessToken}`,
-      Accept: "application/json",
-    },
-  });
-}
-
 export async function updateVendorOlaProfile(
   supabaseAccessToken: string,
   userUuid: string,
@@ -54,29 +41,6 @@ export async function fetchVendorOlaOrderDetails(
   orderGuid: string,
 ) {
   return fetch(`${apiBase()}/api/vendor/ola/orders/${encodeURIComponent(orderGuid)}`, {
-    headers: {
-      Authorization: `Bearer ${supabaseAccessToken}`,
-      Accept: "application/json",
-    },
-  });
-}
-
-export async function fetchVendorOlaPharmacies(
-  supabaseAccessToken: string,
-  params: {
-    pharmacyName?: string;
-    zipCode?: string;
-    pharmacyNcpdpId?: string;
-  },
-) {
-  const search = new URLSearchParams();
-  if (params.pharmacyNcpdpId?.trim()) {
-    search.set("pharmacy_ncpdp_id", params.pharmacyNcpdpId.trim());
-  } else {
-    search.set("pharmacy_name", params.pharmacyName?.trim() ?? "");
-    search.set("zip_code", params.zipCode?.trim() ?? "");
-  }
-  return fetch(`${apiBase()}/api/vendor/ola/pharmacies?${search.toString()}`, {
     headers: {
       Authorization: `Bearer ${supabaseAccessToken}`,
       Accept: "application/json",

@@ -3,8 +3,6 @@ import {
   defaultPreSignupQuestions,
   formatQuestionAnswersForPayload,
 } from "@/lib/intake/intakeQuestions";
-import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
-import type { SlotDisplay } from "@/lib/scheduling/olaProviderSchedules";
 import { treatmentByKey, treatmentQuestions } from "@/lib/treatments";
 
 export const GREYMATTER_SERVICE_KEY =
@@ -23,14 +21,6 @@ export type BookingIntentPayload = {
     providerName: string;
   };
 };
-
-function answerLabel(id: string, value: string): string {
-  const question = APPOINTMENT_QUESTIONS.find((item) => item.id === id);
-  if (!question || question.type !== "select") {
-    return value;
-  }
-  return question.options.find((opt) => opt.value === value)?.label ?? value;
-}
 
 export function buildTreatmentBookingIntentPayload(
   patient: IntakeDraftData,
@@ -53,41 +43,6 @@ export function buildTreatmentBookingIntentPayload(
         medicationQuestions,
         patient.treatment_answers,
       ),
-    },
-  };
-}
-
-export function buildBookingIntentPayload({
-  answers,
-  patient,
-  selectedSlot,
-  serviceState,
-  serviceKey = GREYMATTER_SERVICE_KEY,
-}: {
-  answers: Record<string, string>;
-  patient: IntakeDraftData;
-  selectedSlot: SlotDisplay;
-  serviceState: string;
-  serviceKey?: string;
-}): BookingIntentPayload {
-  return {
-    serviceState: serviceState.trim(),
-    serviceKey,
-    serviceType: "initial",
-    intakeData: patient,
-    appointmentAnswers: Object.fromEntries(
-      Object.entries(answers)
-        .filter(([, value]) => value.trim())
-        .map(([id, value]) => {
-          const question = APPOINTMENT_QUESTIONS.find((q) => q.id === id);
-          return [question?.label ?? id, answerLabel(id, value)];
-      }),
-    ),
-    selectedSlot: {
-      start: selectedSlot.start,
-      end: selectedSlot.end,
-      providerGuid: selectedSlot.providerGuid?.trim() ?? "",
-      providerName: selectedSlot.provider?.trim() ?? "",
     },
   };
 }
