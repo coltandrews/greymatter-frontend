@@ -9,20 +9,21 @@ type Mode = "signup" | "signin";
 
 const field = {
   display: "grid" as const,
-  gap: 12,
+  gap: 8,
   fontSize: 14,
-  color: "#f2f2f2",
+  color: "#d7d7d7",
   fontWeight: 400,
 };
 
 const input = {
   minHeight: 48,
-  padding: "0 20px",
+  padding: "0 14px",
   borderRadius: 7,
-  border: "2px solid #d8d8d8",
-  background: "transparent",
+  border: "1px solid #575757",
+  background: "#151515",
   color: "#f2f2f2",
   fontSize: 16,
+  outlineColor: "#3487ed",
 };
 
 const card = {
@@ -47,7 +48,15 @@ const progressTrack = {
   height: 4,
   borderRadius: 999,
   background: "#666666",
-  marginBottom: 44,
+  marginBottom: 38,
+};
+
+const messageSlot = {
+  minHeight: 18,
+  margin: 0,
+  color: "#fca5a5",
+  fontSize: 14,
+  lineHeight: 1.3,
 };
 
 function isExistingUserSignupError(message: string) {
@@ -101,6 +110,7 @@ export function AuthEntry({
     }
     submittingRef.current = true;
     setLoading(true);
+    let keepLockedForNavigation = false;
     try {
       const supabase = createClient();
       const origin = window.location.origin;
@@ -121,6 +131,7 @@ export function AuthEntry({
       }
       if (data.session) {
         await syncStoredPreAuthIntake(supabase, data.session.user.id);
+        keepLockedForNavigation = true;
         router.push(intakeReady ? "/checkout" : "/post-login");
         router.refresh();
         return;
@@ -138,8 +149,10 @@ export function AuthEntry({
 
       setAwaitingEmail(true);
     } finally {
-      submittingRef.current = false;
-      setLoading(false);
+      if (!keepLockedForNavigation) {
+        submittingRef.current = false;
+        setLoading(false);
+      }
     }
   }
 
@@ -152,6 +165,7 @@ export function AuthEntry({
     setExistingEmailError(false);
     submittingRef.current = true;
     setLoading(true);
+    let keepLockedForNavigation = false;
     try {
       const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({
@@ -168,11 +182,15 @@ export function AuthEntry({
       if (user) {
         await syncStoredPreAuthIntake(supabase, user.id);
       }
+      keepLockedForNavigation = true;
       router.push(intakeReady ? "/checkout" : "/post-login");
       router.refresh();
+      return;
     } finally {
-      submittingRef.current = false;
-      setLoading(false);
+      if (!keepLockedForNavigation) {
+        submittingRef.current = false;
+        setLoading(false);
+      }
     }
   }
 
@@ -256,7 +274,7 @@ export function AuthEntry({
 
         <form
           onSubmit={mode === "signup" ? onSignUp : onSignIn}
-          style={{ display: "grid", gap: 16 }}
+          style={{ display: "grid", gap: 14 }}
         >
           <label style={field}>
             Email
@@ -264,6 +282,7 @@ export function AuthEntry({
               type="email"
               autoComplete="email"
               required
+              disabled={loading}
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -281,6 +300,7 @@ export function AuthEntry({
               }
               required
               minLength={mode === "signup" ? 8 : undefined}
+              disabled={loading}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={input}
@@ -294,22 +314,26 @@ export function AuthEntry({
                 autoComplete="new-password"
                 required
                 minLength={8}
+                disabled={loading}
                 value={passwordConfirm}
                 onChange={(e) => setPasswordConfirm(e.target.value)}
                 style={input}
               />
             </label>
-          ) : null}
-          {error ? (
-            <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
-              {error}
-            </p>
-          ) : null}
-          {existingEmailError ? (
-            <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
+          ) : (
+            <div style={{ display: "none" }} aria-hidden="true" />
+          )}
+          <div style={{ minHeight: existingEmailError ? 38 : 18 }}>
+            {error ? (
+              <p role="alert" style={messageSlot}>
+                {error}
+              </p>
+            ) : existingEmailError ? (
+              <p role="alert" style={messageSlot}>
               That email is already in use.{" "}
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => {
                   setMode("signin");
                   setPassword("");
@@ -324,14 +348,15 @@ export function AuthEntry({
                   color: "#73d2ff",
                   fontWeight: 600,
                   fontSize: 14,
-                  cursor: "pointer",
+                  cursor: loading ? "not-allowed" : "pointer",
                 }}
               >
                 Sign in here
               </button>
               .
             </p>
-          ) : null}
+            ) : null}
+          </div>
           <button
             type="submit"
             disabled={loading}
@@ -347,7 +372,6 @@ export function AuthEntry({
               fontSize: 15,
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.78 : 1,
             }}
           >
             {loading
@@ -371,8 +395,9 @@ export function AuthEntry({
           {mode === "signup" ? (
             <>
               Already have an account?{" "}
-              <button
+                <button
                 type="button"
+                disabled={loading}
                 onClick={() => {
                   setMode("signin");
                   setPasswordConfirm("");
@@ -387,7 +412,7 @@ export function AuthEntry({
                   color: "#3487ed",
                   fontWeight: 500,
                   fontSize: 14,
-                  cursor: "pointer",
+                  cursor: loading ? "not-allowed" : "pointer",
                 }}
               >
                 Sign in
@@ -398,6 +423,7 @@ export function AuthEntry({
               Need an account?{" "}
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => {
                   setMode("signup");
                   setPasswordConfirm("");
@@ -412,7 +438,7 @@ export function AuthEntry({
                   color: "#3487ed",
                   fontWeight: 500,
                   fontSize: 14,
-                  cursor: "pointer",
+                  cursor: loading ? "not-allowed" : "pointer",
                 }}
               >
                 Sign up

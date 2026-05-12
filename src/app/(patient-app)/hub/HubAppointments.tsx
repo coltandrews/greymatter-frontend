@@ -5,6 +5,8 @@ import { reconcileCheckoutSession } from "@/lib/api/bookingIntents";
 import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
 import { patientBookingTimeline } from "@/lib/scheduling/patientTimeline";
+import { treatmentByKey } from "@/lib/treatments";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./hub.module.css";
 
@@ -353,6 +355,22 @@ function bookingIntentProvider(row: HubBookingIntentRow): string {
     : "Provider pending";
 }
 
+function bookingIntentTreatment(row: HubBookingIntentRow): string {
+  const intake =
+    row.intake_data && typeof row.intake_data === "object"
+      ? (row.intake_data as Record<string, unknown>)
+      : {};
+  const treatmentKey =
+    typeof intake.selected_treatment === "string" ? intake.selected_treatment : null;
+  return treatmentByKey(treatmentKey)?.name ?? "Medication request";
+}
+
+function visitHref(row: HubVisitRow): string {
+  return row.kind === "bookingIntent"
+    ? `/hub/medications/booking/${encodeURIComponent(row.bookingIntent.id)}`
+    : `/hub/medications/appointment/${encodeURIComponent(row.appointment.id)}`;
+}
+
 function bookingIntentTimeline(row: HubBookingIntentRow) {
   return patientBookingTimeline({
     booking_status: row.booking_status,
@@ -592,12 +610,9 @@ export function HubAppointments({
               const startsAt = bookingIntentStartsAt(r);
               return (
                 <li key={`booking-${r.id}`} className={styles.visitRow}>
-                  <button
-                    type="button"
+                  <Link
+                    href={visitHref(row)}
                     className={`${styles.visitItem} ${styles.visitItemButton}`}
-                    onClick={() => {
-                      setSelected(row);
-                    }}
                   >
                     <div className={styles.visitTop}>
                       <div className={styles.visitLeft}>
@@ -607,7 +622,7 @@ export function HubAppointments({
                           </span>
                           <span className={styles.visitProviderBlock}>
                             <span className={styles.visitDoctor}>
-                              {bookingIntentProvider(r)}
+                              {bookingIntentTreatment(r)}
                             </span>
                             <span className={styles.visitSubtitle}>
                               {status.subtitle}
@@ -620,7 +635,7 @@ export function HubAppointments({
                         <span className={styles.visitDate}>{formatListDate(startsAt)}</span>
                       </div>
                     </div>
-                  </button>
+                  </Link>
                   {r.ola_redirect_url ? (
                     <a
                       className={styles.nextStepsLink}
@@ -637,12 +652,9 @@ export function HubAppointments({
             const r = row.appointment;
             return (
               <li key={`appointment-${r.id}`} className={styles.visitRow}>
-                <button
-                  type="button"
+                <Link
+                  href={visitHref(row)}
                   className={`${styles.visitItem} ${styles.visitItemButton}`}
-                  onClick={() => {
-                    setSelected(row);
-                  }}
                 >
                   <div className={styles.visitTop}>
                     <div className={styles.visitLeft}>
@@ -665,7 +677,7 @@ export function HubAppointments({
                       <span className={styles.visitDate}>{formatListDate(r.starts_at)}</span>
                     </div>
                   </div>
-                </button>
+                </Link>
                 {r.ola_redirect_url ? (
                   <a
                     className={styles.nextStepsLink}

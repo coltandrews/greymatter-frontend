@@ -15,12 +15,6 @@ import styles from "./confirmed.module.css";
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLLS = 15;
 
-type StatusRow = {
-  label: string;
-  value: string;
-  state: "complete" | "current" | "pending" | "attention";
-};
-
 async function loadBookingIntentByCheckoutSession(
   checkoutSessionId: string,
 ): Promise<BookingIntentReturnRow | null> {
@@ -38,49 +32,6 @@ async function loadBookingIntentByCheckoutSession(
   return data as BookingIntentReturnRow | null;
 }
 
-function statusRows(bookingIntent: BookingIntentReturnRow | null): StatusRow[] {
-  const paid = bookingIntent?.payment_status === "paid";
-  const booked =
-    bookingIntent?.booking_status === "booked" &&
-    bookingIntent?.ola_status === "booked";
-  const actionRequired = bookingIntent?.booking_status === "action_required";
-  const underReview = bookingIntent?.booking_status === "needs_review";
-
-  return [
-    {
-      label: "Payment",
-      value: paid ? "Received" : "Pending",
-      state: paid ? "complete" : "current",
-    },
-    {
-      label: "Provider review",
-      value: booked
-        ? "Submitted"
-        : actionRequired
-          ? "Next steps ready"
-          : underReview
-            ? "Under review"
-            : paid
-              ? "Processing"
-              : "Pending",
-      state: booked
-        ? "complete"
-        : actionRequired
-          ? "current"
-          : underReview
-            ? "attention"
-            : paid
-              ? "current"
-              : "pending",
-    },
-    {
-      label: "Updates",
-      value: paid ? "SMS and email" : "After payment",
-      state: paid ? "pending" : "pending",
-    },
-  ];
-}
-
 export function CheckoutReturnCard({
   checkoutSessionId,
   initialBookingIntent,
@@ -96,7 +47,6 @@ export function CheckoutReturnCard({
   const view = useMemo(() => checkoutReturnView(bookingIntent), [bookingIntent]);
   const action = useMemo(() => checkoutReturnAction(bookingIntent), [bookingIntent]);
   const polling = Boolean(checkoutSessionId) && shouldPollCheckoutReturn(bookingIntent);
-  const rows = useMemo(() => statusRows(bookingIntent), [bookingIntent]);
 
   useEffect(() => {
     if (!checkoutSessionId || !polling || reconcileAttempted.current) {
@@ -170,21 +120,9 @@ export function CheckoutReturnCard({
         <p className={styles.statusNote} role="status">
           Checking for updates...
         </p>
-      ) : null}
-      <dl className={styles.statusList} aria-label="Request status">
-        {rows.map((row) => (
-          <div key={row.label} className={styles.statusRow}>
-            <dt>{row.label}</dt>
-            <dd>
-              <span
-                className={`${styles.statusDot} ${styles[`status${row.state}`]}`}
-                aria-hidden="true"
-              />
-              {row.value}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      ) : (
+        <p className={styles.statusNote} aria-hidden="true" />
+      )}
       <div className={styles.actions}>
         <Link
           href="/hub"

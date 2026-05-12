@@ -8,14 +8,15 @@
 .card {
   text-align: center;
   min-height: calc(100vh - 84px);
-  display: grid;
+  display: flex;
+  flex-direction: column;
 }
 
 .flowHeader {
   display: grid;
   justify-items: center;
-  gap: 28px;
-  margin-bottom: 56px;
+  gap: 24px;
+  margin-bottom: 44px;
 }
 
 .logo {
@@ -34,7 +35,7 @@
 .icon {
   width: 44px;
   height: 44px;
-  margin: 0 auto 18px;
+  margin: 0 auto 16px;
   border-radius: 50%;
   font-size: 20px;
   font-weight: 500;
@@ -70,7 +71,7 @@
 }
 
 .lead {
-  margin: 0 auto 10px;
+  margin: 0 auto 12px;
   max-width: 360px;
   font-size: 16px;
   font-weight: 400;
@@ -79,7 +80,7 @@
 }
 
 .summary {
-  margin: 0 auto 22px;
+  margin: 0 auto 18px;
   max-width: 340px;
   font-size: 15px;
   color: #c9c9c9;
@@ -94,74 +95,14 @@
 }
 
 .statusNote {
-  margin: -12px 0 22px;
+  min-height: 18px;
+  margin: 0 0 28px;
   font-size: 12px;
   color: #8f9ba8;
 }
 
-.statusList {
-  margin: 0 0 26px;
-  padding: 6px 0;
-  display: grid;
-  gap: 0;
-  border-block: 1px solid rgba(255, 255, 255, 0.16);
-}
-
-.statusRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 13px 2px;
-  text-align: left;
-}
-
-.statusRow + .statusRow {
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.statusRow dt {
-  margin: 0;
-  color: #c9c9c9;
-  font-size: 13px;
-  font-weight: 400;
-}
-
-.statusRow dd {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #f2f2f2;
-  font-size: 14px;
-  font-weight: 500;
-  text-align: right;
-}
-
-.statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #334155;
-}
-
-.statuscomplete {
-  background: #7dd3b0;
-}
-
-.statuscurrent {
-  background: #73d2ff;
-}
-
-.statusattention {
-  background: #fdba74;
-}
-
-.statuspending {
-  background: #334155;
-}
-
 .actions {
+  margin-top: auto;
   display: flex;
   align-items: center;
   flex-wrap: wrap;

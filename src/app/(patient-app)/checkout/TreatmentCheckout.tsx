@@ -418,7 +418,7 @@ export function TreatmentCheckout({
             {error ? <p className={styles.error}>{error}</p> : null}
             {!isShippingComplete ? (
               <p className={styles.muted}>Enter shipping address to load payment.</p>
-            ) : loadingCheckout ? (
+            ) : loadingCheckout || !checkout ? (
               <div className={styles.paymentSkeleton}>Preparing payment...</div>
             ) : checkout ? (
               <div className={styles.checkoutFrame}>

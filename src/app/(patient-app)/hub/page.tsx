@@ -4,7 +4,6 @@ import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographic
 import { patientWelcomeName } from "@/lib/patientDisplayName";
 import { PatientTopBar } from "../PatientTopBar";
 import { HubAppointments } from "./HubAppointments";
-import { HubMedications } from "./HubMedications";
 import styles from "./hub.module.css";
 
 export default async function HubPage() {
@@ -71,12 +70,6 @@ export default async function HubPage() {
     ola_popup_message: r.ola_popup_message,
     ola_order_guid: r.ola_order_guid,
   }));
-  const showPatientNav = bookingIntents.some(
-    (row) =>
-      row.payment_status === "paid" &&
-      row.booking_status === "booked" &&
-      row.ola_status === "booked",
-  );
   const forWelcome = mergeIntakeAndProfileDemographics(
     draftRow?.data as IntakeDraftData | undefined,
     profile?.demographics as IntakeDraftData | undefined,
@@ -84,37 +77,26 @@ export default async function HubPage() {
 
   return (
     <>
-      {showPatientNav ? (
-        <PatientTopBar
-          welcomeName={patientWelcomeName(user, forWelcome)}
-          email={user.email ?? user.id}
-        />
-      ) : null}
+      <PatientTopBar
+        welcomeName={patientWelcomeName(user, forWelcome)}
+        email={user.email ?? user.id}
+      />
       <main className={styles.page}>
-        <header className={styles.hero}>
-          <img src="/brand/gmmd-intake-logo.png" alt="GMMD" className={styles.logo} />
-          <h1>Patient Hub</h1>
+        <header className={styles.pageHeader}>
+          <h1>Patient hub</h1>
         </header>
 
         <div className={styles.stack}>
           <section className={styles.panel} aria-labelledby="appointments-title">
             <div className={styles.panelHeaderRow}>
               <h2 id="appointments-title" className={styles.panelTitle}>
-                Medication Requests
+                Medications
               </h2>
             </div>
 
             <HubAppointments
               initial={appointments}
               initialBookingIntents={bookingIntents}
-              serverLoadError={error?.message ?? bookingError?.message ?? null}
-            />
-          </section>
-
-          <section className={styles.panel} aria-labelledby="medications-title">
-            <HubMedications
-              appointments={appointments}
-              bookingIntents={bookingIntents}
               serverLoadError={error?.message ?? bookingError?.message ?? null}
             />
           </section>
