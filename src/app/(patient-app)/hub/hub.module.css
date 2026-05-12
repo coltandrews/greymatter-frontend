@@ -804,9 +804,74 @@
 
   .visitRow {
     grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .visitItem {
+    padding: 16px;
+    background: #111111;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+  }
+
+  .visitTop {
+    display: grid;
+    gap: 14px;
+  }
+
+  .visitRowLine {
+    display: grid;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .visitProviderBlock {
+    gap: 6px;
+  }
+
+  .visitDoctor {
+    font-size: 16px;
+    line-height: 1.25;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .visitSubtitle {
+    font-size: 13px;
+    line-height: 1.45;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .visitTimeBlock {
+    min-width: 0;
+    padding-top: 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.16);
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .visitTime {
+    color: #eef3f8;
+    font-size: 15px;
+  }
+
+  .visitDate {
+    max-width: 58%;
+    text-align: right;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .visitRow .statusPill {
+    justify-self: start;
   }
 
   .nextStepsLink {
+    width: 100%;
     min-height: 44px;
   }
 
