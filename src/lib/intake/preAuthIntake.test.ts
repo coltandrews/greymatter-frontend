@@ -26,6 +26,7 @@ describe("pre-auth intake", () => {
         version: "placeholder-2026-05-11",
       },
       treatment_answers: {
+        glp_1_current_height: "70",
         glp_1_current_weight: "210",
       },
     });
@@ -48,6 +49,7 @@ describe("pre-auth intake", () => {
         version: "placeholder-2026-05-11",
       },
       treatment_answers: {
+        glp_1_current_height: "70",
         glp_1_current_weight: "210",
       },
     });

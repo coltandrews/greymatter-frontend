@@ -169,6 +169,18 @@ const progressFill = {
   transition: "width 160ms ease",
 };
 
+const bmiCard = {
+  display: "flex" as const,
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 16,
+  margin: "2px 0 4px",
+  padding: "14px 16px",
+  borderRadius: 7,
+  background: "#1f2b3a",
+  color: brand.text,
+};
+
 const genderOptions = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
@@ -201,6 +213,77 @@ function groupQuestionsByPage(questions: IntakeQuestion[]): IntakeQuestion[][] {
   return [...questions]
     .sort((a, b) => a.position - b.position)
     .map((question) => [question]);
+}
+
+function parseHeightInches(value: IntakeQuestionAnswer | undefined): number | null {
+  const raw = stringAnswer(value).trim().toLowerCase();
+  if (!raw) {
+    return null;
+  }
+
+  const feetInches = raw.match(/^(\d+)\s*(?:'|ft|feet|\s)\s*(\d{1,2})?\s*(?:"|in|inches)?$/);
+  if (feetInches) {
+    const feet = Number(feetInches[1]);
+    const inches = feetInches[2] ? Number(feetInches[2]) : 0;
+    if (feet >= 3 && feet <= 8 && inches >= 0 && inches < 12) {
+      return feet * 12 + inches;
+    }
+  }
+
+  const numeric = Number(raw.replace(/[^\d.]/g, ""));
+  if (numeric >= 36 && numeric <= 96) {
+    return numeric;
+  }
+  return null;
+}
+
+function calculateBmi(height: IntakeQuestionAnswer | undefined, weight: IntakeQuestionAnswer | undefined) {
+  const inches = parseHeightInches(height);
+  const pounds = Number(stringAnswer(weight).replace(/[^\d.]/g, ""));
+  if (!inches || !Number.isFinite(pounds) || pounds <= 0) {
+    return null;
+  }
+  const value = (pounds / (inches * inches)) * 703;
+  if (!Number.isFinite(value)) {
+    return null;
+  }
+  return value;
+}
+
+function bmiLabel(value: number) {
+  if (value < 18.5) {
+    return "Below range";
+  }
+  if (value < 25) {
+    return "Standard range";
+  }
+  if (value < 30) {
+    return "Elevated range";
+  }
+  return "Clinical range";
+}
+
+function BmiPreview({ answers }: { answers: IntakeQuestionAnswers }) {
+  const bmi = calculateBmi(
+    answers.glp_1_current_height,
+    answers.glp_1_current_weight,
+  );
+  if (!bmi) {
+    return null;
+  }
+  return (
+    <div style={bmiCard} aria-live="polite">
+      <span style={{ display: "grid", gap: 3 }}>
+        <span style={{ color: brand.muted, fontSize: 13 }}>BMI</span>
+        <strong style={{ fontSize: 26, lineHeight: 1, fontWeight: 500 }}>
+          {bmi.toFixed(1)}
+        </strong>
+      </span>
+      <span style={{ color: "#d7e8ff", fontSize: 14, fontWeight: 500 }}>
+        {bmiLabel(bmi)}
+      </span>
+    </div>
+  );
 }
 
 function QuestionField({
@@ -626,7 +709,7 @@ export function PreAuthEligibility() {
 
         {step === "treatment_questions" ? (
           <form
-            style={{ display: "grid", gap: 0 }}
+            style={{ display: "grid", gap: 18 }}
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
@@ -641,17 +724,21 @@ export function PreAuthEligibility() {
             }}
           >
             {medicationQuestions.map((question) => (
-              <QuestionField
-                key={question.id}
-                question={question}
-                answer={treatmentAnswers[question.question_key]}
-                onChange={(value) =>
-                  setTreatmentAnswers((current) => ({
-                    ...current,
-                    [question.question_key]: value,
-                  }))
-                }
-              />
+              <div key={question.id} style={{ display: "grid", gap: 12 }}>
+                <QuestionField
+                  question={question}
+                  answer={treatmentAnswers[question.question_key]}
+                  onChange={(value) =>
+                    setTreatmentAnswers((current) => ({
+                      ...current,
+                      [question.question_key]: value,
+                    }))
+                  }
+                />
+                {selectedTreatment === "glp_1" && question.question_key === "glp_1_current_weight" ? (
+                  <BmiPreview answers={treatmentAnswers} />
+                ) : null}
+              </div>
             ))}
             {error ? (
               <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>

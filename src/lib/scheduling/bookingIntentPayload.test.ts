@@ -16,6 +16,7 @@ describe("buildTreatmentBookingIntentPayload", () => {
         for_self: "yes",
       },
       treatment_answers: {
+        glp_1_current_height: "5'10",
         glp_1_current_weight: "210",
         glp_1_prior_use: "no",
       },
@@ -28,6 +29,7 @@ describe("buildTreatmentBookingIntentPayload", () => {
       appointmentAnswers: {
         State: "SC",
         "Are You Booking Care For Yourself?": "yes",
+        "What is your height?": "5'10",
         "What is your current weight?": "210",
         "Have you used a GLP-1 medication before?": "no",
       },

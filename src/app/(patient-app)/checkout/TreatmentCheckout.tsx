@@ -5,6 +5,7 @@ import {
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { US_STATES } from "@/app/intake/usStates";
 import {
   createBookingIntent,
   createBookingIntentCheckout,
@@ -12,6 +13,7 @@ import {
 import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { syncStoredPreAuthIntake } from "@/lib/intake/syncStoredPreAuthIntake";
+import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
 import { buildTreatmentBookingIntentPayload } from "@/lib/scheduling/bookingIntentPayload";
 import { createClient } from "@/lib/supabase/client";
 import { treatmentByKey } from "@/lib/treatments";
@@ -27,6 +29,57 @@ type CheckoutState = {
   checkoutSessionId: string | null;
   clientSecret: string;
 };
+
+type ShippingForm = {
+  street_address: string;
+  address_line2: string;
+  city: string;
+  address_state: string;
+  zip: string;
+};
+
+function shippingFromDraft(data: IntakeDraftData | null): ShippingForm {
+  return {
+    street_address: data?.street_address?.trim() ?? "",
+    address_line2: data?.address_line2?.trim() ?? "",
+    city: data?.city?.trim() ?? "",
+    address_state: data?.address_state?.trim() || data?.service_state?.trim() || "",
+    zip: data?.zip?.trim() ?? "",
+  };
+}
+
+function shippingPatch(form: ShippingForm): IntakeDraftData {
+  const state = form.address_state.trim();
+  return {
+    street_address: form.street_address.trim(),
+    address_line2: form.address_line2.trim(),
+    city: form.city.trim(),
+    address_state: state,
+    service_state: state,
+    zip: form.zip.trim(),
+    country: "US",
+  };
+}
+
+function shippingComplete(form: ShippingForm): boolean {
+  return Boolean(
+    form.street_address.trim() &&
+      form.city.trim() &&
+      form.address_state.trim() &&
+      form.zip.trim(),
+  );
+}
+
+function shippingKey(form: ShippingForm): string {
+  const patch = shippingPatch(form);
+  return [
+    patch.street_address,
+    patch.address_line2,
+    patch.city,
+    patch.address_state,
+    patch.zip,
+  ].join("|");
+}
 
 function responseErrorMessage(prefix: string, res: Response): Promise<string> {
   return res.text().then((raw) => {
@@ -62,9 +115,13 @@ export function TreatmentCheckout({
   const [intake, setIntake] = useState(() =>
     mergeIntakeAndProfileDemographics(initialDraft, initialProfile),
   );
+  const [shipping, setShipping] = useState<ShippingForm>(() =>
+    shippingFromDraft(mergeIntakeAndProfileDemographics(initialDraft, initialProfile)),
+  );
   const [loadingIntake, setLoadingIntake] = useState(true);
   const [checkout, setCheckout] = useState<CheckoutState | null>(null);
   const [loadingCheckout, setLoadingCheckout] = useState(false);
+  const [checkoutShippingKey, setCheckoutShippingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,12 +151,12 @@ export function TreatmentCheckout({
       ]);
 
       if (!cancelled) {
-        setIntake(
-          mergeIntakeAndProfileDemographics(
-            (draftRow?.data ?? null) as IntakeDraftData | null,
-            (profile?.demographics ?? null) as IntakeDraftData | null,
-          ),
+        const merged = mergeIntakeAndProfileDemographics(
+          (draftRow?.data ?? null) as IntakeDraftData | null,
+          (profile?.demographics ?? null) as IntakeDraftData | null,
         );
+        setIntake(merged);
+        setShipping(shippingFromDraft(merged));
         setLoadingIntake(false);
       }
     }
@@ -114,6 +171,15 @@ export function TreatmentCheckout({
     () => treatmentByKey(intake.selected_treatment),
     [intake.selected_treatment],
   );
+  const isShippingComplete = shippingComplete(shipping);
+  const activeShippingKey = shippingKey(shipping);
+
+  function updateShipping(key: keyof ShippingForm, value: string) {
+    setShipping((current) => ({ ...current, [key]: value }));
+    setCheckout(null);
+    setCheckoutShippingKey(null);
+    setError(null);
+  }
 
   async function startCheckout() {
     setError(null);
@@ -125,6 +191,9 @@ export function TreatmentCheckout({
       if (!stripePublishableKey) {
         throw new Error("Payment is not configured yet.");
       }
+      if (!shippingComplete(shipping)) {
+        throw new Error("Enter your shipping address.");
+      }
 
       const supabase = createClient();
       const {
@@ -134,9 +203,43 @@ export function TreatmentCheckout({
         throw new Error("Sign in again to continue to payment.");
       }
 
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Sign in again to continue to payment.");
+      }
+
+      const intakeForCheckout: IntakeDraftData = {
+        ...intake,
+        ...shippingPatch(shipping),
+      };
+      setIntake(intakeForCheckout);
+
+      const { error: draftError } = await supabase.from("intake_drafts").upsert(
+        {
+          user_id: user.id,
+          step: "checkout",
+          data: intakeForCheckout,
+        },
+        { onConflict: "user_id" },
+      );
+      if (draftError) {
+        throw new Error(draftError.message);
+      }
+
+      const { error: profileError } = await syncProfileDemographics(
+        supabase,
+        user.id,
+        intakeForCheckout,
+      );
+      if (profileError) {
+        throw new Error(`Could not save shipping address: ${profileError}`);
+      }
+
       const bookingRes = await createBookingIntent(
         session.access_token,
-        buildTreatmentBookingIntentPayload(intake),
+        buildTreatmentBookingIntentPayload(intakeForCheckout),
       );
       if (!bookingRes.ok) {
         throw new Error(await responseErrorMessage("Medication request", bookingRes));
@@ -179,12 +282,41 @@ export function TreatmentCheckout({
             : null,
         clientSecret,
       });
+      setCheckoutShippingKey(shippingKey(shipping));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start checkout.");
     } finally {
       setLoadingCheckout(false);
     }
   }
+
+  useEffect(() => {
+    if (
+      loadingIntake ||
+      loadingCheckout ||
+      checkout ||
+      error ||
+      !treatment ||
+      !isShippingComplete ||
+      checkoutShippingKey === activeShippingKey
+    ) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      void startCheckout();
+    }, 500);
+    return () => window.clearTimeout(timeout);
+  }, [
+    activeShippingKey,
+    checkout,
+    checkoutShippingKey,
+    error,
+    isShippingComplete,
+    loadingCheckout,
+    loadingIntake,
+    treatment,
+  ]);
 
   function onCheckoutComplete() {
     const checkoutSessionId = checkout?.checkoutSessionId;
@@ -205,63 +337,104 @@ export function TreatmentCheckout({
 
         <div className={styles.grid}>
           <section className={styles.panel} aria-labelledby="purchase-title">
-            <h2 id="purchase-title" className={styles.sectionTitle}>
-              Purchase summary
-            </h2>
+            <h2 id="purchase-title" className={styles.sectionTitle}>Purchase summary</h2>
             {loadingIntake ? (
-              <p className={styles.muted}>Loading your intake...</p>
+              <p className={styles.muted}>Loading...</p>
             ) : treatment ? (
-              <>
-                <p className={styles.treatmentName}>{treatment.name}</p>
-                <p className={styles.muted}>{treatment.priceLabel}</p>
-              </>
+              <div className={styles.summaryLine}>
+                <span>{treatment.name}</span>
+              </div>
             ) : (
-              <>
-                <p className={styles.muted}>
-                  We could not find a selected treatment on your saved intake.
-                </p>
-                <div className={styles.actions}>
-                  <Link href="/" className={styles.secondary}>
-                    Return to intake
-                  </Link>
-                </div>
-              </>
+              <div className={styles.emptyState}>
+                <p className={styles.muted}>No treatment selected.</p>
+                <Link href="/" className={styles.secondary}>
+                  Return to intake
+                </Link>
+              </div>
             )}
+
+            <div className={styles.shippingBlock}>
+              <h2 className={styles.sectionTitle}>Shipping address</h2>
+              <label className={styles.field}>
+                Address
+                <input
+                  className={styles.input}
+                  value={shipping.street_address}
+                  onChange={(event) => updateShipping("street_address", event.target.value)}
+                  autoComplete="shipping street-address"
+                />
+              </label>
+              <label className={styles.field}>
+                Apt, suite, etc.
+                <input
+                  className={styles.input}
+                  value={shipping.address_line2}
+                  onChange={(event) => updateShipping("address_line2", event.target.value)}
+                  autoComplete="shipping address-line2"
+                />
+              </label>
+              <div className={styles.addressGrid}>
+                <label className={styles.field}>
+                  City
+                  <input
+                    className={styles.input}
+                    value={shipping.city}
+                    onChange={(event) => updateShipping("city", event.target.value)}
+                    autoComplete="shipping address-level2"
+                  />
+                </label>
+                <label className={styles.field}>
+                  State
+                  <select
+                    className={styles.input}
+                    value={shipping.address_state}
+                    onChange={(event) => updateShipping("address_state", event.target.value)}
+                    autoComplete="shipping address-level1"
+                  >
+                    <option value="">Select</option>
+                    {US_STATES.map((state) => (
+                      <option key={state.code} value={state.code}>
+                        {state.code}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <label className={styles.field}>
+                ZIP
+                <input
+                  className={styles.input}
+                  value={shipping.zip}
+                  onChange={(event) => updateShipping("zip", event.target.value)}
+                  autoComplete="shipping postal-code"
+                  inputMode="numeric"
+                />
+              </label>
+            </div>
           </section>
 
-          {!checkout ? (
-            <div className={styles.actions}>
-              <button
-                type="button"
-                className={styles.primary}
-                disabled={!treatment || loadingCheckout || loadingIntake}
-                onClick={() => void startCheckout()}
-              >
-                {loadingCheckout ? "Preparing payment..." : "Continue to payment"}
-              </button>
-            </div>
-          ) : null}
-          {error ? <p className={styles.error}>{error}</p> : null}
-        </div>
-
-        {checkout ? (
           <section className={styles.panel} aria-labelledby="payment-title">
-            <h2 id="payment-title" className={styles.sectionTitle}>
-              Payment
-            </h2>
-            <div className={styles.checkoutFrame}>
-              <EmbeddedCheckoutProvider
-                stripe={stripePromise}
-                options={{
-                  clientSecret: checkout.clientSecret,
-                  onComplete: onCheckoutComplete,
-                }}
-              >
-                <EmbeddedCheckout />
-              </EmbeddedCheckoutProvider>
-            </div>
+            <h2 id="payment-title" className={styles.sectionTitle}>Payment</h2>
+            {error ? <p className={styles.error}>{error}</p> : null}
+            {!isShippingComplete ? (
+              <p className={styles.muted}>Enter shipping address to load payment.</p>
+            ) : loadingCheckout ? (
+              <div className={styles.paymentSkeleton}>Preparing payment...</div>
+            ) : checkout ? (
+              <div className={styles.checkoutFrame}>
+                <EmbeddedCheckoutProvider
+                  stripe={stripePromise}
+                  options={{
+                    clientSecret: checkout.clientSecret,
+                    onComplete: onCheckoutComplete,
+                  }}
+                >
+                  <EmbeddedCheckout />
+                </EmbeddedCheckoutProvider>
+              </div>
+            ) : null}
           </section>
-        ) : null}
+        </div>
       </div>
     </main>
   );
