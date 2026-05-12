@@ -19,6 +19,16 @@ export type TreatmentQuestionSet = {
   questions: IntakeQuestion[];
 };
 
+const GLP_1_HEIGHT_OPTIONS = Array.from({ length: 73 }, (_, index) => {
+  const totalInches = 36 + index;
+  const feet = Math.floor(totalInches / 12);
+  const inches = totalInches % 12;
+  return {
+    value: String(totalInches),
+    label: inches === 0 ? `${feet} ft` : `${feet} ft ${inches} in`,
+  };
+});
+
 export const TREATMENTS: TreatmentOption[] = [
   {
     key: "peptides",
@@ -86,16 +96,16 @@ export const TREATMENT_QUESTION_SETS: Record<TreatmentKey, TreatmentQuestionSet>
       question_key: "glp_1_current_height",
       prompt: "What is your height?",
       help_text: null,
-      question_type: "text",
+      question_type: "select",
       required: true,
-      options: [],
+      options: GLP_1_HEIGHT_OPTIONS,
       position: 990,
       is_active: true,
     },
     {
       id: "glp-1-current-weight",
       question_key: "glp_1_current_weight",
-      prompt: "What is your current weight?",
+      prompt: "What is your current weight? (lbs)",
       help_text: null,
       question_type: "number",
       required: true,

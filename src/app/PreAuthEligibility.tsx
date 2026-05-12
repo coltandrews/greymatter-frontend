@@ -231,7 +231,7 @@ function parseHeightInches(value: IntakeQuestionAnswer | undefined): number | nu
   }
 
   const numeric = Number(raw.replace(/[^\d.]/g, ""));
-  if (numeric >= 36 && numeric <= 96) {
+  if (numeric >= 36 && numeric <= 108) {
     return numeric;
   }
   return null;
