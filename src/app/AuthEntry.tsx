@@ -183,7 +183,7 @@ export function AuthEntry({
         await syncStoredPreAuthIntake(supabase, user.id);
       }
       keepLockedForNavigation = true;
-      router.push(intakeReady ? "/checkout" : "/post-login");
+      router.push("/post-login");
       router.refresh();
       return;
     } finally {
