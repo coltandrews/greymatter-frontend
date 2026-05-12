@@ -1,4 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import type { IntakeDraftData } from "@/lib/intake/draftData";
+import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
+import { patientWelcomeName } from "@/lib/patientDisplayName";
+import { PatientTopBar } from "../PatientTopBar";
 import { HubAppointments } from "./HubAppointments";
 import { HubMedications } from "./HubMedications";
 import styles from "./hub.module.css";
@@ -13,8 +17,12 @@ export default async function HubPage() {
     return null;
   }
 
-  const [{ data: rows, error }, { data: bookingRows, error: bookingError }] =
-    await Promise.all([
+  const [
+    { data: rows, error },
+    { data: bookingRows, error: bookingError },
+    { data: profile },
+    { data: draftRow },
+  ] = await Promise.all([
       supabase
         .from("appointments")
         .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message, ola_order_guid")
@@ -26,6 +34,16 @@ export default async function HubPage() {
         .eq("user_id", user.id)
         .neq("booking_status", "draft")
         .order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("demographics")
+        .eq("id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("intake_drafts")
+        .select("data")
+        .eq("user_id", user.id)
+        .maybeSingle(),
     ]);
 
   const appointments = (rows ?? []).map((r) => ({
@@ -53,36 +71,54 @@ export default async function HubPage() {
     ola_popup_message: r.ola_popup_message,
     ola_order_guid: r.ola_order_guid,
   }));
+  const showPatientNav = bookingIntents.some(
+    (row) =>
+      row.payment_status === "paid" &&
+      row.booking_status === "booked" &&
+      row.ola_status === "booked",
+  );
+  const forWelcome = mergeIntakeAndProfileDemographics(
+    draftRow?.data as IntakeDraftData | undefined,
+    profile?.demographics as IntakeDraftData | undefined,
+  );
 
   return (
-    <main className={styles.page}>
-      <header className={styles.hero}>
-        <h1>Patient Hub</h1>
-      </header>
+    <>
+      {showPatientNav ? (
+        <PatientTopBar
+          welcomeName={patientWelcomeName(user, forWelcome)}
+          email={user.email ?? user.id}
+        />
+      ) : null}
+      <main className={styles.page}>
+        <header className={styles.hero}>
+          <h1>Patient Hub</h1>
+        </header>
 
-      <div className={styles.stack}>
-        <section className={styles.panel} aria-labelledby="appointments-title">
-          <div className={styles.panelHeaderRow}>
-            <h2 id="appointments-title" className={styles.panelTitle}>
-              Medication Requests
-            </h2>
-          </div>
+        <div className={styles.stack}>
+          <section className={styles.panel} aria-labelledby="appointments-title">
+            <div className={styles.panelHeaderRow}>
+              <h2 id="appointments-title" className={styles.panelTitle}>
+                Medication Requests
+              </h2>
+            </div>
 
-          <HubAppointments
-            initial={appointments}
-            initialBookingIntents={bookingIntents}
-            serverLoadError={error?.message ?? bookingError?.message ?? null}
-          />
-        </section>
+            <HubAppointments
+              initial={appointments}
+              initialBookingIntents={bookingIntents}
+              serverLoadError={error?.message ?? bookingError?.message ?? null}
+            />
+          </section>
 
-        <section className={styles.panel} aria-labelledby="medications-title">
-          <HubMedications
-            appointments={appointments}
-            bookingIntents={bookingIntents}
-            serverLoadError={error?.message ?? bookingError?.message ?? null}
-          />
-        </section>
-      </div>
-    </main>
+          <section className={styles.panel} aria-labelledby="medications-title">
+            <HubMedications
+              appointments={appointments}
+              bookingIntents={bookingIntents}
+              serverLoadError={error?.message ?? bookingError?.message ?? null}
+            />
+          </section>
+        </div>
+      </main>
+    </>
   );
 }

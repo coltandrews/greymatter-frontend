@@ -396,9 +396,15 @@ export function PreAuthEligibility() {
     >
       <section style={card}>
         <img
-          src="/brand/gmmd-logo-light.jpeg"
+          src="/brand/gmmd-logo-white-transparent.png"
           alt="GMMD"
-          style={{ display: "block", width: 176, maxWidth: "100%", marginBottom: 28 }}
+          style={{
+            display: "block",
+            width: 188,
+            maxWidth: "62%",
+            height: "auto",
+            margin: "0 auto 28px",
+          }}
         />
         <h1 style={{ margin: "0 0 8px", fontSize: 30, fontWeight: 850, color: brand.text }}>
           {heading}

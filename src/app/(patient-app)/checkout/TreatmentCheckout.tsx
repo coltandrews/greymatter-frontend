@@ -125,7 +125,7 @@ export function TreatmentCheckout({
         throw new Error("Choose a treatment before checkout.");
       }
       if (!stripePublishableKey) {
-        throw new Error("Stripe publishable key is not configured.");
+        throw new Error("Payment is not configured yet.");
       }
 
       const supabase = createClient();
@@ -201,8 +201,8 @@ export function TreatmentCheckout({
     <main className={styles.page}>
       <div className={styles.shell}>
         <header className={styles.hero}>
-          <img src="/brand/gmmd-logo-light.jpeg" alt="GMMD" className={styles.logo} />
-          <p className={styles.eyebrow}>Secure checkout</p>
+          <img src="/brand/gmmd-logo-white-transparent.png" alt="GMMD" className={styles.logo} />
+          <p className={styles.eyebrow}>Secure payment</p>
           <h1 className={styles.title}>Review and payment</h1>
           <p className={styles.lead}>
             Complete payment to submit your request for provider review. After payment,
@@ -262,13 +262,13 @@ export function TreatmentCheckout({
               What happens after payment
             </h2>
             <p className={styles.muted}>
-              Your provider review is submitted after Stripe confirms payment. The patient
-              portal will show medication request status as it updates.
+              Your provider review is submitted after payment is confirmed. The patient
+              hub will show medication request status as it updates.
             </p>
             <div className={styles.summaryList}>
               <div className={styles.summaryRow}>
                 <span>Payment</span>
-                <strong>Processed by Stripe</strong>
+                <strong>Processed securely</strong>
               </div>
               <div className={styles.summaryRow}>
                 <span>Provider handoff</span>
@@ -296,8 +296,8 @@ export function TreatmentCheckout({
         </div>
 
         {checkout ? (
-          <section className={styles.panel} aria-labelledby="stripe-title">
-            <h2 id="stripe-title" className={styles.sectionTitle}>
+          <section className={styles.panel} aria-labelledby="payment-title">
+            <h2 id="payment-title" className={styles.sectionTitle}>
               Payment
             </h2>
             <div className={styles.checkoutFrame}>

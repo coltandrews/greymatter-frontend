@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { syncStoredPreAuthIntake } from "@/lib/intake/syncStoredPreAuthIntake";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type Mode = "signup" | "signin";
 
@@ -34,6 +34,17 @@ const card = {
   boxShadow: "0 34px 90px rgba(0, 0, 0, 0.42)",
 };
 
+const logo = {
+  display: "block" as const,
+  width: 164,
+  maxWidth: "62%",
+  height: "auto",
+  margin: "0 auto 24px",
+};
+
+const pageBackground =
+  "linear-gradient(180deg, rgba(7, 9, 13, 0.86), rgba(7, 9, 13, 0.96)), url('/textures/graphite-texture.jpeg') center / cover fixed";
+
 function isExistingUserSignupError(message: string) {
   const m = message.toLowerCase();
   return (
@@ -61,6 +72,7 @@ export function AuthEntry({
   const [existingEmailError, setExistingEmailError] = useState(false);
   const [awaitingEmail, setAwaitingEmail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     const q = searchParams.get("signin");
@@ -73,77 +85,90 @@ export function AuthEntry({
 
   async function onSignUp(e: React.FormEvent) {
     e.preventDefault();
+    if (loading || submittingRef.current) {
+      return;
+    }
     setError(null);
     setExistingEmailError(false);
     if (password !== passwordConfirm) {
       setError("Passwords do not match.");
       return;
     }
+    submittingRef.current = true;
     setLoading(true);
-    const supabase = createClient();
-    const origin = window.location.origin;
-    const { data, error: err } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { emailRedirectTo: `${origin}/auth/callback?next=/checkout` },
-    });
-    setLoading(false);
-    if (err) {
-      if (isExistingUserSignupError(err.message)) {
+    try {
+      const supabase = createClient();
+      const origin = window.location.origin;
+      const { data, error: err } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${origin}/auth/callback?next=/checkout` },
+      });
+      if (err) {
+        if (isExistingUserSignupError(err.message)) {
+          setPassword("");
+          setPasswordConfirm("");
+          setExistingEmailError(true);
+          return;
+        }
+        setError(err.message);
+        return;
+      }
+      if (data.session) {
+        await syncStoredPreAuthIntake(supabase, data.session.user.id);
+        router.push(intakeReady ? "/checkout" : "/post-login");
+        router.refresh();
+        return;
+      }
+
+      // Duplicate email: Supabase returns no error and no session, but user.identities is empty
+      // (avoids enumeration). Real new signups still have at least one identity while awaiting confirm.
+      const identities = data.user?.identities;
+      if (data.user && (!identities || identities.length === 0)) {
         setPassword("");
         setPasswordConfirm("");
         setExistingEmailError(true);
         return;
       }
-      setError(err.message);
-      return;
-    }
-    if (data.session) {
-      await syncStoredPreAuthIntake(supabase, data.session.user.id);
-      router.push(intakeReady ? "/checkout" : "/post-login");
-      router.refresh();
-      return;
-    }
 
-    // Duplicate email: Supabase returns no error and no session, but user.identities is empty
-    // (avoids enumeration). Real new signups still have at least one identity while awaiting confirm.
-    const identities = data.user?.identities;
-    if (
-      data.user &&
-      (!identities || identities.length === 0)
-    ) {
-      setPassword("");
-      setPasswordConfirm("");
-      setExistingEmailError(true);
-      return;
+      setAwaitingEmail(true);
+    } finally {
+      submittingRef.current = false;
+      setLoading(false);
     }
-
-    setAwaitingEmail(true);
   }
 
   async function onSignIn(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    setExistingEmailError(false);
-    setLoading(true);
-    const supabase = createClient();
-    const { error: err } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    setLoading(false);
-    if (err) {
-      setError(err.message);
+    if (loading || submittingRef.current) {
       return;
     }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await syncStoredPreAuthIntake(supabase, user.id);
+    setError(null);
+    setExistingEmailError(false);
+    submittingRef.current = true;
+    setLoading(true);
+    try {
+      const supabase = createClient();
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (err) {
+        setError(err.message);
+        return;
+      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        await syncStoredPreAuthIntake(supabase, user.id);
+      }
+      router.push(intakeReady ? "/checkout" : "/post-login");
+      router.refresh();
+    } finally {
+      submittingRef.current = false;
+      setLoading(false);
     }
-    router.push(intakeReady ? "/checkout" : "/post-login");
-    router.refresh();
   }
 
   function leaveCheckEmail() {
@@ -162,10 +187,11 @@ export function AuthEntry({
           placeItems: "center",
           padding: "32px 20px",
           minHeight: "100vh",
-          background: "#07090d",
+          background: pageBackground,
         }}
       >
         <section style={card}>
+          <img src="/brand/gmmd-logo-white-transparent.png" alt="GMMD" style={logo} />
           <h1 style={{ margin: "0 0 12px", fontSize: 22, fontWeight: 800, color: "#eef3f8" }}>
             Check your email
           </h1>
@@ -202,10 +228,11 @@ export function AuthEntry({
         placeItems: "center",
         padding: "32px 20px",
         minHeight: "100vh",
-        background: "#07090d",
+        background: pageBackground,
       }}
     >
       <section style={card}>
+        <img src="/brand/gmmd-logo-white-transparent.png" alt="GMMD" style={logo} />
         <h1 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 800, color: "#eef3f8" }}>
           {mode === "signup" ? "Create account" : "Sign in"}
         </h1>
@@ -307,9 +334,16 @@ export function AuthEntry({
               fontSize: 16,
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading ? 0.78 : 1,
             }}
           >
-            {mode === "signup" ? "Continue" : "Sign in"}
+            {loading
+              ? mode === "signup"
+                ? "Creating account..."
+                : "Signing in..."
+              : mode === "signup"
+                ? "Continue"
+                : "Sign in"}
           </button>
         </form>
 

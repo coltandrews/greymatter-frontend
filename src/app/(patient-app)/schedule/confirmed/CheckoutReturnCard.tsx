@@ -83,14 +83,14 @@ export function CheckoutReturnCard({
           checkoutSessionId,
         );
         if (!response.ok && response.status !== 409) {
-          throw new Error("Could not sync Stripe checkout status.");
+          throw new Error("Could not sync payment status.");
         }
 
         const latest = await loadBookingIntentByCheckoutSession(checkoutSessionId);
         setBookingIntent(latest);
         setPollError(null);
       } catch {
-        setPollError("Payment is confirmed in Stripe. We are syncing your medication request status.");
+        setPollError("Payment is confirmed. We are syncing your medication request status.");
       }
     })();
   }, [checkoutSessionId, polling]);
