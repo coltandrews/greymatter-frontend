@@ -4,6 +4,7 @@ export type BookingIntentReturnRow = {
   payment_status: string | null;
   ola_status: string | null;
   ola_redirect_url: string | null;
+  intake_data?: unknown;
   selected_slot: unknown;
 };
 

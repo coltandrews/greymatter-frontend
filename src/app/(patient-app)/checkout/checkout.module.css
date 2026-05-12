@@ -122,7 +122,9 @@
 
 .purchaseList div {
   display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px;
+  align-items: start;
 }
 
 .purchaseList dt {
@@ -132,10 +134,34 @@
 }
 
 .purchaseList dd {
+  grid-column: 1;
   margin: 0;
   color: #c9c9c9;
   font-size: 13px;
   line-height: 1.4;
+}
+
+.purchaseList strong {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: #f2f2f2;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.totalRow {
+  padding-top: 12px;
+  border-top: 1px solid #3a3a3a;
+}
+
+.totalRow dt,
+.totalRow strong {
+  font-size: 16px;
+}
+
+.totalRow dd {
+  color: #8f9ba8;
 }
 
 .muted {
@@ -277,7 +303,7 @@
   position: relative;
   display: grid;
   gap: 8px;
-  min-height: 180px;
+  min-height: 190px;
   place-content: center;
   padding: 24px;
   border: 1px dashed #686868;
@@ -297,6 +323,15 @@
   inset: 0;
   opacity: 0;
   cursor: pointer;
+}
+
+.uploadPreview {
+  width: min(210px, 100%);
+  max-height: 132px;
+  justify-self: center;
+  border-radius: 7px;
+  object-fit: cover;
+  border: 1px solid #575757;
 }
 
 .uploadTitle {

@@ -26,6 +26,8 @@ const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : 
 const ID_BUCKET = "patient-documents";
 const ID_MAX_BYTES = 10 * 1024 * 1024;
 const ID_MIME_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
+const TEMP_CONSULTATION_FEE = 99;
+const TEMP_MEDICATION_FEE = 249;
 
 type CheckoutState = {
   bookingIntentId: string;
@@ -124,6 +126,14 @@ function shippingSummary(form: ShippingForm): string {
   ].filter(Boolean).join(" ");
 }
 
+function currency(value: number): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 function responseErrorMessage(prefix: string, res: Response): Promise<string> {
   return res.text().then((raw) => {
     if (!raw.trim()) {
@@ -167,6 +177,7 @@ export function TreatmentCheckout({
   const [checkoutShippingKey, setCheckoutShippingKey] = useState<string | null>(null);
   const [step, setStep] = useState<CheckoutStep>("address");
   const [idFile, setIdFile] = useState<File | null>(null);
+  const [idPreviewUrl, setIdPreviewUrl] = useState<string | null>(null);
   const [idError, setIdError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -231,12 +242,28 @@ export function TreatmentCheckout({
 
   function updateIdFile(file: File | null) {
     const validationError = validateIdFile(file);
+    if (idPreviewUrl) {
+      URL.revokeObjectURL(idPreviewUrl);
+    }
     setIdFile(file);
+    setIdPreviewUrl(
+      file && file.type.startsWith("image/") && !validationError
+        ? URL.createObjectURL(file)
+        : null,
+    );
     setIdError(file ? validationError : null);
     setCheckout(null);
     setCheckoutShippingKey(null);
     setError(null);
   }
+
+  useEffect(() => {
+    return () => {
+      if (idPreviewUrl) {
+        URL.revokeObjectURL(idPreviewUrl);
+      }
+    };
+  }, [idPreviewUrl]);
 
   function continueFromAddress() {
     setError(null);
@@ -548,13 +575,27 @@ export function TreatmentCheckout({
 
           {step === "id" ? (
             <section className={styles.panel} aria-labelledby="id-title">
-              <h2 id="id-title" className={styles.sectionTitle}>Verify identity</h2>
+              <div className={styles.sectionIntro}>
+                <h2 id="id-title" className={styles.sectionTitle}>Verify identity</h2>
+                <p className={styles.sectionSubtitle}>
+                  Upload a photo of your government ID so your provider can confirm your identity
+                  before review. Your ID is stored securely and shared only with the care team for
+                  verification.
+                </p>
+              </div>
               <label className={styles.uploadBox}>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,application/pdf"
                   onChange={(event) => updateIdFile(event.target.files?.[0] ?? null)}
                 />
+                {idPreviewUrl ? (
+                  <img
+                    src={idPreviewUrl}
+                    alt="Selected government ID preview"
+                    className={styles.uploadPreview}
+                  />
+                ) : null}
                 <span className={styles.uploadTitle}>
                   {idFile ? idFile.name : "Upload government ID"}
                 </span>
@@ -593,10 +634,17 @@ export function TreatmentCheckout({
                     <div>
                       <dt>Consultation fee</dt>
                       <dd>Provider review and treatment eligibility</dd>
+                      <strong>{currency(TEMP_CONSULTATION_FEE)}</strong>
                     </div>
                     <div>
                       <dt>Medication fee</dt>
-                      <dd>Medication cost will be added here</dd>
+                      <dd>Medication cost placeholder</dd>
+                      <strong>{currency(TEMP_MEDICATION_FEE)}</strong>
+                    </div>
+                    <div className={styles.totalRow}>
+                      <dt>Total</dt>
+                      <dd>Due today</dd>
+                      <strong>{currency(TEMP_CONSULTATION_FEE + TEMP_MEDICATION_FEE)}</strong>
                     </div>
                   </dl>
                 </>

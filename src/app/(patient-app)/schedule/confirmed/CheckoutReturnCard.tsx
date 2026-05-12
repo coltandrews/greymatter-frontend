@@ -21,7 +21,7 @@ async function loadBookingIntentByCheckoutSession(
   const supabase = createClient();
   const { data, error } = await supabase
     .from("booking_intents")
-    .select("id, booking_status, payment_status, ola_status, ola_redirect_url, selected_slot")
+    .select("id, booking_status, payment_status, ola_status, ola_redirect_url, intake_data, selected_slot")
     .eq("stripe_checkout_session_id", checkoutSessionId)
     .maybeSingle();
 
@@ -30,6 +30,16 @@ async function loadBookingIntentByCheckoutSession(
   }
 
   return data as BookingIntentReturnRow | null;
+}
+
+function phoneLast4(bookingIntent: BookingIntentReturnRow | null): string | null {
+  const intake =
+    bookingIntent?.intake_data && typeof bookingIntent.intake_data === "object"
+      ? (bookingIntent.intake_data as Record<string, unknown>)
+      : null;
+  const rawPhone = typeof intake?.phone === "string" ? intake.phone : "";
+  const digits = rawPhone.replace(/\D/g, "");
+  return digits.length >= 4 ? digits.slice(-4) : null;
 }
 
 export function CheckoutReturnCard({
@@ -47,6 +57,13 @@ export function CheckoutReturnCard({
   const view = useMemo(() => checkoutReturnView(bookingIntent), [bookingIntent]);
   const action = useMemo(() => checkoutReturnAction(bookingIntent), [bookingIntent]);
   const polling = Boolean(checkoutSessionId) && shouldPollCheckoutReturn(bookingIntent);
+  const phoneEnding = phoneLast4(bookingIntent);
+  const reviewNote =
+    bookingIntent?.booking_status === "needs_review"
+      ? `We are securely sending your information to the provider team for review. You will hear back by SMS${
+          phoneEnding ? ` at the phone number ending in ${phoneEnding}` : ""
+        } when there is an update.`
+      : null;
 
   useEffect(() => {
     if (!checkoutSessionId || !polling || reconcileAttempted.current) {
@@ -115,11 +132,13 @@ export function CheckoutReturnCard({
       </div>
       <h1 className={styles.title}>{view.title}</h1>
       <p className={styles.lead}>{view.lead}</p>
+      {reviewNote ? <p className={styles.summary}>{reviewNote}</p> : null}
       {pollError ? <p className={styles.summary}>{pollError}</p> : null}
       {polling && pollCount < MAX_POLLS ? (
-        <p className={styles.statusNote} role="status">
-          Checking for updates...
-        </p>
+        <div className={styles.processingBlock} role="status">
+          <span className={styles.processingIndicator} aria-hidden="true" />
+          <span>Checking for updates...</span>
+        </div>
       ) : (
         <p className={styles.statusNote} aria-hidden="true" />
       )}
