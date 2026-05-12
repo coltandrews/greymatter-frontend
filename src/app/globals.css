@@ -23,3 +23,17 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 44px !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%238f9ba8' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 16px center !important;
+  background-size: 14px 14px !important;
+}
+
+select::-ms-expand {
+  display: none;
+}
