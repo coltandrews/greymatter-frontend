@@ -26,6 +26,9 @@ const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
 const ID_BUCKET = "patient-documents";
 const ID_MAX_BYTES = 10 * 1024 * 1024;
+const ID_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
+const ID_IMAGE_UPLOAD_MAX_DIMENSION = 1800;
+const ID_IMAGE_UPLOAD_QUALITY = 0.86;
 const ID_MIME_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
 const TEMP_CONSULTATION_FEE = 99;
 const TEMP_MEDICATION_FEE = 249;
@@ -115,10 +118,62 @@ function validateIdFile(file: File | null): string | null {
   if (!ID_MIME_TYPES.has(file.type)) {
     return "Use a JPG, PNG, or PDF.";
   }
-  if (file.size <= 0 || file.size > ID_MAX_BYTES) {
-    return "File must be 10 MB or less.";
+  const maxBytes = file.type.startsWith("image/") ? ID_IMAGE_MAX_BYTES : ID_MAX_BYTES;
+  if (file.size <= 0 || file.size > maxBytes) {
+    return file.type.startsWith("image/")
+      ? "Image must be 20 MB or less."
+      : "PDF must be 10 MB or less.";
   }
   return null;
+}
+
+function loadImage(file: File): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read ID image."));
+    };
+    image.src = url;
+  });
+}
+
+async function prepareIdUploadFile(file: File, side: IdSide): Promise<File> {
+  if (!file.type.startsWith("image/")) {
+    return file;
+  }
+
+  try {
+    const image = await loadImage(file);
+    const scale = Math.min(
+      1,
+      ID_IMAGE_UPLOAD_MAX_DIMENSION / Math.max(image.naturalWidth, image.naturalHeight),
+    );
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      return file;
+    }
+    context.drawImage(image, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, "image/jpeg", ID_IMAGE_UPLOAD_QUALITY);
+    });
+    if (!blob || blob.size <= 0 || blob.size > ID_MAX_BYTES) {
+      return file;
+    }
+    return new File([blob], `government-id-${side}.jpg`, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
 }
 
 function emptyIdUpload(): IdUploadState {
@@ -408,15 +463,23 @@ export function TreatmentCheckout({
     userId: string;
   }) {
     const supabase = createClient();
-    const storagePath = `${userId}/${bookingIntentId}/government-id-${side}.${idFileExtension(file)}`;
+    const uploadFile = await prepareIdUploadFile(file, side);
+    if (uploadFile.size > ID_MAX_BYTES) {
+      throw new Error(
+        `Could not upload the ${side} of your ID. Please retake the photo a little farther back and try again.`,
+      );
+    }
+    const storagePath = `${userId}/${bookingIntentId}/government-id-${side}.${idFileExtension(uploadFile)}`;
     const { error: uploadError } = await supabase.storage
       .from(ID_BUCKET)
-      .upload(storagePath, file, {
-        contentType: file.type,
+      .upload(storagePath, uploadFile, {
+        contentType: uploadFile.type,
         upsert: true,
       });
     if (uploadError) {
-      throw new Error(`Could not upload ID: ${uploadError.message}`);
+      throw new Error(
+        `Could not upload the ${side} of your ID. Please try again or retake the photo.`,
+      );
     }
 
     const { error: documentError } = await supabase
@@ -427,8 +490,8 @@ export function TreatmentCheckout({
           user_id: userId,
           kind: `government_id_${side}`,
           storage_path: storagePath,
-          mime_type: file.type,
-          size_bytes: file.size,
+          mime_type: uploadFile.type,
+          size_bytes: uploadFile.size,
         },
         { onConflict: "booking_intent_id,kind" },
       );
@@ -521,20 +584,18 @@ export function TreatmentCheckout({
         throw new Error("Could not prepare this medication request for payment.");
       }
 
-      await Promise.all([
-        saveGovernmentIdDocument({
-          bookingIntentId,
-          file: frontFile,
-          side: "front",
-          userId: user.id,
-        }),
-        saveGovernmentIdDocument({
-          bookingIntentId,
-          file: backFile,
-          side: "back",
-          userId: user.id,
-        }),
-      ]);
+      await saveGovernmentIdDocument({
+        bookingIntentId,
+        file: frontFile,
+        side: "front",
+        userId: user.id,
+      });
+      await saveGovernmentIdDocument({
+        bookingIntentId,
+        file: backFile,
+        side: "back",
+        userId: user.id,
+      });
 
       const checkoutRes = await createBookingIntentCheckout(
         session.access_token,
