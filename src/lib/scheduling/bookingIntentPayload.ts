@@ -1,7 +1,11 @@
 import type { IntakeDraftData } from "@/lib/intake/draftData";
+import {
+  defaultPreSignupQuestions,
+  formatQuestionAnswersForPayload,
+} from "@/lib/intake/intakeQuestions";
 import { APPOINTMENT_QUESTIONS } from "@/lib/scheduling/appointmentQuestions";
 import type { SlotDisplay } from "@/lib/scheduling/olaProviderSchedules";
-import { treatmentByKey } from "@/lib/treatments";
+import { treatmentByKey, treatmentQuestions } from "@/lib/treatments";
 
 export const GREYMATTER_SERVICE_KEY =
   "MetaHealthRX - Oral Semaglutide Dissolvable Tablets";
@@ -28,31 +32,27 @@ function answerLabel(id: string, value: string): string {
   return question.options.find((opt) => opt.value === value)?.label ?? value;
 }
 
-function flattenAnswers(
-  answers: Record<string, string | string[]> | undefined,
-): Record<string, string> {
-  return Object.fromEntries(
-    Object.entries(answers ?? {})
-      .map(([key, value]) => [
-        key,
-        Array.isArray(value) ? value.join(", ") : value,
-      ])
-      .filter(([, value]) => value.trim()),
-  );
-}
-
 export function buildTreatmentBookingIntentPayload(
   patient: IntakeDraftData,
 ): BookingIntentPayload {
   const treatment = treatmentByKey(patient.selected_treatment);
+  const medicationQuestions = treatmentQuestions(
+    treatment ? treatment.key : null,
+  );
   return {
     serviceState: (patient.service_state ?? patient.address_state ?? "").trim(),
     serviceKey: treatment?.serviceKey ?? GREYMATTER_SERVICE_KEY,
     serviceType: "initial",
     intakeData: patient,
     appointmentAnswers: {
-      ...flattenAnswers(patient.pre_signup_answers),
-      ...flattenAnswers(patient.treatment_answers),
+      ...formatQuestionAnswersForPayload(
+        defaultPreSignupQuestions,
+        patient.pre_signup_answers,
+      ),
+      ...formatQuestionAnswersForPayload(
+        medicationQuestions,
+        patient.treatment_answers,
+      ),
     },
   };
 }

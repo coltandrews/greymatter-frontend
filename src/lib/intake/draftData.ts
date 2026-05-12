@@ -24,6 +24,11 @@ export type IntakeDraftData = {
   service_state?: string;
   pre_signup_answers?: Record<string, string | string[]>;
   selected_treatment?: string;
+  selected_treatment_question_set?: {
+    treatmentKey: string;
+    source: string;
+    version: string;
+  };
   treatment_answers?: Record<string, string | string[]>;
 };
 

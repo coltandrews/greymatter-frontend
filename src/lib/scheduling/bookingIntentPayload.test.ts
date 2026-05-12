@@ -64,10 +64,10 @@ describe("buildBookingIntentPayload", () => {
       serviceKey: GREYMATTER_SERVICE_KEY,
       serviceType: "initial",
       appointmentAnswers: {
-        service_state: "SC",
-        for_self: "yes",
-        glp_1_current_weight: "210",
-        glp_1_prior_use: "no",
+        State: "SC",
+        "Are You Booking Care For Yourself?": "yes",
+        "What is your current weight?": "210",
+        "Have you used a GLP-1 medication before?": "no",
       },
     });
     expect(payload.selectedSlot).toBeUndefined();

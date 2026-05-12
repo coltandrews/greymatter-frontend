@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   intakeAnswerComplete,
+  formatQuestionAnswersForPayload,
   isCorePreSignupQuestionKey,
   makeQuestionKey,
   mergePreSignupQuestions,
@@ -62,6 +63,39 @@ describe("intake question helpers", () => {
     ).toEqual({
       symptoms: ["nausea"],
       notes: "Some detail",
+    });
+  });
+
+  it("formats stored answers with question text and option labels for vendor payloads", () => {
+    expect(
+      formatQuestionAnswersForPayload(
+        [
+          {
+            question_key: "symptoms",
+            prompt: "Which symptoms are you looking to address?",
+            question_type: "multi_select",
+            options: [
+              { value: "low_energy", label: "Low energy" },
+              { value: "low_libido", label: "Low libido" },
+            ],
+          },
+          {
+            question_key: "notes",
+            prompt: "Anything else?",
+            question_type: "textarea",
+            options: [],
+          },
+        ],
+        {
+          symptoms: ["low_energy", "low_libido"],
+          notes: "  Some detail  ",
+          ignored: "x",
+        },
+      ),
+    ).toEqual({
+      "Which symptoms are you looking to address?": "Low energy, Low libido",
+      "Anything else?": "Some detail",
+      ignored: "x",
     });
   });
 

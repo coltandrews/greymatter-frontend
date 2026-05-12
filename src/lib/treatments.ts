@@ -12,6 +12,13 @@ export type TreatmentOption = {
   priceLabel: string;
 };
 
+export type TreatmentQuestionSet = {
+  treatmentKey: TreatmentKey;
+  source: "placeholder" | "ola";
+  version: string;
+  questions: IntakeQuestion[];
+};
+
 export const TREATMENTS: TreatmentOption[] = [
   {
     key: "peptides",
@@ -42,9 +49,12 @@ export const TREATMENTS: TreatmentOption[] = [
   },
 ];
 
-const baseMedicationQuestions: Record<TreatmentKey, IntakeQuestion[]> = {
-  peptides: [
-    {
+export const TREATMENT_QUESTION_SETS: Record<TreatmentKey, TreatmentQuestionSet> = {
+  peptides: {
+    treatmentKey: "peptides",
+    source: "placeholder",
+    version: "placeholder-2026-05-11",
+    questions: [{
       id: "peptides-primary-goal",
       question_key: "peptides_primary_goal",
       prompt: "What is your primary goal for peptide treatment?",
@@ -65,10 +75,13 @@ const baseMedicationQuestions: Record<TreatmentKey, IntakeQuestion[]> = {
       options: [],
       position: 1010,
       is_active: true,
-    },
-  ],
-  glp_1: [
-    {
+    }],
+  },
+  glp_1: {
+    treatmentKey: "glp_1",
+    source: "placeholder",
+    version: "placeholder-2026-05-11",
+    questions: [{
       id: "glp-1-current-weight",
       question_key: "glp_1_current_weight",
       prompt: "What is your current weight?",
@@ -89,10 +102,13 @@ const baseMedicationQuestions: Record<TreatmentKey, IntakeQuestion[]> = {
       options: [],
       position: 1010,
       is_active: true,
-    },
-  ],
-  testosterone: [
-    {
+    }],
+  },
+  testosterone: {
+    treatmentKey: "testosterone",
+    source: "placeholder",
+    version: "placeholder-2026-05-11",
+    questions: [{
       id: "testosterone-symptoms",
       question_key: "testosterone_symptoms",
       prompt: "Which symptoms are you looking to address?",
@@ -118,14 +134,18 @@ const baseMedicationQuestions: Record<TreatmentKey, IntakeQuestion[]> = {
       options: [],
       position: 1010,
       is_active: true,
-    },
-  ],
+    }],
+  },
 };
 
 export function treatmentByKey(key: string | null | undefined): TreatmentOption | null {
   return TREATMENTS.find((treatment) => treatment.key === key) ?? null;
 }
 
+export function treatmentQuestionSet(key: TreatmentKey | null): TreatmentQuestionSet | null {
+  return key ? TREATMENT_QUESTION_SETS[key] : null;
+}
+
 export function treatmentQuestions(key: TreatmentKey | null): IntakeQuestion[] {
-  return key ? baseMedicationQuestions[key] : [];
+  return treatmentQuestionSet(key)?.questions.filter((question) => question.is_active) ?? [];
 }

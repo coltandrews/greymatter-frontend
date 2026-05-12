@@ -199,3 +199,30 @@ export function normalizeIntakeAnswers(
     return acc;
   }, {});
 }
+
+export function formatQuestionAnswersForPayload(
+  questions: Pick<IntakeQuestion, "prompt" | "question_key" | "question_type" | "options">[],
+  answers: IntakeQuestionAnswers | undefined,
+): Record<string, string> {
+  const questionByKey = new Map(questions.map((question) => [question.question_key, question]));
+
+  return Object.fromEntries(
+    Object.entries(answers ?? {})
+      .map(([key, rawValue]) => {
+        const question = questionByKey.get(key);
+        const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+        const formatted = values
+          .map((value) => {
+            const stringValue = typeof value === "string" ? value.trim() : "";
+            if (!stringValue) {
+              return "";
+            }
+            return question?.options.find((option) => option.value === stringValue)?.label ?? stringValue;
+          })
+          .filter(Boolean)
+          .join(", ");
+        return [question?.prompt ?? key, formatted];
+      })
+      .filter(([, value]) => value.trim()),
+  );
+}

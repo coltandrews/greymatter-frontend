@@ -20,6 +20,11 @@ describe("pre-auth intake", () => {
         glp_1_history: "no",
       },
       selected_treatment: "glp_1",
+      selected_treatment_question_set: {
+        treatmentKey: "glp_1",
+        source: "placeholder",
+        version: "placeholder-2026-05-11",
+      },
       treatment_answers: {
         glp_1_current_weight: "210",
       },
@@ -37,6 +42,11 @@ describe("pre-auth intake", () => {
         glp_1_history: "no",
       },
       selected_treatment: "glp_1",
+      selected_treatment_question_set: {
+        treatmentKey: "glp_1",
+        source: "placeholder",
+        version: "placeholder-2026-05-11",
+      },
       treatment_answers: {
         glp_1_current_weight: "210",
       },
@@ -106,6 +116,11 @@ describe("pre-auth intake", () => {
         symptoms: ["nausea", "fatigue"],
       },
       selected_treatment: "testosterone",
+      selected_treatment_question_set: {
+        treatmentKey: "testosterone",
+        source: "placeholder",
+        version: "placeholder-2026-05-11",
+      },
       treatment_answers: {
         testosterone_symptoms: ["low_energy", "mood"],
       },

@@ -5,6 +5,7 @@ import {
   type IntakeQuestionAnswers,
 } from "./intakeQuestions";
 import type { TreatmentKey } from "@/lib/treatments";
+import { treatmentQuestionSet } from "@/lib/treatments";
 
 export const PRE_AUTH_INTAKE_STORAGE_KEY = "greymatter_pre_auth_intake";
 
@@ -20,6 +21,11 @@ export type PreAuthIntakeData = Pick<
 > & {
   pre_signup_answers?: IntakeQuestionAnswers;
   selected_treatment?: TreatmentKey | string;
+  selected_treatment_question_set?: {
+    treatmentKey: string;
+    source: string;
+    version: string;
+  };
   treatment_answers?: IntakeQuestionAnswers;
 };
 
@@ -52,6 +58,12 @@ export function parsePreAuthIntake(raw: string | null): PreAuthIntakeData | null
       !Array.isArray(record.treatment_answers)
         ? (record.treatment_answers as IntakeQuestionAnswers)
         : undefined;
+    const questionSet =
+      record.selected_treatment_question_set &&
+      typeof record.selected_treatment_question_set === "object" &&
+      !Array.isArray(record.selected_treatment_question_set)
+        ? record.selected_treatment_question_set as Record<string, unknown>
+        : null;
     const data: PreAuthIntakeData = {
       legal_first_name: stringValue(record, "legal_first_name"),
       legal_last_name: stringValue(record, "legal_last_name"),
@@ -62,6 +74,13 @@ export function parsePreAuthIntake(raw: string | null): PreAuthIntakeData | null
       for_self: typeof forSelf === "boolean" ? forSelf : undefined,
       pre_signup_answers: answers,
       selected_treatment: stringValue(record, "selected_treatment"),
+      selected_treatment_question_set: questionSet
+        ? {
+          treatmentKey: stringValue(questionSet, "treatmentKey"),
+          source: stringValue(questionSet, "source"),
+          version: stringValue(questionSet, "version"),
+        }
+        : undefined,
       treatment_answers: treatmentAnswers,
     };
 
@@ -94,6 +113,7 @@ export function serializePreAuthIntake(data: PreAuthIntakeData): string {
     for_self: data.for_self,
     pre_signup_answers: data.pre_signup_answers ?? {},
     selected_treatment: data.selected_treatment ?? "",
+    selected_treatment_question_set: data.selected_treatment_question_set,
     treatment_answers: data.treatment_answers ?? {},
   });
 }
@@ -119,6 +139,11 @@ export function buildPreAuthIntakeData(
   },
 ): PreAuthIntakeData {
   const state = stringAnswer(answers, "service_state");
+  const selectedTreatment = treatment?.selectedTreatment ?? "";
+  const questionSet =
+    selectedTreatment && typeof selectedTreatment === "string"
+      ? treatmentQuestionSet(selectedTreatment as TreatmentKey)
+      : null;
   return {
     legal_first_name: stringAnswer(answers, "legal_first_name"),
     legal_last_name: stringAnswer(answers, "legal_last_name"),
@@ -128,7 +153,14 @@ export function buildPreAuthIntakeData(
     address_state: state,
     for_self: answers.for_self === "yes",
     pre_signup_answers: normalizeIntakeAnswers(questions, answers),
-    selected_treatment: treatment?.selectedTreatment ?? "",
+    selected_treatment: selectedTreatment,
+    selected_treatment_question_set: questionSet
+      ? {
+        treatmentKey: questionSet.treatmentKey,
+        source: questionSet.source,
+        version: questionSet.version,
+      }
+      : undefined,
     treatment_answers: normalizeIntakeAnswers(
       treatment?.questions ?? [],
       treatment?.answers ?? {},
