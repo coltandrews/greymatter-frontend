@@ -14,7 +14,10 @@ const row: BookingQueueRow = {
   userId: "user-1",
   patientName: "Pat Patient",
   patientEmail: "pat@example.com",
+  phoneLast4: "3344",
   serviceState: "SC",
+  shippingSummary: "2402 Myrtle Avenue · Sullivans Island, SC 29482",
+  shippingComplete: true,
   bookingStatus: "action_required",
   paymentStatus: "paid",
   olaStatus: "booked",
@@ -28,6 +31,12 @@ const row: BookingQueueRow = {
   olaOrderGuid: "ola-order-1",
   hasNextSteps: true,
   failureReason: null,
+  idDocumentStatus: {
+    frontUploaded: true,
+    backUploaded: true,
+    complete: true,
+    sentToOla: false,
+  },
   createdAt: "2026-05-01T10:00:00.000Z",
   updatedAt: "2026-05-01T11:00:00.000Z",
 };

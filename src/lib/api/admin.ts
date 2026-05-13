@@ -26,7 +26,10 @@ export type BookingQueueRow = {
   userId: string;
   patientName: string;
   patientEmail: string | null;
+  phoneLast4: string | null;
   serviceState: string | null;
+  shippingSummary: string;
+  shippingComplete: boolean;
   bookingStatus: string | null;
   paymentStatus: string | null;
   olaStatus: string | null;
@@ -40,6 +43,12 @@ export type BookingQueueRow = {
   olaOrderGuid: string | null;
   hasNextSteps: boolean;
   failureReason: string | null;
+  idDocumentStatus: {
+    frontUploaded: boolean;
+    backUploaded: boolean;
+    complete: boolean;
+    sentToOla: boolean;
+  };
   createdAt: string;
   updatedAt: string;
 };

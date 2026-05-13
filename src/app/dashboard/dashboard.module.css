@@ -451,6 +451,60 @@
   border-radius: 7px;
 }
 
+.requestFilters {
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(130px, 0.7fr)) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.requestSearch,
+.requestSelect {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 13px;
+  border: 1px solid #575757;
+  border-radius: 7px;
+  background-color: #151515;
+  color: #f2f2f2;
+  font: inherit;
+  font-size: 13px;
+}
+
+.requestSearch:focus,
+.requestSelect:focus {
+  outline: none;
+  border-color: #3487ed;
+  box-shadow: 0 0 0 3px rgba(52, 135, 237, 0.18);
+}
+
+.requestToggle {
+  min-height: 42px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #575757;
+  border-radius: 7px;
+  background: #151515;
+  color: #c9c9c9;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.requestToggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: #3487ed;
+}
+
+.requestsTable {
+  min-width: 1180px;
+}
+
 .transactionListStack {
   display: grid;
   gap: 14px;
@@ -1076,7 +1130,8 @@
   .overviewDataSplit,
   .overviewStatusSections,
   .transactionSummaryGrid,
-  .overviewKpiGrid {
+  .overviewKpiGrid,
+  .requestFilters {
     grid-template-columns: 1fr;
   }
 
