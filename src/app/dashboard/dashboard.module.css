@@ -874,6 +874,154 @@
   font-weight: 800;
 }
 
+.requestStatusCallout {
+  padding: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #202020;
+}
+
+.requestStatusCallout h3 {
+  margin: 0 0 6px;
+  color: #f2f2f2;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.requestStatusCallout p {
+  margin: 0;
+  color: #c9c9c9;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.requestStatusCallout strong {
+  max-width: 330px;
+  color: #f2f2f2;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.requestStatusCalloutblocked {
+  border-color: rgba(252, 165, 165, 0.4);
+  background: rgba(127, 29, 29, 0.18);
+}
+
+.requestStatusCalloutcurrent {
+  border-color: rgba(253, 186, 116, 0.34);
+  background: rgba(180, 83, 9, 0.14);
+}
+
+.requestStatusCalloutcomplete {
+  border-color: rgba(134, 239, 172, 0.34);
+  background: rgba(22, 163, 74, 0.14);
+}
+
+.requestStatusCalloutpending {
+  border-color: #343434;
+  background: #202020;
+}
+
+.requestStatusEyebrow {
+  margin: 0 0 7px !important;
+  color: #9a9a9a !important;
+  font-size: 11px !important;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.requestTimeline {
+  position: relative;
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timelineStep {
+  position: relative;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 12px;
+  padding: 0 0 16px;
+}
+
+.timelineStep::before {
+  content: "";
+  position: absolute;
+  top: 18px;
+  bottom: 0;
+  left: 6px;
+  width: 1px;
+  background: #343434;
+}
+
+.timelineStep:last-child {
+  padding-bottom: 0;
+}
+
+.timelineStep:last-child::before {
+  display: none;
+}
+
+.timelineDot {
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  margin-top: 3px;
+  border-radius: 50%;
+  border: 2px solid #575757;
+  background: #202020;
+}
+
+.timelineStepcomplete .timelineDot {
+  border-color: #86efac;
+  background: #16a34a;
+}
+
+.timelineStepcurrent .timelineDot {
+  border-color: #fdba74;
+  background: #b45309;
+}
+
+.timelineStepblocked .timelineDot {
+  border-color: #fca5a5;
+  background: #7f1d1d;
+}
+
+.timelineStepHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timelineStepHeader h4 {
+  margin: 0;
+  color: #f2f2f2;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.timelineStepHeader time {
+  color: #9a9a9a;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.timelineStep p {
+  margin: 4px 0 0;
+  color: #9a9a9a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .detailDefinitionGrid {
   display: grid;
   gap: 10px;
@@ -1034,6 +1182,40 @@
   background: #151515;
   color: #9a9a9a;
   font-size: 13px;
+}
+
+.recoveryList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recoveryList li {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #181818;
+}
+
+.recoveryList strong {
+  color: #f2f2f2;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.recoveryList span {
+  color: #c9c9c9;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.recoveryList time {
+  color: #777777;
+  font-size: 11px;
 }
 
 .compactText {
@@ -1421,10 +1603,21 @@
 
   .detailTopBar,
   .requestDetailHero,
+  .requestStatusCallout,
   .documentSectionHeader,
   .documentPreviewHeader {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .requestStatusCallout strong {
+    max-width: none;
+    text-align: left;
+  }
+
+  .timelineStepHeader {
+    flex-direction: column;
+    gap: 3px;
   }
 
   .requestDetailHero {

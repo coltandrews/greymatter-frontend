@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  fetchAuditEvents,
   fetchBookingRequestDetail,
+  type AuditEvent,
   type BookingRequestDetailResponse,
   type BookingRequestDocument,
 } from "@/lib/api/admin";
@@ -10,6 +12,11 @@ import {
   retryBookingIntentOla,
 } from "@/lib/api/bookingIntents";
 import { bookingQueueReference, bookingQueueTreatmentLabel } from "@/lib/dashboard/bookingQueue";
+import {
+  auditEventLabel,
+  auditEventSummary,
+  auditEventWhen,
+} from "@/lib/dashboard/auditTrail";
 import {
   medicationRequestAgeLabel,
   medicationRequestStatusView,
@@ -28,6 +35,13 @@ type Props = {
 type DetailItem = {
   label: string;
   value: string;
+};
+
+type TimelineStep = {
+  label: string;
+  detail: string;
+  when: string;
+  state: "complete" | "current" | "blocked" | "pending";
 };
 
 function readBackendMessage(res: Response): Promise<string> {
@@ -104,6 +118,148 @@ function fileSizeLabel(sizeBytes: number | null) {
   return `${Math.max(1, Math.round(sizeBytes / 1024))} KB`;
 }
 
+function latestDate(values: Array<string | null | undefined>): string | null {
+  const sorted = values
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  return sorted[0] ?? null;
+}
+
+function requestStatusSummary(detail: BookingRequestDetailResponse) {
+  const { request } = detail;
+  if (request.paymentStatus === "pending") {
+    return {
+      title: "Payment pending",
+      body: "Stripe checkout has started but the app has not recorded a paid checkout yet.",
+      action: "Use Reconcile Payment after confirming the session is paid in Stripe.",
+      state: "blocked" as const,
+    };
+  }
+  if (request.paymentStatus !== "paid") {
+    return {
+      title: "Payment not complete",
+      body: "This request has not moved into the paid provider handoff flow.",
+      action: "The patient needs to complete payment before provider handoff.",
+      state: "pending" as const,
+    };
+  }
+  if (!request.idDocumentStatus.complete) {
+    return {
+      title: "ID upload incomplete",
+      body: "Provider handoff requires front and back government ID uploads.",
+      action: "Ask the patient to upload both sides of their ID.",
+      state: "blocked" as const,
+    };
+  }
+  if (!request.shippingComplete) {
+    return {
+      title: "Shipping address incomplete",
+      body: "The request is missing a complete shipping address for medication fulfillment.",
+      action: "Ask the patient to update their shipping address.",
+      state: "blocked" as const,
+    };
+  }
+  if (request.bookingStatus === "needs_review") {
+    return {
+      title: "Provider handoff needs review",
+      body: request.failureReason ?? "Ola did not complete the handoff for this paid request.",
+      action: "Review the failure and retry provider handoff when the data is corrected.",
+      state: "blocked" as const,
+    };
+  }
+  if (request.bookingStatus === "action_required" || request.hasNextSteps) {
+    return {
+      title: "Patient action required",
+      body: "Ola accepted the request and returned next steps for the patient.",
+      action: "Confirm the patient receives the follow-up instructions.",
+      state: "current" as const,
+    };
+  }
+  if (request.olaStatus === "booked" || request.olaOrderGuid) {
+    return {
+      title: "Provider handoff complete",
+      body: "The request has been sent to Ola and is available for provider review.",
+      action: "Monitor provider status updates and patient communication.",
+      state: "complete" as const,
+    };
+  }
+  return {
+    title: "Ready for provider handoff",
+    body: "Payment and required request data are present, but provider handoff is not complete.",
+    action: "Retry provider handoff if this request is stuck.",
+    state: "current" as const,
+  };
+}
+
+function requestTimeline(detail: BookingRequestDetailResponse): TimelineStep[] {
+  const { request } = detail;
+  const idUploadedAt = latestDate(detail.documents.map((document) => document.createdAt));
+  const idSentAt = latestDate(detail.documents.map((document) => document.sentToOlaAt));
+  const handoffComplete = request.olaStatus === "booked" || Boolean(request.olaOrderGuid);
+  const handoffBlocked = request.bookingStatus === "needs_review";
+
+  return [
+    {
+      label: "Intake submitted",
+      detail: "Patient intake and treatment selection were captured.",
+      when: formatDateTime(request.createdAt),
+      state: "complete",
+    },
+    {
+      label: "ID uploaded",
+      detail: request.idDocumentStatus.complete
+        ? "Front and back government ID are on file."
+        : "Front and back government ID are required.",
+      when: request.idDocumentStatus.complete ? formatDateTime(idUploadedAt) : "Waiting",
+      state: request.idDocumentStatus.complete ? "complete" : "blocked",
+    },
+    {
+      label: "Payment",
+      detail: request.paymentStatus === "paid"
+        ? "Payment is recorded."
+        : "Payment must complete before handoff.",
+      when: request.paymentStatus === "paid" ? formatDateTime(detail.paidAt) : statusLabel(request.paymentStatus),
+      state: request.paymentStatus === "paid"
+        ? "complete"
+        : request.paymentStatus === "pending"
+          ? "current"
+          : "pending",
+    },
+    {
+      label: "Provider handoff",
+      detail: handoffComplete
+        ? "Request was accepted by Ola."
+        : handoffBlocked
+          ? request.failureReason ?? "Provider handoff failed."
+          : "Request has not been accepted by Ola yet.",
+      when: handoffComplete ? formatDateTime(idSentAt ?? request.updatedAt) : handoffBlocked ? "Needs review" : "Waiting",
+      state: handoffComplete ? "complete" : handoffBlocked ? "blocked" : "pending",
+    },
+    {
+      label: "Provider review",
+      detail: handoffComplete
+        ? "Provider review is in progress or complete with Ola."
+        : "Provider review starts after handoff.",
+      when: handoffComplete ? medicationRequestAgeLabel(request.updatedAt) : "Waiting",
+      state: handoffComplete ? "current" : "pending",
+    },
+  ];
+}
+
+function statusLabel(value: string | null | undefined): string {
+  return value?.replace(/_/g, " ") || "Not started";
+}
+
+function retryHistory(events: AuditEvent[]): AuditEvent[] {
+  return events
+    .filter((event) =>
+      event.action.includes("retry") ||
+      event.action.includes("reconcile") ||
+      event.action.includes("needs_review"),
+    )
+    .slice(0, 5);
+}
+
 function DetailGrid({ items }: { items: DetailItem[] }) {
   return (
     <dl className={styles.detailDefinitionGrid}>
@@ -157,6 +313,7 @@ function DocumentPreview({ document }: { document: BookingRequestDocument }) {
 
 export function MedicationRequestDetail({ bookingIntentId }: Props) {
   const [detail, setDetail] = useState<BookingRequestDetailResponse | null>(null);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<"retry-ola" | "reconcile-stripe" | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -165,6 +322,7 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
   async function loadDetail() {
     setLoading(true);
     setError(null);
+    setAuditEvents([]);
     try {
       const supabase = createClient();
       const {
@@ -177,7 +335,17 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
       if (!response.ok) {
         throw new Error(await readBackendMessage(response));
       }
-      setDetail(await response.json() as BookingRequestDetailResponse);
+      const payload = await response.json() as BookingRequestDetailResponse;
+      setDetail(payload);
+      const auditResponse = await fetchAuditEvents(session.access_token, {
+        bookingIntentId,
+        patientUserId: payload.request.userId,
+        limit: 20,
+      });
+      if (auditResponse.ok) {
+        const auditPayload = await auditResponse.json() as { events?: AuditEvent[] };
+        setAuditEvents(auditPayload.events ?? []);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load medication request.");
     } finally {
@@ -274,6 +442,9 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
     request.paymentStatus === "paid" && request.bookingStatus === "needs_review";
   const canReconcileStripe =
     request.paymentStatus === "pending" && Boolean(detail.stripeCheckoutSessionId?.trim());
+  const summary = requestStatusSummary(detail);
+  const timeline = requestTimeline(detail);
+  const recoveryEvents = retryHistory(auditEvents);
 
   const patientItems: DetailItem[] = [
     { label: "Name", value: request.patientName },
@@ -336,6 +507,40 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
           <span>Reference</span>
           <strong>{bookingQueueReference(request)}</strong>
         </div>
+      </section>
+
+      <section className={`${styles.requestStatusCallout} ${styles[`requestStatusCallout${summary.state}`]}`}>
+        <div>
+          <p className={styles.requestStatusEyebrow}>
+            {summary.state === "blocked" ? "Current blocker" : "Current status"}
+          </p>
+          <h3>{summary.title}</h3>
+          <p>{summary.body}</p>
+        </div>
+        <strong>{summary.action}</strong>
+      </section>
+
+      <section className={styles.requestDetailPanel}>
+        <div className={styles.documentSectionHeader}>
+          <div>
+            <h3>Request Timeline</h3>
+            <p>Key events from intake through provider review.</p>
+          </div>
+        </div>
+        <ol className={styles.requestTimeline}>
+          {timeline.map((step) => (
+            <li key={step.label} className={`${styles.timelineStep} ${styles[`timelineStep${step.state}`]}`}>
+              <span className={styles.timelineDot} />
+              <div>
+                <div className={styles.timelineStepHeader}>
+                  <h4>{step.label}</h4>
+                  <time>{step.when}</time>
+                </div>
+                <p>{step.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
       <div className={styles.requestDetailGrid}>
@@ -437,6 +642,28 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
           </div>
         ) : (
           <p className={styles.emptyText}>No ID documents have been uploaded.</p>
+        )}
+      </section>
+
+      <section className={styles.requestDetailPanel}>
+        <div className={styles.documentSectionHeader}>
+          <div>
+            <h3>Recovery History</h3>
+            <p>Recent retry, reconcile, and review events for this request.</p>
+          </div>
+        </div>
+        {recoveryEvents.length > 0 ? (
+          <ul className={styles.recoveryList}>
+            {recoveryEvents.map((event) => (
+              <li key={event.id}>
+                <strong>{auditEventLabel(event)}</strong>
+                <span>{auditEventSummary(event)}</span>
+                <time>{auditEventWhen(event)}</time>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.emptyText}>No recovery actions have been recorded.</p>
         )}
       </section>
 
