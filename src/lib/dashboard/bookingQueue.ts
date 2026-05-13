@@ -9,11 +9,11 @@ export type BookingQueueStatusView = {
 };
 
 const toneStyles = {
-  confirmed: { color: "#166534", background: "#dcfce7" },
-  pending: { color: "#1d4ed8", background: "#dbeafe" },
-  action: { color: "#92400e", background: "#fef3c7" },
-  review: { color: "#9a3412", background: "#ffedd5" },
-  cancelled: { color: "#475569", background: "#f1f5f9" },
+  confirmed: { color: "#86efac", background: "rgba(22, 163, 74, 0.16)" },
+  pending: { color: "#8ec5ff", background: "rgba(52, 135, 237, 0.16)" },
+  action: { color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" },
+  review: { color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" },
+  cancelled: { color: "#b8b8b8", background: "#242424" },
 };
 
 export function bookingQueueStatusView(row: BookingQueueRow): BookingQueueStatusView {

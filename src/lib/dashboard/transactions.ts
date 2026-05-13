@@ -29,28 +29,28 @@ export function transactionReceiptFileName(row: TransactionRow): string {
 export function transactionStatusView(status: string | null): TransactionStatusView {
   switch (status) {
     case "paid":
-      return { label: "Paid", color: "#166534", background: "#dcfce7" };
+      return { label: "Paid", color: "#86efac", background: "rgba(22, 163, 74, 0.16)" };
     case "pending":
-      return { label: "Pending", color: "#92400e", background: "#fef3c7" };
+      return { label: "Pending", color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" };
     case "failed":
-      return { label: "Failed", color: "#b91c1c", background: "#fee2e2" };
+      return { label: "Failed", color: "#fca5a5", background: "rgba(127, 29, 29, 0.24)" };
     case "refunded":
-      return { label: "Refunded", color: "#475569", background: "#f1f5f9" };
+      return { label: "Refunded", color: "#b8b8b8", background: "#242424" };
     default:
-      return { label: status || "Unknown", color: "#475569", background: "#f1f5f9" };
+      return { label: status || "Unknown", color: "#b8b8b8", background: "#242424" };
   }
 }
 
 export function transactionWebhookStatusView(row: TransactionRow): TransactionStatusView {
   if (row.paymentStatus === "paid" && row.paidAt) {
-    return { label: "Received", color: "#166534", background: "#dcfce7" };
+    return { label: "Received", color: "#86efac", background: "rgba(22, 163, 74, 0.16)" };
   }
 
   if (row.paymentStatus === "pending" && row.stripeCheckoutSessionId?.trim()) {
-    return { label: "Not Received", color: "#92400e", background: "#fef3c7" };
+    return { label: "Not Received", color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" };
   }
 
-  return { label: "Not Expected", color: "#475569", background: "#f1f5f9" };
+  return { label: "Not Expected", color: "#b8b8b8", background: "#242424" };
 }
 
 export function canReconcileStripeTransaction(row: TransactionRow): boolean {

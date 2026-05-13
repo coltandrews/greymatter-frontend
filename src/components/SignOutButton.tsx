@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export function SignOutButton({
+  dark,
   noMargin,
   menuItem,
 }: {
+  dark?: boolean;
   noMargin?: boolean;
   /** Full-width row for header dropdowns */
   menuItem?: boolean;
@@ -42,9 +44,9 @@ export function SignOutButton({
         marginTop: noMargin ? 0 : 16,
         padding: "10px 16px",
         borderRadius: 8,
-        border: "1px solid #cbd5e1",
-        background: "#fff",
-        color: "#172033",
+        border: dark ? "1px solid #575757" : "1px solid #cbd5e1",
+        background: dark ? "#202020" : "#fff",
+        color: dark ? "#f2f2f2" : "#172033",
         fontSize: 14,
         fontWeight: 600,
         cursor: loading ? ("not-allowed" as const) : ("pointer" as const),

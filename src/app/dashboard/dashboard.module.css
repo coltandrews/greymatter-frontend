@@ -2,8 +2,8 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
-  background: #f6f8fb;
-  color: #172033;
+  background: #121212;
+  color: #f2f2f2;
 }
 
 .sidebar {
@@ -16,13 +16,13 @@
   flex-direction: column;
   gap: 22px;
   overflow-y: auto;
-  background: #ffffff;
-  border-right: 1px solid #e5ebf5;
+  background: #202020;
+  border-right: 1px solid #343434;
 }
 
 .brand {
   padding: 0 6px 12px;
-  border-bottom: 1px solid #eef2f6;
+  border-bottom: 1px solid #303030;
 }
 
 .brandTitle {
@@ -36,7 +36,7 @@
   margin: 0;
   font-size: 12px;
   line-height: 1.4;
-  color: #64748b;
+  color: #9a9a9a;
   word-break: break-word;
 }
 
@@ -50,8 +50,8 @@
   display: flex;
   align-items: center;
   padding: 0 12px;
-  border-radius: 10px;
-  color: #334155;
+  border-radius: 7px;
+  color: #c9c9c9;
   font-size: 14px;
   font-weight: 700;
   text-decoration: none;
@@ -59,15 +59,15 @@
 }
 
 .navLink:hover {
-  background: #f8fafc;
-  border-color: #e5ebf5;
+  background: #181818;
+  border-color: #343434;
 }
 
 .navLinkActive,
 .navLinkActive:hover {
-  background: #172033;
+  background: #3487ed;
   color: #ffffff;
-  border-color: #172033;
+  border-color: #3487ed;
   box-shadow: 0 8px 18px rgba(23, 32, 51, 0.16);
 }
 
@@ -102,13 +102,13 @@
   max-width: 680px;
   font-size: 14px;
   line-height: 1.55;
-  color: #64748b;
+  color: #9a9a9a;
 }
 
 .panel {
-  background: #ffffff;
-  border: 1px solid #e5ebf5;
-  border-radius: 14px;
+  background: #202020;
+  border: 1px solid #343434;
+  border-radius: 7px;
   padding: 22px;
   box-shadow: 0 1px 3px rgba(23, 32, 51, 0.05);
 }
@@ -122,8 +122,8 @@
 
 .overviewPrimary {
   padding: 24px;
-  border-radius: 14px;
-  background: #172033;
+  border-radius: 7px;
+  background: #3487ed;
   color: #ffffff;
 }
 
@@ -132,8 +132,8 @@
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #cbd5e1;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.72);
 }
 
 .overviewTitle {
@@ -147,7 +147,7 @@
   margin: 0;
   font-size: 14px;
   line-height: 1.55;
-  color: #dbe3ef;
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .overviewSide {
@@ -157,23 +157,23 @@
 
 .overviewStat {
   padding: 18px;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid #e5ebf5;
+  border-radius: 7px;
+  background: #202020;
+  border: 1px solid #343434;
 }
 
 .overviewStatLabel {
   margin: 0 0 8px;
   font-size: 12px;
   font-weight: 800;
-  color: #64748b;
+  color: #9a9a9a;
 }
 
 .overviewStatValue {
   margin: 0;
   font-size: 30px;
   font-weight: 800;
-  color: #172033;
+  color: #f2f2f2;
 }
 
 .cardGrid {
@@ -188,9 +188,9 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px solid #e5ebf5;
-  border-radius: 14px;
-  background: #ffffff;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #202020;
   box-shadow: 0 1px 3px rgba(23, 32, 51, 0.05);
 }
 
@@ -204,7 +204,7 @@
 .metricLabel {
   margin: 0;
   font-size: 13px;
-  color: #64748b;
+  color: #9a9a9a;
   font-weight: 800;
 }
 
@@ -217,22 +217,22 @@
 .metricValue {
   margin: 16px 0 6px;
   font-size: 34px;
-  color: #172033;
+  color: #f2f2f2;
   font-weight: 800;
 }
 
 .metricHint {
   margin: 0;
   font-size: 12px;
-  color: #64748b;
+  color: #9a9a9a;
   line-height: 1.45;
 }
 
 .healthPanel {
   padding: 20px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid #e5ebf5;
+  border-radius: 7px;
+  background: #202020;
+  border: 1px solid #343434;
   box-shadow: 0 1px 3px rgba(23, 32, 51, 0.05);
 }
 
@@ -253,31 +253,31 @@
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #64748b;
+  letter-spacing: 0;
+  color: #9a9a9a;
 }
 
 .healthTitle {
   margin: 0 0 6px;
   font-size: 22px;
   font-weight: 800;
-  color: #172033;
+  color: #f2f2f2;
 }
 
 .healthSummary {
   margin: 0;
   font-size: 13px;
   line-height: 1.55;
-  color: #64748b;
+  color: #9a9a9a;
 }
 
 .healthRefresh {
   flex-shrink: 0;
   min-height: 34px;
   padding: 0 14px;
-  border-radius: 9px;
-  border: 1px solid #172033;
-  background: #172033;
+  border-radius: 7px;
+  border: 1px solid #3487ed;
+  background: #3487ed;
   color: #ffffff;
   font-size: 12px;
   font-weight: 800;
@@ -287,9 +287,9 @@
 }
 
 .healthRefresh:disabled {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
-  color: #64748b;
+  border-color: #575757;
+  background: #242424;
+  color: #9a9a9a;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -303,45 +303,45 @@
 
 .healthStat {
   padding: 10px 12px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  border-radius: 7px;
+  background: #181818;
+  border: 1px solid #303030;
 }
 
 .healthStatLabel {
   margin: 0 0 4px;
   font-size: 11px;
-  color: #64748b;
+  color: #9a9a9a;
   font-weight: 800;
 }
 
 .healthStatValue {
   margin: 0;
   font-size: 20px;
-  color: #172033;
+  color: #f2f2f2;
   font-weight: 800;
 }
 
 .healthChecked {
   margin: 0 0 16px;
   font-size: 12px;
-  color: #94a3b8;
+  color: #777777;
 }
 
 .healthError {
   margin: 0 0 16px;
   padding: 12px 14px;
-  border-radius: 10px;
-  background: #fef2f2;
-  color: #b91c1c;
+  border-radius: 7px;
+  background: rgba(127, 29, 29, 0.24);
+  color: #fca5a5;
   font-size: 14px;
 }
 
 .healthTableWrap {
   overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid #e5ebf5;
-  background: #ffffff;
+  border-radius: 7px;
+  border: 1px solid #343434;
+  background: #202020;
 }
 
 .healthTable {
@@ -353,19 +353,19 @@
 
 .healthTable th {
   padding: 9px 12px;
-  border-bottom: 1px solid #e5ebf5;
-  background: #f8fafc;
+  border-bottom: 1px solid #343434;
+  background: #181818;
   text-align: left;
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #64748b;
+  letter-spacing: 0;
+  color: #9a9a9a;
 }
 
 .healthTable td {
   padding: 10px 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #242424;
   vertical-align: top;
 }
 
@@ -390,21 +390,21 @@
 }
 
 .healthStatusOk {
-  color: #15803d;
+  color: #86efac;
 }
 
 .healthStatusError {
-  color: #b91c1c;
+  color: #fca5a5;
 }
 
 .healthCheckName {
-  color: #172033;
+  color: #f2f2f2;
   font-weight: 800;
 }
 
 .healthCheckMessage {
   line-height: 1.45;
-  color: #64748b;
+  color: #9a9a9a;
 }
 
 .appointmentsStack {
@@ -414,9 +414,9 @@
 
 .workspaceCard {
   padding: 22px;
-  border-radius: 16px;
-  background: #ffffff;
-  border: 1px solid #e5ebf5;
+  border-radius: 7px;
+  background: #202020;
+  border: 1px solid #343434;
   box-shadow: 0 1px 3px rgba(23, 32, 51, 0.05);
 }
 
@@ -432,23 +432,23 @@
   margin: 0;
   font-size: 18px;
   font-weight: 800;
-  color: #172033;
+  color: #f2f2f2;
 }
 
 .workspaceMeta {
   margin: 0;
   padding: 5px 10px;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: #242424;
+  color: #9a9a9a;
   font-size: 12px;
   font-weight: 800;
 }
 
 .tableWrap {
   overflow-x: auto;
-  border: 1px solid #e5ebf5;
-  border-radius: 12px;
+  border: 1px solid #343434;
+  border-radius: 7px;
 }
 
 .transactionListStack {
@@ -465,21 +465,21 @@
 .transactionSummaryItem {
   min-width: 0;
   padding: 14px;
-  border: 1px solid #e5ebf5;
-  border-radius: 12px;
-  background: #f8fafc;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #181818;
 }
 
 .transactionSummaryLabel {
   margin: 0 0 7px;
-  color: #64748b;
+  color: #9a9a9a;
   font-size: 12px;
   font-weight: 800;
 }
 
 .transactionSummaryValue {
   margin: 0;
-  color: #172033;
+  color: #f2f2f2;
   font-size: 22px;
   font-weight: 800;
   overflow-wrap: anywhere;
@@ -495,16 +495,16 @@
 .adminTable th {
   padding: 11px 12px;
   text-align: left;
-  color: #64748b;
+  color: #9a9a9a;
   font-weight: 800;
-  background: #f8fafc;
-  border-bottom: 1px solid #e5ebf5;
+  background: #181818;
+  border-bottom: 1px solid #343434;
 }
 
 .adminTable td {
   padding: 12px;
-  color: #334155;
-  border-bottom: 1px solid #f1f5f9;
+  color: #c9c9c9;
+  border-bottom: 1px solid #242424;
 }
 
 .adminTable tr:last-child td {
@@ -541,10 +541,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #dbe3ef;
+  border: 1px solid #575757;
   border-radius: 8px;
-  background: #ffffff;
-  color: #172033;
+  background: #202020;
+  color: #f2f2f2;
   font: inherit;
   font-size: 15px;
   font-weight: 900;
@@ -554,8 +554,8 @@
 
 .contextMenuButton:hover,
 .contextMenuButton[aria-expanded="true"] {
-  background: #f8fafc;
-  border-color: #bfdbfe;
+  background: #181818;
+  border-color: #3487ed;
 }
 
 .contextMenuPanel {
@@ -565,9 +565,9 @@
   padding: 6px;
   display: grid;
   gap: 3px;
-  border: 1px solid #dbe3ef;
-  border-radius: 9px;
-  background: #ffffff;
+  border: 1px solid #575757;
+  border-radius: 7px;
+  background: #202020;
   box-shadow: 0 18px 40px rgba(23, 32, 51, 0.18);
 }
 
@@ -580,7 +580,7 @@
   border: 0;
   border-radius: 7px;
   background: transparent;
-  color: #172033;
+  color: #f2f2f2;
   font: inherit;
   font-size: 13px;
   font-weight: 800;
@@ -590,17 +590,17 @@
 }
 
 .contextMenuItem:hover {
-  background: #f1f5f9;
+  background: #242424;
 }
 
 .contextMenuItem:disabled {
-  color: #94a3b8;
+  color: #777777;
   cursor: not-allowed;
 }
 
 .contextMenuEmpty {
   padding: 8px 9px;
-  color: #64748b;
+  color: #9a9a9a;
   font-size: 12px;
   font-weight: 700;
 }
@@ -609,7 +609,7 @@
   max-width: 260px;
   font-family: ui-monospace, monospace;
   font-size: 12px;
-  color: #172033;
+  color: #f2f2f2;
   text-transform: none;
   white-space: nowrap;
   overflow: hidden;
@@ -618,14 +618,14 @@
 
 .tableStrong {
   display: block;
-  color: #172033;
+  color: #f2f2f2;
   font-weight: 800;
 }
 
 .tableMeta {
   display: block;
   margin-top: 4px;
-  color: #64748b;
+  color: #9a9a9a;
   font-size: 12px;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -637,7 +637,7 @@
 }
 
 .patientLink:hover {
-  color: #2563eb;
+  color: #73d2ff;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -645,9 +645,9 @@
 .inlineError {
   margin: 0 0 14px;
   padding: 12px 14px;
-  border-radius: 10px;
-  background: #fef2f2;
-  color: #b91c1c;
+  border-radius: 7px;
+  background: rgba(127, 29, 29, 0.24);
+  color: #fca5a5;
   font-size: 14px;
 }
 
@@ -669,10 +669,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
-  border: 1px solid #dbe3ef;
-  background: #ffffff;
-  color: #172033;
+  border-radius: 7px;
+  border: 1px solid #575757;
+  background: #202020;
+  color: #f2f2f2;
   font: inherit;
   font-size: 13px;
   font-weight: 800;
@@ -681,8 +681,8 @@
 }
 
 .smallAction:disabled {
-  background: #f1f5f9;
-  color: #64748b;
+  background: #242424;
+  color: #9a9a9a;
   cursor: not-allowed;
 }
 
@@ -703,23 +703,23 @@
 }
 
 .actionMessage {
-  color: #15803d;
+  color: #86efac;
 }
 
 .actionError {
-  color: #b91c1c;
+  color: #fca5a5;
 }
 
 .emptyText {
   margin: 0;
   font-size: 14px;
-  color: #64748b;
+  color: #9a9a9a;
 }
 
 .compactText {
   margin: 5px 0 0;
   font-size: 13px;
-  color: #64748b;
+  color: #9a9a9a;
 }
 
 .overviewStack {
@@ -729,9 +729,9 @@
 
 .overviewSimplePanel {
   padding: 18px;
-  border-radius: 12px;
-  background: #ffffff;
-  border: 1px solid #e5ebf5;
+  border-radius: 7px;
+  background: #202020;
+  border: 1px solid #343434;
   box-shadow: 0 1px 3px rgba(23, 32, 51, 0.05);
 }
 
@@ -752,9 +752,9 @@
 .overviewStatusSection {
   min-width: 0;
   padding: 12px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
+  border-radius: 7px;
+  background: #181818;
+  border: 1px solid #303030;
 }
 
 .overviewStatRows {
@@ -771,7 +771,7 @@
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
-  border-bottom: 1px solid #e5ebf5;
+  border-bottom: 1px solid #343434;
 }
 
 .overviewStatRow:last-child {
@@ -781,7 +781,7 @@
 .overviewStatusLabel {
   margin: 0;
   font-size: 12px;
-  color: #64748b;
+  color: #9a9a9a;
   font-weight: 800;
 }
 
@@ -789,7 +789,7 @@
   margin: 0;
   font-size: 16px;
   line-height: 1;
-  color: #172033;
+  color: #f2f2f2;
   font-weight: 800;
 }
 
@@ -808,23 +808,23 @@
 }
 
 .overviewBadgeOk {
-  background: #dcfce7;
-  color: #166534;
+  background: rgba(22, 163, 74, 0.16);
+  color: #86efac;
 }
 
 .overviewBadgePending {
-  background: #dbeafe;
-  color: #1d4ed8;
+  background: rgba(52, 135, 237, 0.16);
+  color: #8ec5ff;
 }
 
 .overviewBadgeWarning {
-  background: #ffedd5;
-  color: #9a3412;
+  background: rgba(180, 83, 9, 0.16);
+  color: #fdba74;
 }
 
 .overviewBadgeNeutral {
-  background: #f1f5f9;
-  color: #475569;
+  background: #242424;
+  color: #b8b8b8;
 }
 
 .overviewWarningList {
@@ -837,10 +837,10 @@
 
 .overviewWarningList li {
   padding: 10px 12px;
-  border-radius: 9px;
-  background: #fff7ed;
-  border: 1px solid #fed7aa;
-  color: #9a3412;
+  border-radius: 7px;
+  background: rgba(180, 83, 9, 0.14);
+  border: 1px solid rgba(180, 83, 9, 0.35);
+  color: #fdba74;
   font-size: 13px;
   font-weight: 700;
 }
@@ -866,7 +866,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #242424;
 }
 
 .overviewListItem:first-child {
@@ -881,7 +881,7 @@
 .overviewListTitle {
   margin: 0;
   font-size: 13px;
-  color: #172033;
+  color: #f2f2f2;
   font-weight: 800;
 }
 
@@ -889,7 +889,7 @@
   margin: 4px 0 0;
   font-size: 12px;
   line-height: 1.35;
-  color: #64748b;
+  color: #9a9a9a;
 }
 
 .overviewDataSplit {
@@ -901,7 +901,7 @@
 .overviewMiniTitle {
   margin: 0 0 8px;
   font-size: 12px;
-  color: #64748b;
+  color: #9a9a9a;
   font-weight: 800;
 }
 
@@ -921,23 +921,23 @@
   justify-content: space-between;
   gap: 10px;
   border-radius: 8px;
-  background: #f8fafc;
-  color: #475569;
+  background: #181818;
+  color: #b8b8b8;
   font-size: 12px;
 }
 
 .overviewMiniList span:first-child,
 .overviewMiniList strong {
-  color: #172033;
+  color: #f2f2f2;
   font-weight: 800;
 }
 
 .inlineSuccess {
   margin: 0 0 14px;
   padding: 12px 14px;
-  border-radius: 10px;
-  background: #ecfdf5;
-  color: #15803d;
+  border-radius: 7px;
+  background: rgba(22, 163, 74, 0.14);
+  color: #86efac;
   font-size: 14px;
 }
 
@@ -949,7 +949,7 @@
   .sidebar {
     min-height: auto;
     border-right: 0;
-    border-bottom: 1px solid #e5ebf5;
+    border-bottom: 1px solid #343434;
   }
 
   .nav {

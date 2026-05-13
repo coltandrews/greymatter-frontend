@@ -13,18 +13,18 @@ export type ConfigHealthView = {
 const statusViews: Record<ConfigHealthStatus, ConfigHealthView> = {
   ok: {
     label: "OK",
-    color: "#166534",
-    background: "#dcfce7",
+    color: "#86efac",
+    background: "rgba(22, 163, 74, 0.16)",
   },
   warning: {
     label: "Warning",
-    color: "#92400e",
-    background: "#fef3c7",
+    color: "#fdba74",
+    background: "rgba(180, 83, 9, 0.16)",
   },
   error: {
     label: "Needs attention",
-    color: "#991b1b",
-    background: "#fee2e2",
+    color: "#fca5a5",
+    background: "rgba(127, 29, 29, 0.24)",
   },
 };
 

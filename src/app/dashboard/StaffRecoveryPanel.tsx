@@ -110,12 +110,12 @@ export function StaffRecoveryPanel({
   return (
     <section style={{ margin: 0 }}>
       <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Booking requests that need help</h2>
-      <p style={{ margin: "0 0 16px", fontSize: 14, color: "#64748b", lineHeight: 1.5 }}>
+      <p style={{ margin: "0 0 16px", fontSize: 14, color: "#9a9a9a", lineHeight: 1.5 }}>
         Paid booking requests that need staff review before provider confirmation.
       </p>
 
       {initialBookings.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 15, color: "#64748b" }}>
+        <p style={{ margin: 0, fontSize: 15, color: "#9a9a9a" }}>
           No booking request issues right now.
         </p>
       ) : (
@@ -130,20 +130,20 @@ export function StaffRecoveryPanel({
                   display: "grid",
                   gap: 14,
                   padding: 16,
-                  border: "1px solid #e5ebf5",
-                  borderRadius: 10,
-                  background: "#f8fafc",
+                  border: "1px solid #343434",
+                  borderRadius: 7,
+                  background: "#181818",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div>
-                    <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 800, color: "#172033" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 800, color: "#f2f2f2" }}>
                       {recoveryBookingTitle(row)}
                     </p>
-                    <p style={{ margin: "0 0 4px", fontSize: 13, color: "#64748b" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: 13, color: "#9a9a9a" }}>
                       {recoveryBookingTime(row)}
                     </p>
-                    <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+                    <p style={{ margin: 0, fontSize: 12, color: "#9a9a9a" }}>
                       {recoveryStateSummary(row)}
                     </p>
                   </div>
@@ -156,9 +156,9 @@ export function StaffRecoveryPanel({
                     style={{
                       padding: "9px 13px",
                       borderRadius: 8,
-                      border: "1px solid #172033",
-                      background: retryingId === row.id ? "#94a3b8" : "#172033",
-                      color: "#fff",
+                      border: "1px solid #3487ed",
+                      background: retryingId === row.id ? "#3f3f3f" : "#3487ed",
+                      color: "#ffffff",
                       fontSize: 13,
                       fontWeight: 700,
                       cursor: retryingId === row.id ? "not-allowed" : "pointer",
@@ -176,19 +176,19 @@ export function StaffRecoveryPanel({
                     gap: 10,
                   }}
                 >
-                  <div style={{ padding: 12, borderRadius: 8, background: "#fff", border: "1px solid #e5ebf5" }}>
-                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+                  <div style={{ padding: 12, borderRadius: 8, background: "#202020", border: "1px solid #343434" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
                       Treatment
                     </p>
-                    <p style={{ margin: 0, fontSize: 13, color: "#172033", lineHeight: 1.45 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "#f2f2f2", lineHeight: 1.45 }}>
                       {recoveryTreatmentSummary(row)}
                     </p>
                   </div>
-                  <div style={{ padding: 12, borderRadius: 8, background: "#fff", border: "1px solid #e5ebf5" }}>
-                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+                  <div style={{ padding: 12, borderRadius: 8, background: "#202020", border: "1px solid #343434" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
                       Failure
                     </p>
-                    <p style={{ margin: 0, fontSize: 13, color: "#b45309", lineHeight: 1.45 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "#fdba74", lineHeight: 1.45 }}>
                       {details[0]?.value ?? "Provider handoff did not complete."}
                     </p>
                   </div>
@@ -204,14 +204,14 @@ export function StaffRecoveryPanel({
                 >
                   {details.map((detail) => (
                     <div key={`${detail.label}-${detail.value}`}>
-                      <dt style={{ marginBottom: 3, fontSize: 11, color: "#94a3b8", fontWeight: 800 }}>
+                      <dt style={{ marginBottom: 3, fontSize: 11, color: "#777777", fontWeight: 800 }}>
                         {detail.label}
                       </dt>
                       <dd
                         style={{
                           margin: 0,
                           fontSize: detail.mono ? 11 : 13,
-                          color: "#475569",
+                          color: "#b8b8b8",
                           fontFamily: detail.mono ? "ui-monospace, monospace" : undefined,
                           wordBreak: "break-word",
                         }}
@@ -223,14 +223,14 @@ export function StaffRecoveryPanel({
                 </dl>
 
                 {messageById[row.id] ? (
-                  <p role="status" style={{ margin: 0, fontSize: 13, color: "#475569" }}>
+                  <p role="status" style={{ margin: 0, fontSize: 13, color: "#b8b8b8" }}>
                     {messageById[row.id]}
                   </p>
                 ) : null}
 
                 {attempts.length > 0 ? (
-                  <div style={{ borderTop: "1px solid #e5ebf5", paddingTop: 10 }}>
-                    <p style={{ margin: "0 0 8px", fontSize: 12, color: "#64748b", fontWeight: 800 }}>
+                  <div style={{ borderTop: "1px solid #343434", paddingTop: 10 }}>
+                    <p style={{ margin: "0 0 8px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
                       Retry history
                     </p>
                     <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 }}>
@@ -239,7 +239,7 @@ export function StaffRecoveryPanel({
                           key={`${attempt.at}-${attempt.message}`}
                           style={{
                             fontSize: 12,
-                            color: attempt.status === "success" ? "#166534" : "#b91c1c",
+                            color: attempt.status === "success" ? "#86efac" : "#fca5a5",
                             lineHeight: 1.4,
                           }}
                         >

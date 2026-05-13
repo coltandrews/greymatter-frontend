@@ -107,17 +107,17 @@ export function AuditTrailPanel({
         gap: 10,
         padding: 12,
         borderRadius: 8,
-        border: "1px solid #e5ebf5",
-        background: "#fff",
+        border: "1px solid #343434",
+        background: "#202020",
       }}
       aria-label={title}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
         <div>
-          <h4 style={{ margin: "0 0 4px", fontSize: 13, color: "#172033" }}>
+          <h4 style={{ margin: "0 0 4px", fontSize: 13, color: "#f2f2f2" }}>
             {title}
           </h4>
-          <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+          <p style={{ margin: 0, fontSize: 12, color: "#9a9a9a" }}>
             Notes and system events for this {auditTargetLabel(target)}.
           </p>
         </div>
@@ -128,9 +128,9 @@ export function AuditTrailPanel({
           style={{
             padding: "6px 9px",
             borderRadius: 7,
-            border: "1px solid #dbe3ef",
-            background: "#fff",
-            color: "#172033",
+            border: "1px solid #575757",
+            background: "#202020",
+            color: "#f2f2f2",
             fontSize: 12,
             fontWeight: 800,
             cursor: loading ? "not-allowed" : "pointer",
@@ -150,9 +150,10 @@ export function AuditTrailPanel({
             minWidth: 0,
             padding: "9px 10px",
             borderRadius: 8,
-            border: "1px solid #dbe3ef",
+            border: "1px solid #575757",
+            background: "#151515",
             fontSize: 13,
-            color: "#172033",
+            color: "#f2f2f2",
           }}
         />
         <button
@@ -162,9 +163,9 @@ export function AuditTrailPanel({
           style={{
             padding: "9px 11px",
             borderRadius: 8,
-            border: "1px solid #172033",
-            background: saving || !note.trim() ? "#94a3b8" : "#172033",
-            color: "#fff",
+            border: "1px solid #3487ed",
+            background: saving || !note.trim() ? "#3f3f3f" : "#3487ed",
+            color: "#ffffff",
             fontSize: 12,
             fontWeight: 800,
             cursor: saving || !note.trim() ? "not-allowed" : "pointer",
@@ -175,13 +176,13 @@ export function AuditTrailPanel({
       </div>
 
       {error ? (
-        <p role="alert" style={{ margin: 0, color: "#b91c1c", fontSize: 13 }}>
+        <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 13 }}>
           {error}
         </p>
       ) : null}
 
       {!loading && events.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 12, color: "#94a3b8" }}>
+        <p style={{ margin: 0, fontSize: 12, color: "#777777" }}>
           No audit events yet.
         </p>
       ) : null}
@@ -190,13 +191,13 @@ export function AuditTrailPanel({
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
           {events.map((event) => (
             <li key={event.id} style={{ display: "grid", gap: 3 }}>
-              <p style={{ margin: 0, fontSize: 12, color: "#172033", fontWeight: 800 }}>
+              <p style={{ margin: 0, fontSize: 12, color: "#f2f2f2", fontWeight: 800 }}>
                 {auditEventLabel(event)}
               </p>
-              <p style={{ margin: 0, fontSize: 12, color: "#475569", lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: 12, color: "#b8b8b8", lineHeight: 1.4 }}>
                 {auditEventSummary(event)}
               </p>
-              <p style={{ margin: 0, fontSize: 11, color: "#94a3b8" }}>
+              <p style={{ margin: 0, fontSize: 11, color: "#777777" }}>
                 {auditEventWhen(event)}
               </p>
             </li>
