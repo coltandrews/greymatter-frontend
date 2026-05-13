@@ -17,6 +17,7 @@ import {
   patientLookupSummary,
 } from "@/lib/dashboard/patientLookup";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { AuditTrailPanel } from "./AuditTrailPanel";
 
@@ -89,6 +90,19 @@ function uniquePatientStates(patients: PatientLookupPatient[]): string[] {
 
 function statusLabel(value: string | null | undefined): string {
   return value?.replace(/_/g, " ") || "Not started";
+}
+
+function idStatusLabel(patient: PatientLookupPatient["bookings"][number]): string {
+  if (patient.idDocumentStatus.sentToOla) {
+    return "ID sent";
+  }
+  if (patient.idDocumentStatus.complete) {
+    return "ID uploaded";
+  }
+  if (patient.idDocumentStatus.frontUploaded || patient.idDocumentStatus.backUploaded) {
+    return "Partial ID";
+  }
+  return "ID missing";
 }
 
 function ageFromDateOfBirth(value: string | null): number | null {
@@ -588,10 +602,44 @@ function PatientProfile({
                     <p style={{ margin: 0, fontSize: 12, color: "#9a9a9a" }}>
                       {bookingQueueTreatmentLabel(booking)}
                     </p>
+                    <dl
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
+                        gap: 8,
+                        margin: 0,
+                      }}
+                    >
+                      {[
+                        ["Payment", statusLabel(booking.paymentStatus)],
+                        ["ID", idStatusLabel(booking)],
+                        ["Shipping", booking.shippingComplete ? "Complete" : "Missing"],
+                      ].map(([label, value]) => (
+                        <div key={label}>
+                          <dt style={{ color: "#777777", fontSize: 11, fontWeight: 800 }}>{label}</dt>
+                          <dd style={{ margin: "2px 0 0", color: "#c9c9c9", fontSize: 12, fontWeight: 800 }}>
+                            {value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
                     <p style={{ margin: 0, fontSize: 11, color: "#777777", fontFamily: "ui-monospace, monospace" }}>
                       {booking.olaOrderGuid || booking.id}
                       {booking.hasNextSteps ? " · next steps" : ""}
                     </p>
+                    <Link
+                      href={`/dashboard/appointments/${encodeURIComponent(booking.id)}`}
+                      style={{
+                        width: "fit-content",
+                        marginTop: 2,
+                        color: "#73d2ff",
+                        fontSize: 12,
+                        fontWeight: 900,
+                        textDecoration: "none",
+                      }}
+                    >
+                      Open request
+                    </Link>
                   </li>
                 );
               })}
