@@ -727,6 +727,65 @@
   gap: 16px;
 }
 
+.overviewHeroPanel {
+  min-height: 190px;
+  padding: 26px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  border-radius: 7px;
+  background: #202020;
+  border: 1px solid #343434;
+}
+
+.overviewHeroAction {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: #3487ed;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.overviewKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.overviewKpi {
+  min-height: 118px;
+  padding: 16px;
+  display: grid;
+  align-content: space-between;
+  gap: 18px;
+  border-radius: 7px;
+  background: #202020;
+  border: 1px solid #343434;
+}
+
+.overviewKpiLabel {
+  margin: 0;
+  color: #9a9a9a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.overviewKpiValue {
+  color: #f2f2f2;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
 .overviewSimplePanel {
   padding: 18px;
   border-radius: 7px;
@@ -932,6 +991,47 @@
   font-weight: 800;
 }
 
+.overviewRequestList {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+  list-style: none;
+}
+
+.overviewRequestRow {
+  min-height: 64px;
+  padding: 12px 0;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.9fr) minmax(220px, 1.3fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid #242424;
+}
+
+.overviewRequestRow:first-child {
+  padding-top: 0;
+}
+
+.overviewRequestRow:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.overviewRequestPatient,
+.overviewRequestRow > div {
+  min-width: 0;
+}
+
+.overviewRequestAge {
+  margin: 0;
+  color: #9a9a9a;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+}
+
 .inlineSuccess {
   margin: 0 0 14px;
   padding: 12px 14px;
@@ -975,8 +1075,26 @@
   .overviewWidgetGrid,
   .overviewDataSplit,
   .overviewStatusSections,
-  .transactionSummaryGrid {
+  .transactionSummaryGrid,
+  .overviewKpiGrid {
     grid-template-columns: 1fr;
   }
 
+  .overviewHeroPanel {
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .overviewHeroAction {
+    width: 100%;
+  }
+
+  .overviewRequestRow {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .overviewRequestAge {
+    text-align: left;
+  }
 }

@@ -1,7 +1,15 @@
 import Link from "next/link";
-import { bookingOperationsSummary } from "@/lib/dashboard/operationsSummary";
-import { transactionStatusView } from "@/lib/dashboard/transactions";
-import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
+import {
+  medicationRequestAgeLabel,
+  medicationRequestLifecycleCounts,
+  medicationRequestNeedsAttention,
+  medicationRequestPatientName,
+  medicationRequestPhoneLast4,
+  medicationRequestShippingSummary,
+  medicationRequestStatusView,
+  medicationRequestToneStyles,
+  medicationRequestTreatmentLabel,
+} from "@/lib/dashboard/medicationRequests";
 import { DashboardShell } from "./DashboardShell";
 import { requireDashboardAccess } from "./dashboardAccess";
 import styles from "./dashboard.module.css";
@@ -17,29 +25,10 @@ type BookingIntentOverviewRow = {
   service_state: string | null;
   stripe_checkout_session_id: string | null;
   failure_reason: string | null;
+  intake_data: unknown;
   created_at: string;
   updated_at: string;
 };
-
-type AppointmentOverviewRow = {
-  id: string;
-  status: string | null;
-  starts_at: string;
-  provider_name: string | null;
-  updated_at: string;
-};
-
-type SubmissionOverviewRow = {
-  id: string;
-  status: string | null;
-  updated_at: string;
-};
-
-type StatusTone = "ok" | "pending" | "warning" | "neutral";
-
-function formatCountLabel(count: number, singular: string, plural = `${singular}s`) {
-  return `${count} ${count === 1 ? singular : plural}`;
-}
 
 function formatCurrencyCents(amountCents: number, currency: string | null) {
   return new Intl.NumberFormat(undefined, {
@@ -49,81 +38,18 @@ function formatCurrencyCents(amountCents: number, currency: string | null) {
 }
 
 function sumAmountCents(rows: BookingIntentOverviewRow[]) {
-  return rows.reduce((sum, row) => sum + (typeof row.amount_cents === "number" ? row.amount_cents : 0), 0);
+  return rows.reduce(
+    (sum, row) => sum + (typeof row.amount_cents === "number" ? row.amount_cents : 0),
+    0,
+  );
 }
 
 function primaryCurrency(rows: BookingIntentOverviewRow[]) {
   return rows.find((row) => row.currency?.trim())?.currency ?? "usd";
 }
 
-function formatStatus(value: string | null) {
-  return value?.replace(/_/g, " ") || "Unknown";
-}
-
-function formatDate(value: string | null) {
-  if (!value) {
-    return "Not recorded";
-  }
-  try {
-    return new Date(value).toLocaleString(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-    });
-  } catch {
-    return value;
-  }
-}
-
-function isTransaction(row: BookingIntentOverviewRow) {
-  return Boolean(row.stripe_checkout_session_id) || row.payment_status === "paid";
-}
-
-function statusClass(tone: StatusTone) {
-  switch (tone) {
-    case "ok":
-      return styles.overviewBadgeOk;
-    case "pending":
-      return styles.overviewBadgePending;
-    case "warning":
-      return styles.overviewBadgeWarning;
-    default:
-      return styles.overviewBadgeNeutral;
-  }
-}
-
-function appointmentTone(status: string | null): StatusTone {
-  switch (status) {
-    case "completed":
-    case "confirmed":
-    case "booked":
-      return "ok";
-    case "cancelled":
-    case "failed":
-      return "warning";
-    case "pending":
-    case "scheduled":
-      return "pending";
-    default:
-      return "neutral";
-  }
-}
-
-function bookingTone(row: BookingIntentOverviewRow): StatusTone {
-  const view = hubBookingIntentStatusView({
-    booking_status: row.booking_status,
-    payment_status: row.payment_status,
-    ola_status: row.ola_status,
-  });
-  if (view.tone === "confirmed") {
-    return "ok";
-  }
-  if (view.tone === "review" || view.tone === "action") {
-    return "warning";
-  }
-  if (view.tone === "pending") {
-    return "pending";
-  }
-  return "neutral";
+function submittedRequests(rows: BookingIntentOverviewRow[]) {
+  return rows.filter((row) => row.payment_status === "paid");
 }
 
 function stateBreakdown(rows: BookingIntentOverviewRow[]) {
@@ -138,190 +64,189 @@ function stateBreakdown(rows: BookingIntentOverviewRow[]) {
     .slice(0, 5);
 }
 
+function treatmentBreakdown(rows: BookingIntentOverviewRow[]) {
+  const counts = rows.reduce<Record<string, number>>((acc, row) => {
+    const treatment = medicationRequestTreatmentLabel(row.intake_data);
+    acc[treatment] = (acc[treatment] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  return Object.entries(counts).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+}
+
+function requestAttentionRows(rows: BookingIntentOverviewRow[]) {
+  return rows
+    .map((row) => {
+      const status = medicationRequestStatusView({
+        bookingStatus: row.booking_status,
+        paymentStatus: row.payment_status,
+        olaStatus: row.ola_status,
+        failureReason: row.failure_reason,
+      });
+      const attention = medicationRequestNeedsAttention({
+        status,
+        intakeData: row.intake_data,
+        updatedAt: row.updated_at,
+      });
+      return { row, status, attention };
+    })
+    .filter((item) => item.attention.needsAttention)
+    .sort((a, b) => a.status.sortRank - b.status.sortRank);
+}
+
+function attentionReasonLabel(reason: string) {
+  switch (reason) {
+    case "payment_failed":
+      return "Payment failed";
+    case "provider_handoff_failed":
+      return "Provider handoff failed";
+    case "missing_id":
+      return "ID missing";
+    case "missing_shipping":
+      return "Shipping missing";
+    case "stale_under_review":
+      return "Under review over 24h";
+    case "needs_manual_review":
+      return "Manual review";
+    default:
+      return reason.replace(/_/g, " ");
+  }
+}
+
 export default async function DashboardPage() {
   const { role, supabase, user } = await requireDashboardAccess();
-  const [
-    { data: bookingRows, error: bookingsError },
-    { data: appointmentRows, error: appointmentsError, count: appointmentCount },
-    { data: submissionRows, error: submissionsError, count: submissionCount },
-  ] = await Promise.all([
-    supabase
-      .from("booking_intents")
-      .select("id, user_id, amount_cents, currency, payment_status, booking_status, ola_status, service_state, stripe_checkout_session_id, failure_reason, created_at, updated_at")
-      .neq("booking_status", "draft")
-      .order("updated_at", { ascending: false }),
-    supabase
-      .from("appointments")
-      .select("id, status, starts_at, provider_name, updated_at", { count: "exact" })
-      .order("updated_at", { ascending: false })
-      .limit(6),
-    supabase
-      .from("submissions")
-      .select("id, status, updated_at", { count: "exact" })
-      .order("updated_at", { ascending: false })
-      .limit(6),
-  ]);
+  const { data: bookingRows, error: bookingsError } = await supabase
+    .from("booking_intents")
+    .select("id, user_id, amount_cents, currency, payment_status, booking_status, ola_status, service_state, stripe_checkout_session_id, failure_reason, intake_data, created_at, updated_at")
+    .neq("booking_status", "draft")
+    .order("updated_at", { ascending: false });
 
   const bookings = (bookingRows ?? []) as BookingIntentOverviewRow[];
-  const appointments = (appointmentRows ?? []) as AppointmentOverviewRow[];
-  const submissions = (submissionRows ?? []) as SubmissionOverviewRow[];
-  const operationsSummary = bookingOperationsSummary(bookings);
-  const transactions = bookings.filter(isTransaction);
-  const paidTransactions = transactions.filter((row) => row.payment_status === "paid");
-  const pendingTransactions = transactions.filter((row) => row.payment_status === "pending");
-  const transactionCurrency = primaryCurrency(transactions);
-  const failedTransactions = transactions.filter((row) => row.payment_status === "failed").length;
-  const openBookings = operationsSummary.paymentPending + operationsSummary.olaPending + operationsSummary.needsReview;
-  const warningItems = [
-    operationsSummary.needsReview > 0
-      ? `${formatCountLabel(operationsSummary.needsReview, "booking request")} need staff review`
-      : null,
-    operationsSummary.olaPending > 0
-      ? `${formatCountLabel(operationsSummary.olaPending, "provider handoff")} still processing`
-      : null,
-    failedTransactions > 0
-      ? `${formatCountLabel(failedTransactions, "transaction")} failed`
-      : null,
-    bookings.some((row) => row.failure_reason)
-      ? "Recent booking request failures include provider handoff details"
-      : null,
-  ].filter((item): item is string => Boolean(item));
-
-  const bookingStatusRows = [
-    { label: "Open booking requests", value: openBookings, tone: "pending" as const },
-    { label: "Needs review", value: operationsSummary.needsReview, tone: "warning" as const },
-    { label: "Booked", value: operationsSummary.booked, tone: "ok" as const },
-  ];
-  const paymentStatusRows = [
-    { label: "Transactions", value: transactions.length, tone: "neutral" as const },
-    {
-      label: "Paid total",
-      value: formatCurrencyCents(sumAmountCents(paidTransactions), transactionCurrency),
-      tone: "ok" as const,
-    },
-    {
-      label: "Pending total",
-      value: formatCurrencyCents(sumAmountCents(pendingTransactions), transactionCurrency),
-      tone: "pending" as const,
-    },
-  ];
-
-  const dataError = bookingsError?.message ?? appointmentsError?.message ?? submissionsError?.message ?? null;
+  const submitted = submittedRequests(bookings);
+  const lifecycle = medicationRequestLifecycleCounts(
+    bookings.map((row) => ({
+      bookingStatus: row.booking_status,
+      paymentStatus: row.payment_status,
+      olaStatus: row.ola_status,
+      failureReason: row.failure_reason,
+    })),
+  );
+  const paidTotal = sumAmountCents(submitted);
+  const currency = primaryCurrency(bookings);
+  const attentionRows = requestAttentionRows(bookings);
+  const visibleAttentionRows = attentionRows.slice(0, 6);
+  const treatmentRows = treatmentBreakdown(bookings);
+  const stateRows = stateBreakdown(bookings);
+  const latestRequests = bookings
+    .slice()
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, 8);
 
   return (
     <DashboardShell
       role={role}
       currentPage="overview"
       title="Admin Portal"
-      subtitle="Warnings, status numbers, recent transactions, provider appointments, and intake forms."
+      subtitle="Medication request intake, payment, provider handoff, and review status."
       email={user.email ?? user.id}
     >
-      {dataError ? (
+      {bookingsError ? (
         <p role="alert" className={styles.inlineError}>
-          {dataError}
+          {bookingsError.message}
         </p>
       ) : null}
 
       <div className={styles.overviewStack}>
-        <section className={styles.overviewSimplePanel} aria-labelledby="overview-status-title">
-          <div className={styles.overviewSectionHeader}>
-            <div>
-              <h2 id="overview-status-title" className={styles.workspaceTitle}>
-                Status
-              </h2>
-              <p className={styles.compactText}>
-                {formatCountLabel(bookings.length, "booking request")} tracked
-              </p>
-            </div>
-            <Link href="/dashboard/appointments" className={styles.smallAction}>
-              Care Activity
-            </Link>
+        <section className={styles.overviewHeroPanel} aria-labelledby="overview-title">
+          <div>
+            <p className={styles.overviewEyebrow}>Medication request operations</p>
+            <h2 id="overview-title" className={styles.overviewTitle}>
+              {attentionRows.length} request{attentionRows.length === 1 ? "" : "s"} need attention
+            </h2>
+            <p className={styles.overviewText}>
+              Track intake completion, treatment selection, payment, provider handoff, and review
+              status from one place.
+            </p>
           </div>
-
-          <div className={styles.overviewStatusSections}>
-            <div className={styles.overviewStatusSection}>
-              <p className={styles.overviewMiniTitle}>Booking request flow</p>
-              <ul className={styles.overviewStatRows}>
-                {bookingStatusRows.map((row) => (
-                  <li key={row.label} className={styles.overviewStatRow}>
-                    <span className={styles.overviewStatusLabel}>{row.label}</span>
-                    <strong className={styles.overviewStatRowValue}>{row.value}</strong>
-                    <span className={`${styles.overviewBadge} ${statusClass(row.tone)}`}>
-                      {row.tone}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className={styles.overviewStatusSection}>
-              <p className={styles.overviewMiniTitle}>Payments</p>
-              <ul className={styles.overviewStatRows}>
-                {paymentStatusRows.map((row) => (
-                  <li key={row.label} className={styles.overviewStatRow}>
-                    <span className={styles.overviewStatusLabel}>{row.label}</span>
-                    <strong className={styles.overviewStatRowValue}>{row.value}</strong>
-                    <span className={`${styles.overviewBadge} ${statusClass(row.tone)}`}>
-                      {row.tone}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <Link href="/dashboard/appointments" className={styles.overviewHeroAction}>
+            Open requests
+          </Link>
         </section>
 
-        <section className={styles.overviewSimplePanel} aria-labelledby="overview-warnings-title">
-          <div className={styles.overviewSectionHeader}>
-            <div>
-              <h2 id="overview-warnings-title" className={styles.workspaceTitle}>
-                Warnings
-              </h2>
-              <p className={styles.compactText}>Items that may need staff attention.</p>
-            </div>
-            <span className={`${styles.overviewBadge} ${warningItems.length > 0 ? styles.overviewBadgeWarning : styles.overviewBadgeOk}`}>
-              {warningItems.length}
-            </span>
+        <section className={styles.overviewKpiGrid} aria-label="Medication request summary">
+          <div className={styles.overviewKpi}>
+            <p className={styles.overviewKpiLabel}>Submitted</p>
+            <strong className={styles.overviewKpiValue}>{submitted.length}</strong>
           </div>
-
-          {warningItems.length > 0 ? (
-            <ul className={styles.overviewWarningList}>
-              {warningItems.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className={styles.emptyText}>No active warnings.</p>
-          )}
+          <div className={styles.overviewKpi}>
+            <p className={styles.overviewKpiLabel}>Under review</p>
+            <strong className={styles.overviewKpiValue}>{lifecycle.underReview}</strong>
+          </div>
+          <div className={styles.overviewKpi}>
+            <p className={styles.overviewKpiLabel}>Provider handoff</p>
+            <strong className={styles.overviewKpiValue}>{lifecycle.providerHandoff}</strong>
+          </div>
+          <div className={styles.overviewKpi}>
+            <p className={styles.overviewKpiLabel}>Paid total</p>
+            <strong className={styles.overviewKpiValue}>
+              {formatCurrencyCents(paidTotal, currency)}
+            </strong>
+          </div>
         </section>
 
         <div className={styles.overviewWidgetGrid}>
-          <section className={styles.overviewSimplePanel} aria-labelledby="overview-transactions-title">
+          <section className={styles.overviewSimplePanel} aria-labelledby="pipeline-title">
             <div className={styles.overviewSectionHeader}>
               <div>
-                <h2 id="overview-transactions-title" className={styles.workspaceTitle}>
-                  Transactions
+                <h2 id="pipeline-title" className={styles.workspaceTitle}>
+                  Request Pipeline
                 </h2>
-                <p className={styles.compactText}>{transactions.length} total</p>
+                <p className={styles.compactText}>{bookings.length} active records tracked</p>
               </div>
-              <Link href="/dashboard/transactions" className={styles.smallAction}>
-                View all
-              </Link>
             </div>
+            <ul className={styles.overviewStatRows}>
+              {[
+                { label: "Payment pending", value: lifecycle.paymentPending },
+                { label: "Provider handoff", value: lifecycle.providerHandoff },
+                { label: "Under review", value: lifecycle.underReview },
+                { label: "Needs attention", value: lifecycle.needsAttention },
+                { label: "Next steps", value: lifecycle.nextSteps },
+                { label: "Confirmed", value: lifecycle.confirmed },
+              ].map(({ label, value }) => (
+                <li key={label} className={styles.overviewStatRow}>
+                  <span className={styles.overviewStatusLabel}>{label}</span>
+                  <strong className={styles.overviewStatRowValue}>{value}</strong>
+                </li>
+              ))}
+            </ul>
+          </section>
 
-            {transactions.length > 0 ? (
+          <section className={styles.overviewSimplePanel} aria-labelledby="attention-title">
+            <div className={styles.overviewSectionHeader}>
+              <div>
+                <h2 id="attention-title" className={styles.workspaceTitle}>
+                  Needs Attention
+                </h2>
+                <p className={styles.compactText}>Highest priority requests for staff.</p>
+              </div>
+            </div>
+            {visibleAttentionRows.length > 0 ? (
               <ul className={styles.overviewList}>
-                {transactions.slice(0, 5).map((row) => {
-                  const status = transactionStatusView(row.payment_status);
+                {visibleAttentionRows.map(({ row, status, attention }) => {
+                  const tone = medicationRequestToneStyles[status.tone];
                   return (
                     <li key={row.id} className={styles.overviewListItem}>
                       <div>
-                        <p className={styles.overviewListTitle}>Patient {row.user_id.slice(0, 8)}</p>
-                        <p className={styles.overviewListMeta}>Updated {formatDate(row.updated_at)}</p>
+                        <p className={styles.overviewListTitle}>
+                          {medicationRequestPatientName(row.intake_data)}
+                        </p>
+                        <p className={styles.overviewListMeta}>
+                          {attention.reasons.map(attentionReasonLabel).join(" · ")}
+                        </p>
                       </div>
                       <span
                         className={styles.statusBadge}
-                        style={{ background: status.background, color: status.color }}
+                        style={{ background: tone.background, color: tone.color }}
                       >
                         {status.label}
                       </span>
@@ -330,122 +255,115 @@ export default async function DashboardPage() {
                 })}
               </ul>
             ) : (
-              <p className={styles.emptyText}>No transactions yet.</p>
+              <p className={styles.emptyText}>No requests need attention right now.</p>
             )}
           </section>
 
-          <section className={styles.overviewSimplePanel} aria-labelledby="overview-appointments-title">
+          <section className={styles.overviewSimplePanel} aria-labelledby="treatment-title">
             <div className={styles.overviewSectionHeader}>
               <div>
-                <h2 id="overview-appointments-title" className={styles.workspaceTitle}>
-                  Recent Provider Appointments
+                <h2 id="treatment-title" className={styles.workspaceTitle}>
+                  Treatment Mix
                 </h2>
-                <p className={styles.compactText}>Latest confirmed provider appointment updates.</p>
+                <p className={styles.compactText}>Selected medication paths.</p>
               </div>
             </div>
-
-            {appointments.length > 0 ? (
-              <ul className={styles.overviewList}>
-                {appointments.map((appointment) => (
-                  <li key={appointment.id} className={styles.overviewListItem}>
-                    <div>
-                      <p className={styles.overviewListTitle}>
-                        {appointment.provider_name?.trim() || "Provider pending"}
-                      </p>
-                      <p className={styles.overviewListMeta}>{formatDate(appointment.starts_at)}</p>
-                    </div>
-                    <span className={`${styles.overviewBadge} ${statusClass(appointmentTone(appointment.status))}`}>
-                      {formatStatus(appointment.status)}
-                    </span>
+            {treatmentRows.length > 0 ? (
+              <ul className={styles.overviewMiniList}>
+                {treatmentRows.map(([treatment, count]) => (
+                  <li key={treatment}>
+                    <span>{treatment}</span>
+                    <strong>{count}</strong>
                   </li>
                 ))}
               </ul>
             ) : (
-              <p className={styles.emptyText}>No provider appointments yet.</p>
+              <p className={styles.emptyText}>No treatment selections yet.</p>
             )}
           </section>
 
-          <section className={styles.overviewSimplePanel} aria-labelledby="overview-bookings-title">
+          <section className={styles.overviewSimplePanel} aria-labelledby="state-title">
             <div className={styles.overviewSectionHeader}>
               <div>
-                <h2 id="overview-bookings-title" className={styles.workspaceTitle}>
-                  Recent Booking Requests
+                <h2 id="state-title" className={styles.workspaceTitle}>
+                  State Breakdown
                 </h2>
-                <p className={styles.compactText}>Payment and provider handoff flow.</p>
+                <p className={styles.compactText}>Where active requests are coming from.</p>
               </div>
             </div>
-
-            {bookings.length > 0 ? (
-              <ul className={styles.overviewList}>
-                {bookings.slice(0, 5).map((row) => {
-                  const status = hubBookingIntentStatusView({
-                    booking_status: row.booking_status,
-                    payment_status: row.payment_status,
-                    ola_status: row.ola_status,
-                  });
-                  return (
-                    <li key={row.id} className={styles.overviewListItem}>
-                      <div>
-                        <p className={styles.overviewListTitle}>Patient {row.user_id.slice(0, 8)}</p>
-                        <p className={styles.overviewListMeta}>Updated {formatDate(row.updated_at)}</p>
-                      </div>
-                      <span className={`${styles.overviewBadge} ${statusClass(bookingTone(row))}`}>
-                        {status.label}
-                      </span>
-                    </li>
-                  );
-                })}
+            {stateRows.length > 0 ? (
+              <ul className={styles.overviewMiniList}>
+                {stateRows.map(([state, count]) => (
+                  <li key={state}>
+                    <span>{state}</span>
+                    <strong>{count}</strong>
+                  </li>
+                ))}
               </ul>
             ) : (
-              <p className={styles.emptyText}>No booking requests yet.</p>
+              <p className={styles.emptyText}>No state data yet.</p>
             )}
           </section>
-
-          <section className={styles.overviewSimplePanel} aria-labelledby="overview-data-title">
-            <div className={styles.overviewSectionHeader}>
-              <div>
-                <h2 id="overview-data-title" className={styles.workspaceTitle}>
-                  Intake and Geography
-                </h2>
-                <p className={styles.compactText}>Intake forms and state coverage.</p>
-              </div>
-            </div>
-
-            <div className={styles.overviewDataSplit}>
-              <div>
-                <p className={styles.overviewMiniTitle}>Recent intake forms</p>
-                {submissions.length > 0 ? (
-                  <ul className={styles.overviewMiniList}>
-                    {submissions.slice(0, 4).map((submission) => (
-                      <li key={submission.id}>
-                        <span>{formatStatus(submission.status)}</span>
-                        <span>{formatDate(submission.updated_at)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className={styles.emptyText}>No intake forms yet.</p>
-                )}
-              </div>
-
-              <div>
-                <p className={styles.overviewMiniTitle}>Top states</p>
-                {stateBreakdown(bookings).length > 0 ? (
-                  <ul className={styles.overviewMiniList}>
-                    {stateBreakdown(bookings).map(([state, count]) => (
-                      <li key={state}>
-                        <span>{state}</span>
-                        <strong>{count}</strong>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className={styles.emptyText}>No state data yet.</p>
-                )}
-              </div>
-            </div>
-          </section>
         </div>
+
+        <section className={styles.overviewSimplePanel} aria-labelledby="latest-title">
+          <div className={styles.overviewSectionHeader}>
+            <div>
+              <h2 id="latest-title" className={styles.workspaceTitle}>
+                Latest Medication Requests
+              </h2>
+              <p className={styles.compactText}>Recent patient movement through the flow.</p>
+            </div>
+            <Link href="/dashboard/appointments" className={styles.smallAction}>
+              View all
+            </Link>
+          </div>
+          {latestRequests.length > 0 ? (
+            <ul className={styles.overviewRequestList}>
+              {latestRequests.map((row) => {
+                const status = medicationRequestStatusView({
+                  bookingStatus: row.booking_status,
+                  paymentStatus: row.payment_status,
+                  olaStatus: row.ola_status,
+                  failureReason: row.failure_reason,
+                });
+                const tone = medicationRequestToneStyles[status.tone];
+                const last4 = medicationRequestPhoneLast4(row.intake_data);
+                return (
+                  <li key={row.id} className={styles.overviewRequestRow}>
+                    <div className={styles.overviewRequestPatient}>
+                      <p className={styles.overviewListTitle}>
+                        {medicationRequestPatientName(row.intake_data)}
+                      </p>
+                      <p className={styles.overviewListMeta}>
+                        {last4 ? `SMS ending ${last4}` : row.user_id.slice(0, 8)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={styles.overviewListTitle}>
+                        {medicationRequestTreatmentLabel(row.intake_data)}
+                      </p>
+                      <p className={styles.overviewListMeta}>
+                        {medicationRequestShippingSummary(row.intake_data)}
+                      </p>
+                    </div>
+                    <span
+                      className={styles.statusBadge}
+                      style={{ background: tone.background, color: tone.color }}
+                    >
+                      {status.label}
+                    </span>
+                    <p className={styles.overviewRequestAge}>
+                      {medicationRequestAgeLabel(row.updated_at)}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className={styles.emptyText}>No medication requests yet.</p>
+          )}
+        </section>
       </div>
     </DashboardShell>
   );
