@@ -5,6 +5,10 @@ import {
   type BookingRequestDetailResponse,
   type BookingRequestDocument,
 } from "@/lib/api/admin";
+import {
+  reconcileBookingIntentStripe,
+  retryBookingIntentOla,
+} from "@/lib/api/bookingIntents";
 import { bookingQueueReference, bookingQueueTreatmentLabel } from "@/lib/dashboard/bookingQueue";
 import {
   medicationRequestAgeLabel,
@@ -154,6 +158,8 @@ function DocumentPreview({ document }: { document: BookingRequestDocument }) {
 export function MedicationRequestDetail({ bookingIntentId }: Props) {
   const [detail, setDetail] = useState<BookingRequestDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState<"retry-ola" | "reconcile-stripe" | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function loadDetail() {
@@ -182,6 +188,47 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
   useEffect(() => {
     void loadDetail();
   }, [bookingIntentId]);
+
+  async function sessionToken(): Promise<string> {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error("Sign in again to run this action.");
+    }
+    return session.access_token;
+  }
+
+  async function runAction(kind: "retry-ola" | "reconcile-stripe") {
+    if (acting) {
+      return;
+    }
+
+    setActing(kind);
+    setActionMessage(null);
+    setError(null);
+    try {
+      const token = await sessionToken();
+      const response =
+        kind === "retry-ola"
+          ? await retryBookingIntentOla(token, bookingIntentId)
+          : await reconcileBookingIntentStripe(token, bookingIntentId);
+      if (!response.ok) {
+        throw new Error(await readBackendMessage(response));
+      }
+      setActionMessage(
+        kind === "retry-ola"
+          ? "Provider handoff retried."
+          : "Payment status reconciled.",
+      );
+      await loadDetail();
+    } catch (err) {
+      setActionMessage(err instanceof Error ? err.message : "Action failed.");
+    } finally {
+      setActing(null);
+    }
+  }
 
   const view = useMemo(() => {
     if (!detail) {
@@ -223,6 +270,10 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
   const selectedPharmacy = asRecord(detail.selectedPharmacy);
   const tone = medicationRequestToneStyles[view.tone];
   const documents = detail.documents ?? [];
+  const canRetryOla =
+    request.paymentStatus === "paid" && request.bookingStatus === "needs_review";
+  const canReconcileStripe =
+    request.paymentStatus === "pending" && Boolean(detail.stripeCheckoutSessionId?.trim());
 
   const patientItems: DetailItem[] = [
     { label: "Name", value: request.patientName },
@@ -288,6 +339,47 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
       </section>
 
       <div className={styles.requestDetailGrid}>
+        <section className={styles.requestDetailPanel}>
+          <div className={styles.documentSectionHeader}>
+            <div>
+              <h3>Actions</h3>
+              <p>Use these when payment or provider handoff needs manual recovery.</p>
+            </div>
+          </div>
+          <div className={styles.detailActionGrid}>
+            <button
+              type="button"
+              className={styles.detailActionButton}
+              onClick={() => void runAction("retry-ola")}
+              disabled={!canRetryOla || Boolean(acting)}
+            >
+              {acting === "retry-ola" ? "Retrying..." : "Retry Provider Handoff"}
+            </button>
+            <button
+              type="button"
+              className={styles.detailActionButton}
+              onClick={() => void runAction("reconcile-stripe")}
+              disabled={!canReconcileStripe || Boolean(acting)}
+            >
+              {acting === "reconcile-stripe" ? "Checking..." : "Reconcile Payment"}
+            </button>
+          </div>
+          <p className={styles.detailActionHint}>
+            Provider retry is available for paid requests under review. Payment reconcile is available for pending checkouts.
+          </p>
+          {actionMessage ? (
+            <p
+              className={
+                actionMessage.includes("retried") || actionMessage.includes("reconciled")
+                  ? styles.actionMessage
+                  : styles.actionError
+              }
+            >
+              {actionMessage}
+            </p>
+          ) : null}
+        </section>
+
         <section className={styles.requestDetailPanel}>
           <h3>Patient</h3>
           <DetailGrid items={patientItems} />

@@ -927,6 +927,43 @@
   line-height: 1.45;
 }
 
+.detailActionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detailActionButton {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #3487ed;
+  border-radius: 7px;
+  background: #3487ed;
+  color: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.detailActionButton:hover:not(:disabled) {
+  background: #2274d6;
+}
+
+.detailActionButton:disabled {
+  border-color: #343434;
+  background: #242424;
+  color: #777777;
+  cursor: not-allowed;
+}
+
+.detailActionHint {
+  margin: 10px 0 0;
+  color: #9a9a9a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
 .documentSectionHeader,
 .documentPreviewHeader {
   display: flex;
@@ -1399,7 +1436,8 @@
   }
 
   .requestDetailGrid,
-  .documentGrid {
+  .documentGrid,
+  .detailActionGrid {
     grid-template-columns: 1fr;
   }
 
