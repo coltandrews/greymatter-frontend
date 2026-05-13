@@ -1,6 +1,9 @@
 import type { BookingQueueRow } from "@/lib/api/admin";
-import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
 import { treatmentByKey } from "@/lib/treatments";
+import {
+  medicationRequestStatusView,
+  medicationRequestToneStyles,
+} from "./medicationRequests";
 
 export type BookingQueueStatusView = {
   label: string;
@@ -8,23 +11,17 @@ export type BookingQueueStatusView = {
   background: string;
 };
 
-const toneStyles = {
-  confirmed: { color: "#86efac", background: "rgba(22, 163, 74, 0.16)" },
-  pending: { color: "#8ec5ff", background: "rgba(52, 135, 237, 0.16)" },
-  action: { color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" },
-  review: { color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" },
-  cancelled: { color: "#b8b8b8", background: "#242424" },
-};
-
 export function bookingQueueStatusView(row: BookingQueueRow): BookingQueueStatusView {
-  const view = hubBookingIntentStatusView({
-    booking_status: row.bookingStatus,
-    payment_status: row.paymentStatus,
-    ola_status: row.olaStatus,
+  const view = medicationRequestStatusView({
+    bookingStatus: row.bookingStatus,
+    paymentStatus: row.paymentStatus,
+    olaStatus: row.olaStatus,
+    failureReason: row.failureReason,
+    hasNextSteps: row.hasNextSteps,
   });
   return {
     label: view.label,
-    ...toneStyles[view.tone],
+    ...medicationRequestToneStyles[view.tone],
   };
 }
 

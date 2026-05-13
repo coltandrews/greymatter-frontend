@@ -1,7 +1,10 @@
+import { medicationRequestLifecycleCounts } from "./medicationRequests";
+
 export type BookingOperationsRow = {
   payment_status: string | null;
   booking_status: string | null;
   ola_status: string | null;
+  failure_reason?: string | null;
 };
 
 export type BookingOperationsSummary = {
@@ -14,42 +17,19 @@ export type BookingOperationsSummary = {
 export function bookingOperationsSummary(
   rows: BookingOperationsRow[],
 ): BookingOperationsSummary {
-  return rows.reduce<BookingOperationsSummary>(
-    (summary, row) => {
-      if (row.booking_status === "needs_review") {
-        summary.needsReview += 1;
-        return summary;
-      }
-      if (
-        (row.booking_status === "booked" ||
-          row.booking_status === "action_required") &&
-        row.ola_status === "booked"
-      ) {
-        summary.booked += 1;
-        return summary;
-      }
-      if (
-        row.payment_status === "paid" &&
-        (row.booking_status === "paid" ||
-          row.booking_status === "ola_pending" ||
-          row.ola_status === "pending")
-      ) {
-        summary.olaPending += 1;
-        return summary;
-      }
-      if (
-        row.payment_status === "pending" ||
-        row.booking_status === "payment_pending"
-      ) {
-        summary.paymentPending += 1;
-      }
-      return summary;
-    },
-    {
-      paymentPending: 0,
-      olaPending: 0,
-      booked: 0,
-      needsReview: 0,
-    },
+  const lifecycle = medicationRequestLifecycleCounts(
+    rows.map((row) => ({
+      bookingStatus: row.booking_status,
+      paymentStatus: row.payment_status,
+      olaStatus: row.ola_status,
+      failureReason: row.failure_reason,
+    })),
   );
+
+  return {
+    paymentPending: lifecycle.paymentPending,
+    olaPending: lifecycle.providerHandoff,
+    booked: lifecycle.confirmed + lifecycle.nextSteps,
+    needsReview: lifecycle.underReview + lifecycle.needsAttention,
+  };
 }

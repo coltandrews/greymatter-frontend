@@ -59,9 +59,9 @@ describe("bookingOperationsSummary", () => {
         },
       ]),
     ).toEqual({
-      paymentPending: 0,
+      paymentPending: 1,
       olaPending: 0,
-      booked: 1,
+      booked: 0,
       needsReview: 1,
     });
   });
