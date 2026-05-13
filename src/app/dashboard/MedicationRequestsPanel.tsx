@@ -12,6 +12,7 @@ import {
   medicationRequestToneStyles,
 } from "@/lib/dashboard/medicationRequests";
 import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./dashboard.module.css";
 
@@ -311,6 +312,7 @@ export function MedicationRequestsPanel() {
                 <th>State</th>
                 <th>Updated</th>
                 <th>Reference</th>
+                <th>Open</th>
               </tr>
             </thead>
             <tbody>
@@ -324,10 +326,13 @@ export function MedicationRequestsPanel() {
                 });
                 const tone = medicationRequestToneStyles[status.tone];
                 const reasons = attentionReasons(row);
+                const href = `/dashboard/appointments/${encodeURIComponent(row.id)}`;
                 return (
                   <tr key={row.id}>
                     <td>
-                      <strong className={styles.tableStrong}>{row.patientName}</strong>
+                      <Link href={href} className={styles.patientLink}>
+                        <strong className={styles.tableStrong}>{row.patientName}</strong>
+                      </Link>
                       <span className={styles.tableMeta}>
                         {row.patientEmail ?? "No email"}
                         {row.phoneLast4 ? ` · SMS ${row.phoneLast4}` : ""}
@@ -372,6 +377,11 @@ export function MedicationRequestsPanel() {
                     <td>{medicationRequestAgeLabel(row.updatedAt)}</td>
                     <td className={styles.monoCell} title={bookingQueueReference(row)}>
                       {bookingQueueReference(row)}
+                    </td>
+                    <td>
+                      <Link href={href} className={styles.smallAction}>
+                        Open
+                      </Link>
                     </td>
                   </tr>
                 );

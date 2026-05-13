@@ -57,6 +57,33 @@ export type BookingQueueResponse = {
   rows: BookingQueueRow[];
 };
 
+export type BookingRequestDocument = {
+  id: string;
+  kind: string | null;
+  storagePath: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  sentToOlaAt: string | null;
+  createdAt: string;
+  signedUrl: string | null;
+};
+
+export type BookingRequestDetailResponse = {
+  request: BookingQueueRow;
+  intakeData: unknown;
+  selectedSlot: unknown;
+  selectedPharmacy: unknown;
+  vendorMetadata: unknown;
+  olaRedirectUrl: string | null;
+  olaPopupMessage: string | null;
+  amountCents: number | null;
+  currency: string | null;
+  stripeCheckoutSessionId: string | null;
+  stripePaymentIntentId: string | null;
+  paidAt: string | null;
+  documents: BookingRequestDocument[];
+};
+
 export type TransactionRow = {
   id: string;
   userId: string;
@@ -146,6 +173,18 @@ export async function fetchBookingQueue(
 ) {
   const search = new URLSearchParams({ limit: String(limit) });
   return fetch(`${apiBase()}/api/admin/booking-queue?${search.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+    },
+  });
+}
+
+export async function fetchBookingRequestDetail(
+  supabaseAccessToken: string,
+  bookingIntentId: string,
+) {
+  return fetch(`${apiBase()}/api/admin/booking-requests/${encodeURIComponent(bookingIntentId)}`, {
     headers: {
       Authorization: `Bearer ${supabaseAccessToken}`,
       Accept: "application/json",

@@ -770,6 +770,235 @@
   color: #9a9a9a;
 }
 
+.detailStack {
+  display: grid;
+  gap: 16px;
+}
+
+.detailTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.detailBackLink {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  color: #c9c9c9;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.detailBackLink::before {
+  content: "<";
+  margin-right: 8px;
+  color: #73d2ff;
+}
+
+.detailBackLink:hover {
+  color: #73d2ff;
+}
+
+.requestDetailHero {
+  min-height: 170px;
+  padding: 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background:
+    linear-gradient(135deg, rgba(52, 135, 237, 0.2), rgba(115, 210, 255, 0.06)),
+    #202020;
+}
+
+.requestDetailHero h2 {
+  margin: 16px 0 6px;
+  color: #f2f2f2;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.requestDetailHero p {
+  margin: 0;
+  color: #c9c9c9;
+  font-size: 15px;
+}
+
+.detailReference {
+  min-width: 220px;
+  padding: 14px;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: rgba(18, 18, 18, 0.68);
+}
+
+.detailReference span {
+  display: block;
+  margin-bottom: 6px;
+  color: #9a9a9a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.detailReference strong {
+  display: block;
+  color: #f2f2f2;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.requestDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.requestDetailPanel {
+  padding: 18px;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #202020;
+}
+
+.requestDetailPanel h3 {
+  margin: 0 0 14px;
+  color: #f2f2f2;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.detailDefinitionGrid {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.detailDefinitionItem {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.detailDefinitionItem dt {
+  color: #9a9a9a;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.detailDefinitionItem dd {
+  margin: 0;
+  color: #f2f2f2;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.detailDisclosure {
+  margin-top: 14px;
+  border-top: 1px solid #343434;
+  padding-top: 12px;
+}
+
+.detailDisclosure summary {
+  color: #c9c9c9;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.detailDisclosure pre {
+  max-height: 260px;
+  overflow: auto;
+  margin: 12px 0 0;
+  padding: 12px;
+  border-radius: 7px;
+  background: #151515;
+  color: #c9c9c9;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.documentSectionHeader,
+.documentPreviewHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.documentSectionHeader p,
+.documentPreviewHeader p {
+  margin: 4px 0 0;
+  color: #9a9a9a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.documentGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.documentPreview {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #181818;
+}
+
+.documentPreview h4 {
+  margin: 0;
+  color: #f2f2f2;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.documentImage {
+  width: 100%;
+  aspect-ratio: 1.55;
+  object-fit: cover;
+  border-radius: 7px;
+  border: 1px solid #343434;
+  background: #121212;
+}
+
+.documentFileLink {
+  min-height: 108px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #151515;
+  color: #73d2ff;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.documentMissing {
+  margin: 0;
+  padding: 18px;
+  border: 1px solid #343434;
+  border-radius: 7px;
+  background: #151515;
+  color: #9a9a9a;
+  font-size: 13px;
+}
+
 .compactText {
   margin: 5px 0 0;
   font-size: 13px;
@@ -1151,5 +1380,31 @@
 
   .overviewRequestAge {
     text-align: left;
+  }
+
+  .detailTopBar,
+  .requestDetailHero,
+  .documentSectionHeader,
+  .documentPreviewHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .requestDetailHero {
+    min-height: 0;
+  }
+
+  .detailReference {
+    min-width: 0;
+  }
+
+  .requestDetailGrid,
+  .documentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .detailDefinitionItem {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 }
