@@ -1,4 +1,5 @@
 import type { TransactionRow } from "@/lib/api/admin";
+import { treatmentByKey } from "@/lib/treatments";
 
 export type TransactionStatusView = {
   label: string;
@@ -19,6 +20,27 @@ export function formatTransactionAmount(row: TransactionRow): string {
     style: "currency",
     currency: row.currency || "usd",
   }).format(row.amountCents / 100);
+}
+
+export function transactionTreatmentLabel(row: TransactionRow): string {
+  const treatment = treatmentByKey(row.treatmentKey);
+  const label = treatment?.name ?? row.treatmentKey?.trim() ?? "Treatment not selected";
+  return row.treatmentAnswerCount > 0
+    ? `${label} · ${row.treatmentAnswerCount} med Q&A`
+    : label;
+}
+
+export function transactionRequestStatusLabel(row: TransactionRow): string {
+  if (row.bookingStatus === "needs_review") {
+    return "Under review";
+  }
+  if (row.bookingStatus === "action_required") {
+    return "Action required";
+  }
+  if (row.bookingStatus === "booked") {
+    return "Provider handoff complete";
+  }
+  return row.bookingStatus?.replace(/_/g, " ") || "Unknown";
 }
 
 export function transactionReceiptFileName(row: TransactionRow): string {

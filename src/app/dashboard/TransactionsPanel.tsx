@@ -12,8 +12,10 @@ import {
   formatTransactionAmount,
   stripeDashboardUrl,
   transactionPatientLabel,
+  transactionRequestStatusLabel,
   transactionReceiptFileName,
   transactionStatusView,
+  transactionTreatmentLabel,
 } from "@/lib/dashboard/transactions";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
@@ -46,6 +48,10 @@ function patientProfileHref(row: TransactionRow): string {
     q: row.patientEmail ?? row.userId,
   });
   return `/dashboard/patients?${search.toString()}`;
+}
+
+function requestDetailHref(row: TransactionRow): string {
+  return `/dashboard/appointments/${encodeURIComponent(row.id)}`;
 }
 
 function formatSummaryAmount(rows: TransactionRow[], fallbackCurrency?: string): string {
@@ -267,7 +273,9 @@ export function TransactionsPanel() {
                 <tr>
                   <th scope="col" className={styles.actionColumn}>Actions</th>
                   <th scope="col">Patient</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">Treatment</th>
+                  <th scope="col">Request</th>
+                  <th scope="col">Payment</th>
                   <th scope="col">Amount</th>
                   <th scope="col" className={styles.paidColumn}>Paid</th>
                 </tr>
@@ -318,6 +326,16 @@ export function TransactionsPanel() {
                                   View In Stripe
                                 </a>
                               ) : null}
+                              <Link
+                                role="menuitem"
+                                className={styles.contextMenuItem}
+                                href={requestDetailHref(row)}
+                                onClick={() => {
+                                  setOpenActionMenu(null);
+                                }}
+                              >
+                                Open Request
+                              </Link>
                               <button
                                 type="button"
                                 role="menuitem"
@@ -369,6 +387,18 @@ export function TransactionsPanel() {
                             {rowMessage}
                           </span>
                         ) : null}
+                      </td>
+                      <td>
+                        <strong className={styles.tableStrong}>
+                          <Link className={styles.patientLink} href={requestDetailHref(row)}>
+                            {transactionTreatmentLabel(row)}
+                          </Link>
+                        </strong>
+                        <span className={styles.tableMeta}>{row.serviceState ?? "State unknown"}</span>
+                      </td>
+                      <td>
+                        <span className={styles.tableStrong}>{transactionRequestStatusLabel(row)}</span>
+                        <span className={styles.tableMeta}>{row.id}</span>
                       </td>
                       <td>
                         <span

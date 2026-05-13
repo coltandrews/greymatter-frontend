@@ -4,8 +4,10 @@ import {
   formatTransactionAmount,
   stripeDashboardUrl,
   transactionPatientLabel,
+  transactionRequestStatusLabel,
   transactionReceiptFileName,
   transactionStatusView,
+  transactionTreatmentLabel,
   transactionWebhookStatusView,
 } from "./transactions";
 
@@ -14,6 +16,8 @@ const row = {
   userId: "user-1",
   patientName: "Pat Patient",
   patientEmail: "pat@example.com",
+  treatmentKey: "glp_1",
+  treatmentAnswerCount: 2,
   amountCents: 19900,
   currency: "usd",
   paymentStatus: "paid",
@@ -30,6 +34,8 @@ describe("transaction dashboard helpers", () => {
   it("formats patient and amount labels", () => {
     expect(transactionPatientLabel(row)).toBe("Pat Patient · pat@example.com");
     expect(formatTransactionAmount(row)).toBe("$199.00");
+    expect(transactionTreatmentLabel(row)).toBe("GLP-1 · 2 med Q&A");
+    expect(transactionRequestStatusLabel(row)).toBe("Provider handoff complete");
     expect(formatTransactionAmount({ ...row, amountCents: null })).toBe("Not recorded");
     expect(transactionReceiptFileName({ ...row, id: "booking/1" })).toBe(
       "greymatter-receipt-booking-1.pdf",

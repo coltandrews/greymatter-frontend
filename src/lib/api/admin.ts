@@ -89,6 +89,8 @@ export type TransactionRow = {
   userId: string;
   patientName: string;
   patientEmail: string | null;
+  treatmentKey: string | null;
+  treatmentAnswerCount: number;
   amountCents: number | null;
   currency: string | null;
   paymentStatus: string | null;
