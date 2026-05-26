@@ -120,8 +120,8 @@ describe("pre-auth intake", () => {
       selected_treatment: "testosterone",
       selected_treatment_question_set: {
         treatmentKey: "testosterone",
-        source: "placeholder",
-        version: "placeholder-2026-05-11",
+        source: "ola",
+        version: "ola-initial-2026-05-26",
       },
       treatment_answers: {
         testosterone_symptoms: ["low_energy", "mood"],

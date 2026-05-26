@@ -30,8 +30,6 @@ const ID_IMAGE_MAX_BYTES = 20 * 1024 * 1024;
 const ID_IMAGE_UPLOAD_MAX_DIMENSION = 1800;
 const ID_IMAGE_UPLOAD_QUALITY = 0.86;
 const ID_MIME_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
-const TEMP_CONSULTATION_FEE = 99;
-const TEMP_MEDICATION_FEE = 249;
 
 type CheckoutState = {
   bookingIntentId: string;
@@ -325,6 +323,9 @@ export function TreatmentCheckout({
     () => treatmentByKey(intake.selected_treatment),
     [intake.selected_treatment],
   );
+  const consultationFee = treatment ? treatment.consultationFeeCents / 100 : 0;
+  const medicationFee = treatment ? treatment.medicationFeeCents / 100 : 0;
+  const totalFee = consultationFee + medicationFee;
   const isShippingComplete = shippingComplete(shipping);
   const activeShippingKey = shippingKey(shipping);
   const idUploadError = validateIdUploads(idUploads);
@@ -882,17 +883,17 @@ export function TreatmentCheckout({
                     <div>
                       <dt>Consultation fee</dt>
                       <dd>Provider review and treatment eligibility</dd>
-                      <strong>{currency(TEMP_CONSULTATION_FEE)}</strong>
+                      <strong>{currency(consultationFee)}</strong>
                     </div>
                     <div>
                       <dt>Medication fee</dt>
-                      <dd>Medication cost placeholder</dd>
-                      <strong>{currency(TEMP_MEDICATION_FEE)}</strong>
+                      <dd>{treatment.priceLabel}</dd>
+                      <strong>{currency(medicationFee)}</strong>
                     </div>
                     <div className={styles.totalRow}>
                       <dt>Total</dt>
                       <dd>Due today</dd>
-                      <strong>{currency(TEMP_CONSULTATION_FEE + TEMP_MEDICATION_FEE)}</strong>
+                      <strong>{currency(totalFee)}</strong>
                     </div>
                   </dl>
                 </>

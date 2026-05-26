@@ -12,11 +12,19 @@ describe("treatment registry", () => {
       const set = treatmentQuestionSet(treatment.key);
       expect(set).toMatchObject({
         treatmentKey: treatment.key,
-        source: expect.any(String),
-        version: expect.any(String),
+        source: "ola",
+        version: expect.stringContaining("ola-initial"),
       });
       expect(treatmentQuestions(treatment.key).length).toBeGreaterThan(0);
+      expect(treatment.consultationFeeCents).toBeGreaterThan(0);
+      expect(treatment.medicationFeeCents).toBeGreaterThan(0);
     }
+  });
+
+  it("contains the launch initial intake depth for each medication", () => {
+    expect(treatmentQuestions("glp_1")).toHaveLength(24);
+    expect(treatmentQuestions("peptides")).toHaveLength(10);
+    expect(treatmentQuestions("testosterone")).toHaveLength(12);
   });
 
   it("returns null or empty values for unknown selections", () => {
