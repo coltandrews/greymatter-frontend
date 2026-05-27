@@ -683,7 +683,7 @@ export function TreatmentCheckout({
     <main className={styles.page}>
       <div className={styles.shell}>
         <header className={styles.hero}>
-          <img src="/brand/gmmd-intake-logo.png" alt="GMMD" className={styles.logo} />
+          <img src="/brand/logo-square.svg" alt="GMMD" className={styles.logo} />
           <h1 className={styles.title}>Review payment</h1>
         </header>
 

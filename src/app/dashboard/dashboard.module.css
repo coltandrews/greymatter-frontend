@@ -123,8 +123,10 @@
 .overviewPrimary {
   padding: 24px;
   border-radius: 7px;
-  background: #3487ed;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--gm-text);
+  border: 1px solid var(--gm-border);
+  box-shadow: 0 1px 3px rgba(23, 32, 51, 0.05);
 }
 
 .overviewEyebrow {
@@ -133,7 +135,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0;
-  color: rgba(255, 255, 255, 0.72);
+  color: var(--gm-subtle);
 }
 
 .overviewTitle {
@@ -141,13 +143,14 @@
   font-size: 28px;
   font-weight: 800;
   letter-spacing: 0;
+  color: var(--gm-text);
 }
 
 .overviewText {
   margin: 0;
   font-size: 14px;
   line-height: 1.55;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--gm-muted);
 }
 
 .overviewSide {
@@ -1237,8 +1240,9 @@
   justify-content: space-between;
   gap: 18px;
   border-radius: 7px;
-  background: var(--gm-surface);
+  background: rgba(255, 255, 255, 0.78);
   border: 1px solid var(--gm-border);
+  box-shadow: 0 1px 3px rgba(23, 32, 51, 0.05);
 }
 
 .overviewHeroAction {

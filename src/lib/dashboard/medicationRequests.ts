@@ -58,9 +58,7 @@ export type MedicationRequestAttentionReason =
   | "payment_failed"
   | "provider_handoff_failed"
   | "missing_id"
-  | "missing_shipping"
-  | "stale_under_review"
-  | "needs_manual_review";
+  | "missing_shipping";
 
 export type MedicationRequestAttention = {
   needsAttention: boolean;
@@ -187,27 +185,27 @@ export function medicationRequestStatusView(
     };
   }
 
+  if (bookingStatus === "needs_review") {
+    return {
+      key: "under_review",
+      label: "Provider review",
+      description: "Payment received. Waiting for the provider network response.",
+      tone: "review",
+      submitted: true,
+      terminal: false,
+      sortRank: 40,
+    };
+  }
+
   if (olaStatus === "failed" || hasText(failureReason)) {
     return {
       key: "needs_attention",
-      label: "Needs attention",
+      label: "Exception",
       description: "Provider handoff failed or needs staff follow-up.",
       tone: "failed",
       submitted: true,
       terminal: false,
       sortRank: 0,
-    };
-  }
-
-  if (bookingStatus === "needs_review") {
-    return {
-      key: "under_review",
-      label: "Under review",
-      description: "Payment received. Staff or provider review is in progress.",
-      tone: "review",
-      submitted: true,
-      terminal: false,
-      sortRank: 40,
     };
   }
 
@@ -330,16 +328,12 @@ export function medicationRequestNeedsAttention(input: {
 }): MedicationRequestAttention {
   const reasons: MedicationRequestAttentionReason[] = [];
   const intake = asRecord(input.intakeData);
-  const now = input.now ?? new Date();
 
   if (input.status.key === "payment_failed") {
     reasons.push("payment_failed");
   }
   if (input.status.key === "needs_attention") {
     reasons.push("provider_handoff_failed");
-  }
-  if (input.status.key === "under_review") {
-    reasons.push("needs_manual_review");
   }
   if (input.status.submitted && input.idStatus && !input.idStatus.complete) {
     reasons.push("missing_id");
@@ -352,13 +346,6 @@ export function medicationRequestNeedsAttention(input: {
   ) {
     reasons.push("missing_shipping");
   }
-  if (input.status.key === "under_review" && input.updatedAt) {
-    const updatedAt = new Date(input.updatedAt);
-    if (!Number.isNaN(updatedAt.getTime()) && now.getTime() - updatedAt.getTime() > ONE_DAY_MS) {
-      reasons.push("stale_under_review");
-    }
-  }
-
   return {
     needsAttention: reasons.length > 0,
     reasons: Array.from(new Set(reasons)),

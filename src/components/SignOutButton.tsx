@@ -44,7 +44,7 @@ export function SignOutButton({
         marginTop: noMargin ? 0 : 16,
         padding: "10px 16px",
         borderRadius: 8,
-        border: dark ? "1px solid #b4b4b4" : "1px solid #cbd5e1",
+        border: dark ? "1px solid var(--gm-border-strong)" : "1px solid #cbd5e1",
         background: dark ? "#ffffff" : "#fff",
         color: dark ? "#171717" : "#172033",
         fontSize: 14,

@@ -20,8 +20,8 @@
 }
 
 .logo {
-  width: 132px;
-  max-width: 46%;
+  width: 112px;
+  max-width: 42%;
   height: auto;
 }
 
@@ -29,7 +29,7 @@
   width: 100%;
   height: 4px;
   border-radius: 999px;
-  background: #d0d0d0;
+  background: var(--gm-rule);
 }
 
 .icon {
@@ -119,7 +119,7 @@
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: #d0d0d0;
+  background: var(--gm-rule);
 }
 
 .processingIndicator::after {

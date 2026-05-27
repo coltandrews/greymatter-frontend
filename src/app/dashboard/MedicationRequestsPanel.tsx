@@ -76,9 +76,6 @@ function attentionReasons(row: BookingQueueRow) {
   if (status.key === "needs_attention") {
     reasons.push("Provider handoff");
   }
-  if (status.key === "under_review") {
-    reasons.push("Review");
-  }
   if (status.submitted && !row.idDocumentStatus.complete) {
     reasons.push("ID");
   }
@@ -284,7 +281,7 @@ export function MedicationRequestsPanel() {
               setFilters((current) => ({ ...current, attentionOnly: event.target.checked }))
             }
           />
-          Needs attention
+          Exceptions only
         </label>
       </div>
 

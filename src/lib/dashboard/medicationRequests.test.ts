@@ -54,7 +54,7 @@ describe("medication request dashboard helpers", () => {
         paymentStatus: "paid",
         olaStatus: "pending",
       }),
-    ).toMatchObject({ key: "under_review", label: "Under review" });
+    ).toMatchObject({ key: "under_review", label: "Provider review" });
 
     expect(
       medicationRequestStatusView({
@@ -63,7 +63,7 @@ describe("medication request dashboard helpers", () => {
         olaStatus: "failed",
         failureReason: "Ola rejected request",
       }),
-    ).toMatchObject({ key: "needs_attention", label: "Needs attention", tone: "failed" });
+    ).toMatchObject({ key: "under_review", label: "Provider review", tone: "review" });
   });
 
   it("extracts high-signal patient, treatment, and shipping labels", () => {
@@ -97,7 +97,7 @@ describe("medication request dashboard helpers", () => {
 
   it("flags attention reasons that admin pages should prioritize", () => {
     const status = medicationRequestStatusView({
-      bookingStatus: "needs_review",
+      bookingStatus: "provider_handoff_failed",
       paymentStatus: "paid",
       olaStatus: "failed",
       failureReason: "Ola request failed",
@@ -129,8 +129,8 @@ describe("medication request dashboard helpers", () => {
     ).toEqual({
       paymentPending: 1,
       providerHandoff: 1,
-      underReview: 1,
-      needsAttention: 1,
+      underReview: 2,
+      needsAttention: 0,
       nextSteps: 1,
       confirmed: 1,
       cancelled: 0,

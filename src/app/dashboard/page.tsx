@@ -104,10 +104,6 @@ function attentionReasonLabel(reason: string) {
       return "ID missing";
     case "missing_shipping":
       return "Shipping missing";
-    case "stale_under_review":
-      return "Under review over 24h";
-    case "needs_manual_review":
-      return "Manual review";
     default:
       return reason.replace(/_/g, " ");
   }
@@ -161,7 +157,7 @@ export default async function DashboardPage() {
           <div>
             <p className={styles.overviewEyebrow}>Medication request operations</p>
             <h2 id="overview-title" className={styles.overviewTitle}>
-              {attentionRows.length} request{attentionRows.length === 1 ? "" : "s"} need attention
+              {attentionRows.length} request exception{attentionRows.length === 1 ? "" : "s"}
             </h2>
             <p className={styles.overviewText}>
               Track intake completion, treatment selection, payment, provider handoff, and review
@@ -208,8 +204,8 @@ export default async function DashboardPage() {
               {[
                 { label: "Payment pending", value: lifecycle.paymentPending },
                 { label: "Provider handoff", value: lifecycle.providerHandoff },
-                { label: "Under review", value: lifecycle.underReview },
-                { label: "Needs attention", value: lifecycle.needsAttention },
+                { label: "Provider review", value: lifecycle.underReview },
+                { label: "Exceptions", value: lifecycle.needsAttention },
                 { label: "Next steps", value: lifecycle.nextSteps },
                 { label: "Confirmed", value: lifecycle.confirmed },
               ].map(({ label, value }) => (
@@ -225,9 +221,9 @@ export default async function DashboardPage() {
             <div className={styles.overviewSectionHeader}>
               <div>
                 <h2 id="attention-title" className={styles.workspaceTitle}>
-                  Needs Attention
+                  Exceptions
                 </h2>
-                <p className={styles.compactText}>Highest priority requests for staff.</p>
+                <p className={styles.compactText}>Requests with missing data or failed operational steps.</p>
               </div>
             </div>
             {visibleAttentionRows.length > 0 ? (
@@ -255,7 +251,7 @@ export default async function DashboardPage() {
                 })}
               </ul>
             ) : (
-              <p className={styles.emptyText}>No requests need attention right now.</p>
+              <p className={styles.emptyText}>No request exceptions right now.</p>
             )}
           </section>
 

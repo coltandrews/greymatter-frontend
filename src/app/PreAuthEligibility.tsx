@@ -33,12 +33,16 @@ const card = {
 const brand = {
   graphite: "var(--gm-page-bg)",
   surface: "#ffffff",
-  surface2: "rgba(255, 255, 255, 0.78)",
+  surface2: "var(--gm-control-bg)",
   text: "#171717",
-  muted: "#4f4f4f",
-  quiet: "#6f6f6f",
-  border: "#d8d8d8",
-  accent: "#3487ed",
+  muted: "#242424",
+  quiet: "#3f3f3f",
+  border: "#171717",
+  accent: "#171717",
+  actionBg: "var(--gm-action-bg)",
+  actionText: "#171717",
+  disabledBg: "var(--gm-disabled-bg)",
+  disabledText: "#4a4a4a",
   error: "#b91c1c",
 };
 
@@ -59,9 +63,9 @@ const input = {
   borderRadius: 7,
   border: `2px solid ${brand.border}`,
   fontSize: 16,
-  background: "transparent",
+  background: brand.surface2,
   color: brand.text,
-  outlineColor: brand.accent,
+  outlineColor: "#171717",
 };
 
 const flowActions = {
@@ -74,12 +78,13 @@ const primaryAction = {
   width: "100%",
   minHeight: 52,
   padding: "0 18px",
-  borderRadius: 7,
-  border: "none",
-  background: brand.accent,
-  color: "#ffffff",
+  borderRadius: 999,
+  border: "1px solid rgba(255, 255, 255, 0.78)",
+  background: brand.actionBg,
+  color: brand.actionText,
   fontSize: 15,
   fontWeight: 600,
+  boxShadow: "0 1px 0 rgba(255, 255, 255, 0.72) inset",
 };
 
 const linkButton = {
@@ -109,7 +114,7 @@ const optionCard = {
   gap: 12,
   padding: "0 22px",
   borderRadius: 7,
-  border: "none",
+  border: "1px solid rgba(23, 23, 23, 0.72)",
   background: brand.surface2,
   color: brand.text,
   fontSize: 15,
@@ -120,6 +125,7 @@ const optionCard = {
 const selectedOptionCard = {
   background: brand.accent,
   color: "#ffffff",
+  borderColor: brand.accent,
   boxShadow: "none",
 };
 
@@ -130,7 +136,7 @@ const optionMark = {
   placeItems: "center",
   flexShrink: 0,
   borderRadius: 999,
-  border: "1px solid rgba(148, 163, 184, 0.34)",
+  border: "1px solid rgba(23, 23, 23, 0.34)",
   background: "#ffffff",
   color: brand.text,
   fontSize: 12,
@@ -156,9 +162,14 @@ const backArrow = {
   left: 0,
   top: 64,
   border: "none",
-  background: "transparent",
+  width: 28,
+  height: 28,
+  display: "grid" as const,
+  placeItems: "center",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.72)",
   color: brand.text,
-  fontSize: 25,
+  fontSize: 20,
   lineHeight: 1,
   cursor: "pointer",
 };
@@ -167,7 +178,7 @@ const progressTrack = {
   width: "100%",
   height: 4,
   borderRadius: 999,
-  background: "#d0d0d0",
+  background: "var(--gm-rule)",
   overflow: "hidden",
 };
 
@@ -637,12 +648,12 @@ export function PreAuthEligibility() {
             </button>
           ) : null}
           <img
-            src="/brand/gmmd-intake-logo.png"
+            src="/brand/logo-square.svg"
             alt="GMMD"
             style={{
               display: "block",
-              width: 132,
-              maxWidth: "46%",
+              width: 112,
+              maxWidth: "42%",
               height: "auto",
             }}
           />
@@ -721,8 +732,8 @@ export function PreAuthEligibility() {
                 disabled={!currentPageComplete}
                 style={{
                   ...primaryAction,
-                  background: currentPageComplete ? brand.accent : "#d0d0d0",
-                  color: currentPageComplete ? "#ffffff" : "#707070",
+                  background: currentPageComplete ? brand.actionBg : brand.disabledBg,
+                  color: currentPageComplete ? brand.actionText : brand.disabledText,
                   cursor: currentPageComplete ? "pointer" : "not-allowed",
                 }}
               >
@@ -768,7 +779,7 @@ export function PreAuthEligibility() {
                       padding: "0 22px",
                       textAlign: "left",
                       borderRadius: 7,
-                      border: "none",
+                      border: `1px solid ${selected ? brand.accent : "rgba(23, 23, 23, 0.72)"}`,
                       background: selected ? brand.accent : brand.surface2,
                       color: selected ? "#ffffff" : brand.text,
                       cursor: "pointer",
@@ -793,8 +804,8 @@ export function PreAuthEligibility() {
                 disabled={!selectedTreatment}
                 style={{
                   ...primaryAction,
-                  background: selectedTreatment ? brand.accent : "#d0d0d0",
-                  color: selectedTreatment ? "#ffffff" : "#707070",
+                  background: selectedTreatment ? brand.actionBg : brand.disabledBg,
+                  color: selectedTreatment ? brand.actionText : brand.disabledText,
                   cursor: selectedTreatment ? "pointer" : "not-allowed",
                 }}
                 onClick={() => {
@@ -875,8 +886,8 @@ export function PreAuthEligibility() {
                 disabled={!currentMedicationQuestionComplete}
                 style={{
                   ...primaryAction,
-                  background: currentMedicationQuestionComplete ? brand.accent : "#d0d0d0",
-                  color: currentMedicationQuestionComplete ? "#ffffff" : "#707070",
+                  background: currentMedicationQuestionComplete ? brand.actionBg : brand.disabledBg,
+                  color: currentMedicationQuestionComplete ? brand.actionText : brand.disabledText,
                   cursor: currentMedicationQuestionComplete ? "pointer" : "not-allowed",
                 }}
               >

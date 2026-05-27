@@ -161,10 +161,10 @@ function requestStatusSummary(detail: BookingRequestDetailResponse) {
   }
   if (request.bookingStatus === "needs_review") {
     return {
-      title: "Provider handoff needs review",
-      body: request.failureReason ?? "Ola did not complete the handoff for this paid request.",
-      action: "Review the failure and retry provider handoff when the data is corrected.",
-      state: "blocked" as const,
+      title: "Provider review pending",
+      body: "The request is waiting on a response from the provider network.",
+      action: "No staff action is needed unless Ola reports a required correction or the request stays stuck.",
+      state: "current" as const,
     };
   }
   if (request.bookingStatus === "action_required" || request.hasNextSteps) {
@@ -196,7 +196,7 @@ function requestTimeline(detail: BookingRequestDetailResponse): TimelineStep[] {
   const idUploadedAt = latestDate(detail.documents.map((document) => document.createdAt));
   const idSentAt = latestDate(detail.documents.map((document) => document.sentToOlaAt));
   const handoffComplete = request.olaStatus === "booked" || Boolean(request.olaOrderGuid);
-  const handoffBlocked = request.bookingStatus === "needs_review";
+  const providerReviewPending = request.bookingStatus === "needs_review";
 
   return [
     {
@@ -229,11 +229,11 @@ function requestTimeline(detail: BookingRequestDetailResponse): TimelineStep[] {
       label: "Provider handoff",
       detail: handoffComplete
         ? "Request was accepted by Ola."
-        : handoffBlocked
-          ? request.failureReason ?? "Provider handoff failed."
+        : providerReviewPending
+          ? "Waiting for provider network response."
           : "Request has not been accepted by Ola yet.",
-      when: handoffComplete ? formatDateTime(idSentAt ?? request.updatedAt) : handoffBlocked ? "Needs review" : "Waiting",
-      state: handoffComplete ? "complete" : handoffBlocked ? "blocked" : "pending",
+      when: handoffComplete ? formatDateTime(idSentAt ?? request.updatedAt) : providerReviewPending ? "Provider review" : "Waiting",
+      state: handoffComplete ? "complete" : providerReviewPending ? "current" : "pending",
     },
     {
       label: "Provider review",

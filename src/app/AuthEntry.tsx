@@ -11,7 +11,7 @@ const field = {
   display: "grid" as const,
   gap: 8,
   fontSize: 14,
-  color: "#333333",
+  color: "#171717",
   fontWeight: 400,
 };
 
@@ -19,11 +19,11 @@ const input = {
   minHeight: 48,
   padding: "0 14px",
   borderRadius: 7,
-  border: "1px solid #b4b4b4",
-  background: "rgba(255, 255, 255, 0.78)",
+  border: "2px solid #171717",
+  background: "var(--gm-control-bg)",
   color: "#171717",
   fontSize: 16,
-  outlineColor: "#3487ed",
+  outlineColor: "#171717",
 };
 
 const card = {
@@ -35,8 +35,8 @@ const card = {
 
 const logo = {
   display: "block" as const,
-  width: 132,
-  maxWidth: "46%",
+  width: 112,
+  maxWidth: "42%",
   height: "auto",
   margin: "8px auto 24px",
 };
@@ -47,7 +47,7 @@ const progressTrack = {
   width: "100%",
   height: 4,
   borderRadius: 999,
-  background: "#d0d0d0",
+  background: "var(--gm-rule)",
   marginBottom: 38,
 };
 
@@ -216,14 +216,14 @@ export function AuthEntry({
       >
         <section style={card}>
           <header>
-            <img src="/brand/gmmd-intake-logo.png" alt="GMMD" style={logo} />
+            <img src="/brand/logo-square.svg" alt="GMMD" style={logo} />
             <div style={progressTrack} />
           </header>
           <div style={{ display: "grid", minHeight: 0 }}>
             <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#171717" }}>
               Check your email
             </h1>
-            <p style={{ margin: 0, fontSize: 15, color: "#4f4f4f", lineHeight: 1.45 }}>
+            <p style={{ margin: 0, fontSize: 15, color: "#242424", lineHeight: 1.45 }}>
               We sent a link to <strong>{email}</strong>. Open it to finish.
             </p>
           <button
@@ -234,10 +234,10 @@ export function AuthEntry({
               width: "100%",
               minHeight: 52,
               padding: "0 18px",
-              borderRadius: 7,
-              border: "none",
-              background: "#3487ed",
-              color: "#ffffff",
+              borderRadius: 999,
+              border: "1px solid rgba(255, 255, 255, 0.78)",
+              background: "var(--gm-action-bg)",
+              color: "#171717",
               fontSize: 15,
               fontWeight: 600,
               cursor: "pointer",
@@ -264,7 +264,7 @@ export function AuthEntry({
     >
       <section style={card}>
         <header>
-          <img src="/brand/gmmd-intake-logo.png" alt="GMMD" style={logo} />
+          <img src="/brand/logo-square.svg" alt="GMMD" style={logo} />
           <div style={progressTrack} />
         </header>
         <div style={{ display: "grid", minHeight: 0 }}>
@@ -365,10 +365,10 @@ export function AuthEntry({
               marginTop: 20,
               minHeight: 52,
               padding: "0 18px",
-              borderRadius: 7,
-              border: "none",
-              background: loading ? "#d0d0d0" : "#3487ed",
-              color: "#ffffff",
+              borderRadius: 999,
+              border: "1px solid rgba(255, 255, 255, 0.78)",
+              background: loading ? "var(--gm-disabled-bg)" : "var(--gm-action-bg)",
+              color: loading ? "var(--gm-disabled-text)" : "#171717",
               fontSize: 15,
               fontWeight: 600,
               cursor: loading ? "not-allowed" : "pointer",
@@ -388,7 +388,7 @@ export function AuthEntry({
           style={{
             margin: "18px 0 0",
             fontSize: 14,
-            color: "#4f4f4f",
+            color: "#242424",
             textAlign: "center",
           }}
         >
@@ -409,7 +409,7 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#3487ed",
+                  color: "#171717",
                   fontWeight: 500,
                   fontSize: 14,
                   cursor: loading ? "not-allowed" : "pointer",
@@ -435,7 +435,7 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#3487ed",
+                  color: "#171717",
                   fontWeight: 500,
                   fontSize: 14,
                   cursor: loading ? "not-allowed" : "pointer",

@@ -124,7 +124,7 @@ export function CheckoutReturnCard({
   return (
     <div className={styles.card}>
       <header className={styles.flowHeader}>
-        <img src="/brand/gmmd-intake-logo.png" alt="GMMD" className={styles.logo} />
+        <img src="/brand/logo-square.svg" alt="GMMD" className={styles.logo} />
         <div className={styles.progressTrack} />
       </header>
       <div className={`${styles.icon} ${styles[view.tone]}`} aria-hidden>
