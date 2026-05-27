@@ -39,7 +39,7 @@ const brand = {
   quiet: "#3f3f3f",
   border: "#171717",
   accent: "#171717",
-  actionBg: "var(--gm-action-bg)",
+  actionBg: "#d6d6d6",
   actionText: "#171717",
   disabledBg: "var(--gm-disabled-bg)",
   disabledText: "#4a4a4a",
