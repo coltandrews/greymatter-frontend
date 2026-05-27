@@ -1,7 +1,7 @@
 .page {
   min-height: 100vh;
   padding: 28px 20px 56px;
-  background: #121212;
+  background: var(--gm-page-bg);
 }
 
 .shell {
@@ -25,7 +25,7 @@
   height: 4px;
   margin-top: 18px;
   border-radius: 999px;
-  background: #666666;
+  background: #d0d0d0;
   order: 1;
 }
 
@@ -37,7 +37,7 @@
 
 .title {
   margin: 0;
-  color: #f2f2f2;
+  color: var(--gm-text);
   font-size: clamp(24px, 4vw, 34px);
   line-height: 1.08;
   font-weight: 400;
@@ -49,7 +49,7 @@
   border-radius: 8px;
   border: 1px solid rgba(251, 191, 36, 0.28);
   background: rgba(120, 53, 15, 0.24);
-  color: #fde68a;
+  color: #92400e;
   font-size: 14px;
   font-weight: 700;
 }
@@ -70,9 +70,9 @@
 .panel {
   border: none;
   border-radius: 7px;
-  background: #202020;
+  background: var(--gm-surface);
   padding: 24px;
-  color: #f2f2f2;
+  color: var(--gm-text);
 }
 
 .sectionTitle {
@@ -90,7 +90,7 @@
 
 .sectionSubtitle {
   margin: 0;
-  color: #c9c9c9;
+  color: var(--gm-muted);
   font-size: 14px;
   line-height: 1.45;
 }
@@ -106,8 +106,8 @@
   justify-content: space-between;
   gap: 18px;
   padding-bottom: 18px;
-  border-bottom: 1px solid #3a3a3a;
-  color: #f2f2f2;
+  border-bottom: 1px solid var(--gm-border);
+  color: var(--gm-text);
   font-size: 18px;
   font-weight: 500;
 }
@@ -127,7 +127,7 @@
 }
 
 .purchaseList dt {
-  color: #f2f2f2;
+  color: var(--gm-text);
   font-size: 14px;
   font-weight: 500;
 }
@@ -135,7 +135,7 @@
 .purchaseList dd {
   grid-column: 1;
   margin: 0;
-  color: #c9c9c9;
+  color: var(--gm-muted);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -143,7 +143,7 @@
 .purchaseList strong {
   grid-column: 2;
   grid-row: 1 / span 2;
-  color: #f2f2f2;
+  color: var(--gm-text);
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -151,7 +151,7 @@
 
 .totalRow {
   padding-top: 12px;
-  border-top: 1px solid #3a3a3a;
+  border-top: 1px solid var(--gm-border);
 }
 
 .totalRow dt,
@@ -160,12 +160,12 @@
 }
 
 .totalRow dd {
-  color: #8f9ba8;
+  color: var(--gm-subtle);
 }
 
 .muted {
   margin: 8px 0 0;
-  color: #c9c9c9;
+  color: var(--gm-muted);
   line-height: 1.45;
 }
 
@@ -177,7 +177,7 @@
 .field {
   display: grid;
   gap: 7px;
-  color: #d7d7d7;
+  color: #333333;
   font-size: 14px;
   font-weight: 500;
 }
@@ -185,18 +185,18 @@
 .input {
   width: 100%;
   min-height: 54px;
-  border: 1px solid #575757;
+  border: 1px solid var(--gm-border-strong);
   border-radius: 7px;
-  background: #151515;
-  color: #f2f2f2;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--gm-text);
   padding: 0 14px;
   font: inherit;
   outline-color: #3487ed;
 }
 
 .input:-webkit-autofill {
-  -webkit-text-fill-color: #f2f2f2;
-  box-shadow: 0 0 0 1000px #151515 inset;
+  -webkit-text-fill-color: var(--gm-text);
+  box-shadow: 0 0 0 1000px #ffffff inset;
 }
 
 .addressGrid {
@@ -210,9 +210,9 @@
   gap: 4px;
   margin-top: 2px;
   overflow: hidden;
-  border: 1px solid #3a3a3a;
+  border: 1px solid var(--gm-border);
   border-radius: 7px;
-  background: #151515;
+  background: #ffffff;
 }
 
 .addressSuggestion,
@@ -221,7 +221,7 @@
   padding: 12px 13px;
   border: none;
   background: transparent;
-  color: #f2f2f2;
+  color: var(--gm-text);
   font: inherit;
   font-size: 14px;
   line-height: 1.35;
@@ -233,21 +233,21 @@
 }
 
 .addressSuggestion:hover {
-  background: #202b38;
+  background: #edf5ff;
 }
 
 .addressSuggestionMuted {
-  color: #8f9ba8;
+  color: var(--gm-subtle);
 }
 
 .secondary {
   display: inline-grid;
   place-items: center;
   min-height: 44px;
-  border: 1px solid #575757;
+  border: 1px solid var(--gm-border-strong);
   border-radius: 7px;
   background: transparent;
-  color: #f2f2f2;
+  color: var(--gm-text);
   padding: 12px 16px;
   font-size: 15px;
   font-weight: 600;
@@ -283,14 +283,14 @@
 
 .primary:disabled {
   cursor: not-allowed;
-  background: #3f3f3f;
-  color: #a9a9a9;
+  background: var(--gm-disabled-bg);
+  color: var(--gm-disabled-text);
 }
 
 .secondaryButton {
-  border: 1px solid #575757;
+  border: 1px solid var(--gm-border-strong);
   background: transparent;
-  color: #f2f2f2;
+  color: var(--gm-text);
 }
 
 .textButton,
@@ -299,7 +299,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: #8dbfff;
+  color: #2563eb;
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -318,18 +318,18 @@
   display: grid;
   gap: 5px;
   padding-top: 14px;
-  border-top: 1px solid #3a3a3a;
+  border-top: 1px solid var(--gm-border);
 }
 
 .reviewList dt {
-  color: #8f9ba8;
+  color: var(--gm-subtle);
   font-size: 12px;
   font-weight: 500;
 }
 
 .reviewList dd {
   margin: 0;
-  color: #f2f2f2;
+  color: var(--gm-text);
   font-size: 14px;
   line-height: 1.45;
   word-break: break-word;
@@ -352,10 +352,10 @@
   min-height: 176px;
   place-content: center;
   padding: 24px;
-  border: 1px dashed #686868;
+  border: 1px dashed var(--gm-border-strong);
   border-radius: 7px;
-  background: #151515;
-  color: #f2f2f2;
+  background: rgba(255, 255, 255, 0.66);
+  color: var(--gm-text);
   text-align: center;
   cursor: pointer;
 }
@@ -377,7 +377,7 @@
   justify-self: center;
   border-radius: 7px;
   object-fit: cover;
-  border: 1px solid #575757;
+  border: 1px solid var(--gm-border);
 }
 
 .uploadTitle {
@@ -386,7 +386,7 @@
 }
 
 .uploadMeta {
-  color: #c9c9c9;
+  color: var(--gm-muted);
   font-size: 13px;
 }
 
@@ -404,9 +404,9 @@
   place-items: center;
   min-height: 42px;
   border-radius: 7px;
-  border: 1px solid #575757;
+  border: 1px solid var(--gm-border-strong);
   background: transparent;
-  color: #f2f2f2;
+  color: var(--gm-text);
   font-size: 14px;
   font-weight: 600;
   font-family: inherit;
@@ -421,18 +421,18 @@
 }
 
 .removeButton {
-  color: #fca5a5;
+  color: var(--gm-error);
 }
 
 .inlineError {
   margin: 0;
-  color: #fca5a5;
+  color: var(--gm-error);
   font-size: 13px;
 }
 
 .error {
   margin: 0 0 14px;
-  color: #fca5a5;
+  color: var(--gm-error);
   font-size: 14px;
 }
 
@@ -440,8 +440,8 @@
   min-height: 520px;
   overflow: hidden;
   border-radius: 7px;
-  background: #151515;
-  color-scheme: dark;
+  background: #ffffff;
+  color-scheme: light;
 }
 
 .paymentColumn {
@@ -465,15 +465,15 @@
   align-content: center;
   gap: 12px;
   border-radius: 7px;
-  background: #151515;
-  color: #c9c9c9;
+  background: #ffffff;
+  color: var(--gm-muted);
   font-size: 15px;
   font-weight: 500;
   text-align: center;
 }
 
 .paymentSkeleton small {
-  color: #8f9ba8;
+  color: var(--gm-subtle);
   font-size: 12px;
   font-weight: 500;
 }
@@ -484,7 +484,7 @@
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: #303030;
+  background: #d0d0d0;
 }
 
 .paymentLoader::after {

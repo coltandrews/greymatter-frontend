@@ -83,7 +83,7 @@ export function BookingQueuePanel() {
           <h2 id="booking-queue-title" style={{ margin: "0 0 6px", fontSize: 18 }}>
             Booking Requests
           </h2>
-          <p style={{ margin: 0, fontSize: 13, color: "#9a9a9a" }}>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--gm-subtle)" }}>
             {loading ? "Loading booking requests..." : `${rows.length} active request${rows.length === 1 ? "" : "s"}`}
           </p>
         </div>
@@ -96,9 +96,9 @@ export function BookingQueuePanel() {
           style={{
             padding: "8px 12px",
             borderRadius: 8,
-            border: "1px solid #575757",
-            background: loading ? "#242424" : "#202020",
-            color: "#f2f2f2",
+            border: "1px solid var(--gm-border-strong)",
+            background: loading ? "var(--gm-border)" : "var(--gm-surface)",
+            color: "var(--gm-text)",
             fontSize: 13,
             fontWeight: 700,
             cursor: loading ? "not-allowed" : "pointer",
@@ -109,13 +109,13 @@ export function BookingQueuePanel() {
       </div>
 
       {error ? (
-        <p role="alert" style={{ margin: "0 0 12px", color: "#fca5a5", fontSize: 14 }}>
+        <p role="alert" style={{ margin: "0 0 12px", color: "var(--gm-error)", fontSize: 14 }}>
           {error}
         </p>
       ) : null}
 
       {!loading && !error && rows.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 15, color: "#9a9a9a" }}>
+        <p style={{ margin: 0, fontSize: 15, color: "var(--gm-subtle)" }}>
           No active booking requests.
         </p>
       ) : null}
@@ -124,7 +124,7 @@ export function BookingQueuePanel() {
         <div
           style={{
             overflowX: "auto",
-            border: "1px solid #343434",
+            border: "1px solid var(--gm-border)",
             borderRadius: 7,
           }}
         >
@@ -137,26 +137,26 @@ export function BookingQueuePanel() {
             }}
           >
             <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #343434", background: "#181818" }}>
-                <th style={{ padding: "10px 12px", color: "#9a9a9a", fontWeight: 700 }}>
+              <tr style={{ textAlign: "left", borderBottom: "1px solid var(--gm-border)", background: "rgba(255, 255, 255, 0.72)" }}>
+                <th style={{ padding: "10px 12px", color: "var(--gm-subtle)", fontWeight: 700 }}>
                   Patient
                 </th>
-                <th style={{ padding: "10px 12px", color: "#9a9a9a", fontWeight: 700 }}>
+                <th style={{ padding: "10px 12px", color: "var(--gm-subtle)", fontWeight: 700 }}>
                   Status
                 </th>
-                <th style={{ padding: "10px 12px", color: "#9a9a9a", fontWeight: 700 }}>
+                <th style={{ padding: "10px 12px", color: "var(--gm-subtle)", fontWeight: 700 }}>
                   Slot
                 </th>
-                <th style={{ padding: "10px 12px", color: "#9a9a9a", fontWeight: 700 }}>
+                <th style={{ padding: "10px 12px", color: "var(--gm-subtle)", fontWeight: 700 }}>
                   Pharmacy
                 </th>
-                <th style={{ padding: "10px 12px", color: "#9a9a9a", fontWeight: 700 }}>
+                <th style={{ padding: "10px 12px", color: "var(--gm-subtle)", fontWeight: 700 }}>
                   State
                 </th>
-                <th style={{ padding: "10px 12px", color: "#9a9a9a", fontWeight: 700 }}>
+                <th style={{ padding: "10px 12px", color: "var(--gm-subtle)", fontWeight: 700 }}>
                   Updated
                 </th>
-                <th style={{ padding: "10px 12px", color: "#9a9a9a", fontWeight: 700 }}>
+                <th style={{ padding: "10px 12px", color: "var(--gm-subtle)", fontWeight: 700 }}>
                   Reference
                 </th>
               </tr>
@@ -165,8 +165,8 @@ export function BookingQueuePanel() {
               {rows.map((row) => {
                 const status = bookingQueueStatusView(row);
                 return (
-                  <tr key={row.id} style={{ borderBottom: "1px solid #242424" }}>
-                    <td style={{ padding: "12px", color: "#f2f2f2", fontWeight: 700 }}>
+                  <tr key={row.id} style={{ borderBottom: "1px solid var(--gm-border)" }}>
+                    <td style={{ padding: "12px", color: "var(--gm-text)", fontWeight: 700 }}>
                       {bookingQueuePatientLabel(row)}
                     </td>
                     <td style={{ padding: "12px" }}>
@@ -186,23 +186,23 @@ export function BookingQueuePanel() {
                         {status.label}
                       </span>
                     </td>
-                    <td style={{ padding: "12px", color: "#b8b8b8" }}>
+                    <td style={{ padding: "12px", color: "var(--gm-muted)" }}>
                       {bookingQueueSlotLabel(row)}
                     </td>
-                    <td style={{ padding: "12px", color: "#b8b8b8" }}>
+                    <td style={{ padding: "12px", color: "var(--gm-muted)" }}>
                       {bookingQueuePharmacyLabel(row)}
                     </td>
-                    <td style={{ padding: "12px", color: "#b8b8b8" }}>
+                    <td style={{ padding: "12px", color: "var(--gm-muted)" }}>
                       {row.serviceState ?? "—"}
                     </td>
-                    <td style={{ padding: "12px", color: "#b8b8b8" }}>
+                    <td style={{ padding: "12px", color: "var(--gm-muted)" }}>
                       {formatUpdated(row.updatedAt)}
                     </td>
                     <td
                       style={{
                         padding: "12px",
-                        color: row.hasNextSteps ? "#fdba74" : "#9a9a9a",
-                        fontFamily: "ui-monospace, monospace",
+                        color: row.hasNextSteps ? "#92400e" : "var(--gm-subtle)",
+                        fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
                         fontSize: 11,
                         maxWidth: 180,
                         overflow: "hidden",

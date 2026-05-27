@@ -13,12 +13,12 @@
   background: transparent;
   font: inherit;
   cursor: pointer;
-  color: #f2f2f2;
+  color: var(--gm-text);
   transition: background 0.15s ease;
 }
 
 .trigger:hover {
-  background: #242424;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .trigger:focus-visible {
@@ -38,12 +38,12 @@
 
 .name {
   font-weight: 700;
-  color: #f2f2f2;
+  color: var(--gm-text);
 }
 
 .chevron {
   flex-shrink: 0;
-  color: #c9c9c9;
+  color: var(--gm-muted);
   transition: transform 0.2s ease;
 }
 
@@ -57,19 +57,19 @@
   top: calc(100% + 8px);
   min-width: 220px;
   padding: 8px;
-  background: #171717;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #ffffff;
+  border: 1px solid var(--gm-border);
   border-radius: 8px;
-  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.42);
+  box-shadow: 0 20px 70px rgba(23, 23, 23, 0.18);
   z-index: 50;
 }
 
 .dropdownEmail {
   margin: 0 8px 8px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--gm-border);
   font-size: 12px;
-  color: #c9c9c9;
+  color: var(--gm-muted);
   word-break: break-all;
   line-height: 1.35;
 }
@@ -80,19 +80,19 @@
   border-radius: 7px;
   font-size: 14px;
   font-weight: 600;
-  color: #f2f2f2;
+  color: var(--gm-text);
   text-decoration: none;
   transition: background 0.12s ease;
 }
 
 .menuLink:hover {
-  background: #242424;
+  background: var(--gm-surface-muted);
 }
 
 .menuFooter {
   margin-top: 4px;
   padding-top: 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--gm-border);
 }
 
 .signOutWrap {

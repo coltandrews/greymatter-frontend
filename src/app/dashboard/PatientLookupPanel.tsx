@@ -232,15 +232,15 @@ function PatientDemographicsOverview({
               padding: 14,
               display: "grid",
               alignContent: "space-between",
-              border: "1px solid #343434",
+              border: "1px solid var(--gm-border)",
               borderRadius: 7,
-              background: "#202020",
+              background: "var(--gm-surface)",
             }}
           >
-            <p style={{ margin: 0, fontSize: 12, color: "#b8b8b8", fontWeight: 800 }}>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--gm-muted)", fontWeight: 800 }}>
               {card.label}
             </p>
-            <p style={{ margin: "10px 0 0", fontSize: 28, lineHeight: 1, color: "#f2f2f2", fontWeight: 900 }}>
+            <p style={{ margin: "10px 0 0", fontSize: 28, lineHeight: 1, color: "var(--gm-text)", fontWeight: 900 }}>
               {card.value}
             </p>
           </div>
@@ -254,39 +254,39 @@ function PatientDemographicsOverview({
           gap: 12,
         }}
       >
-        <div style={{ padding: 14, border: "1px solid #343434", borderRadius: 7, background: "#202020" }}>
-          <p style={{ margin: "0 0 10px", fontSize: 13, color: "#f2f2f2", fontWeight: 900 }}>
+        <div style={{ padding: 14, border: "1px solid var(--gm-border)", borderRadius: 7, background: "var(--gm-surface)" }}>
+          <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--gm-text)", fontWeight: 900 }}>
             Age range
           </p>
           {ageRanges.length > 0 ? (
             <ul style={{ margin: 0, padding: 0, display: "grid", gap: 7, listStyle: "none" }}>
               {ageRanges.map(([range, count]) => (
                 <li key={range} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>
-                  <span style={{ color: "#b8b8b8", fontWeight: 800 }}>{range}</span>
-                  <strong style={{ color: "#f2f2f2" }}>{count}</strong>
+                  <span style={{ color: "var(--gm-muted)", fontWeight: 800 }}>{range}</span>
+                  <strong style={{ color: "var(--gm-text)" }}>{count}</strong>
                 </li>
               ))}
             </ul>
           ) : (
-            <p style={{ margin: 0, color: "#9a9a9a", fontSize: 13 }}>No age data yet.</p>
+            <p style={{ margin: 0, color: "var(--gm-subtle)", fontSize: 13 }}>No age data yet.</p>
           )}
         </div>
 
-        <div style={{ padding: 14, border: "1px solid #343434", borderRadius: 7, background: "#202020" }}>
-          <p style={{ margin: "0 0 10px", fontSize: 13, color: "#f2f2f2", fontWeight: 900 }}>
+        <div style={{ padding: 14, border: "1px solid var(--gm-border)", borderRadius: 7, background: "var(--gm-surface)" }}>
+          <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--gm-text)", fontWeight: 900 }}>
             Gender
           </p>
           {genderCounts.length > 0 ? (
             <ul style={{ margin: 0, padding: 0, display: "grid", gap: 7, listStyle: "none" }}>
               {genderCounts.map(([gender, count]) => (
                 <li key={gender} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: 13 }}>
-                  <span style={{ color: "#b8b8b8", fontWeight: 800 }}>{gender}</span>
-                  <strong style={{ color: "#f2f2f2" }}>{count}</strong>
+                  <span style={{ color: "var(--gm-muted)", fontWeight: 800 }}>{gender}</span>
+                  <strong style={{ color: "var(--gm-text)" }}>{count}</strong>
                 </li>
               ))}
             </ul>
           ) : (
-            <p style={{ margin: 0, color: "#9a9a9a", fontSize: 13 }}>No gender data yet.</p>
+            <p style={{ margin: 0, color: "var(--gm-subtle)", fontSize: 13 }}>No gender data yet.</p>
           )}
         </div>
       </div>
@@ -324,7 +324,7 @@ function PatientTable({
           flexWrap: "wrap",
         }}
       >
-        <p style={{ margin: 0, color: "#9a9a9a", fontSize: 13, fontWeight: 800 }}>
+        <p style={{ margin: 0, color: "var(--gm-subtle)", fontSize: 13, fontWeight: 800 }}>
           {patients.length} of {allPatients.length} patients
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginLeft: "auto" }}>
@@ -338,10 +338,10 @@ function PatientTable({
               maxWidth: "100%",
               padding: "9px 11px",
               borderRadius: 8,
-              border: "1px solid #575757",
-              background: "#151515",
+              border: "1px solid var(--gm-border-strong)",
+              background: "rgba(255, 255, 255, 0.78)",
               fontSize: 13,
-              color: "#f2f2f2",
+              color: "var(--gm-text)",
             }}
           />
           <select
@@ -352,10 +352,10 @@ function PatientTable({
               minWidth: 128,
               padding: "9px 11px",
               borderRadius: 8,
-              border: "1px solid #575757",
-              background: "#202020",
+              border: "1px solid var(--gm-border-strong)",
+              background: "var(--gm-surface)",
               fontSize: 13,
-              color: "#f2f2f2",
+              color: "var(--gm-text)",
             }}
           >
             <option value="">All states</option>
@@ -367,10 +367,10 @@ function PatientTable({
       </div>
 
       {patients.length > 0 ? (
-        <div style={{ overflowX: "auto", border: "1px solid #343434", borderRadius: 7, background: "#202020" }}>
+        <div style={{ overflowX: "auto", border: "1px solid var(--gm-border)", borderRadius: 7, background: "var(--gm-surface)" }}>
           <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
-              <tr style={{ background: "#181818" }}>
+              <tr style={{ background: "rgba(255, 255, 255, 0.72)" }}>
                 {["Patient", "Age", "Gender", "State", "Treatment", "Intake form", "Booking requests", "Provider appts", "Latest activity"].map((header) => (
                   <th
                     key={header}
@@ -378,9 +378,9 @@ function PatientTable({
                     style={{
                       padding: "11px 12px",
                       textAlign: "left",
-                      color: "#9a9a9a",
+                      color: "var(--gm-subtle)",
                       fontWeight: 900,
-                      borderBottom: "1px solid #343434",
+                      borderBottom: "1px solid var(--gm-border)",
                     }}
                   >
                     {header}
@@ -405,34 +405,34 @@ function PatientTable({
                     style={{ cursor: "pointer" }}
                     aria-label={`Open ${patient.name} profile`}
                   >
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424" }}>
-                      <strong style={{ display: "block", color: "#f2f2f2" }}>{patient.name}</strong>
-                      <span style={{ display: "block", marginTop: 3, color: "#9a9a9a", fontSize: 12 }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)" }}>
+                      <strong style={{ display: "block", color: "var(--gm-text)" }}>{patient.name}</strong>
+                      <span style={{ display: "block", marginTop: 3, color: "var(--gm-subtle)", fontSize: 12 }}>
                         {patient.email ?? patient.userId}
                       </span>
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#c9c9c9" }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-muted)" }}>
                       {ageRangeForPatient(patient)}
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#c9c9c9" }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-muted)" }}>
                       {genderLabel(patient.gender)}
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#c9c9c9", fontWeight: 800 }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-muted)", fontWeight: 800 }}>
                       {patient.serviceState ?? "Unknown"}
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#c9c9c9" }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-muted)" }}>
                       {latestTreatmentLabel(patient)}
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#c9c9c9", textTransform: "capitalize" }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-muted)", textTransform: "capitalize" }}>
                       {statusLabel(patient.latestSubmission?.status)}
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#c9c9c9" }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-muted)" }}>
                       {patient.bookings.length}
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#c9c9c9" }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-muted)" }}>
                       {patient.appointments.length}
                     </td>
-                    <td style={{ padding: 12, borderBottom: "1px solid #242424", color: "#9a9a9a" }}>
+                    <td style={{ padding: 12, borderBottom: "1px solid var(--gm-border)", color: "var(--gm-subtle)" }}>
                       {latestUpdate ? formatUpdated(latestUpdate) : "No activity"}
                     </td>
                   </tr>
@@ -442,7 +442,7 @@ function PatientTable({
           </table>
         </div>
       ) : (
-        <p style={{ margin: 0, padding: 18, border: "1px solid #343434", borderRadius: 7, background: "#202020", color: "#9a9a9a", fontSize: 14 }}>
+        <p style={{ margin: 0, padding: 18, border: "1px solid var(--gm-border)", borderRadius: 7, background: "var(--gm-surface)", color: "var(--gm-subtle)", fontSize: 14 }}>
           No patients match those filters.
         </p>
       )}
@@ -461,10 +461,10 @@ function PatientProfile({
 
   const tabStyle = (active: boolean) => ({
     padding: "8px 12px",
-    border: "1px solid #575757",
+    border: "1px solid var(--gm-border-strong)",
     borderRadius: 8,
-    background: active ? "#3487ed" : "#202020",
-    color: active ? "#ffffff" : "#b8b8b8",
+    background: active ? "#3487ed" : "var(--gm-surface)",
+    color: active ? "#ffffff" : "var(--gm-muted)",
     fontSize: 13,
     fontWeight: 800,
     cursor: "pointer",
@@ -480,7 +480,7 @@ function PatientProfile({
             padding: 0,
             border: 0,
             background: "transparent",
-            color: "#73d2ff",
+            color: "#2563eb",
             fontSize: 13,
             fontWeight: 800,
             cursor: "pointer",
@@ -488,8 +488,8 @@ function PatientProfile({
         >
           Patient search
         </button>
-        <span style={{ color: "#777777" }}>/</span>
-        <span style={{ color: "#b8b8b8", fontWeight: 800 }}>{patient.name}</span>
+        <span style={{ color: "var(--gm-subtle)" }}>/</span>
+        <span style={{ color: "var(--gm-muted)", fontWeight: 800 }}>{patient.name}</span>
       </nav>
 
       <div role="tablist" aria-label="Patient profile sections" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -518,26 +518,26 @@ function PatientProfile({
           display: "grid",
           gap: 14,
           padding: 16,
-          border: "1px solid #343434",
+          border: "1px solid var(--gm-border)",
           borderRadius: 7,
-          background: "#181818",
+          background: "rgba(255, 255, 255, 0.72)",
         }}
       >
         {activeTab === "profile" ? (
           <>
 	        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
 	          <div>
-            <h3 style={{ margin: "0 0 5px", fontSize: 15, color: "#f2f2f2" }}>
+            <h3 style={{ margin: "0 0 5px", fontSize: 15, color: "var(--gm-text)" }}>
               {patient.name}
             </h3>
-            <p style={{ margin: "0 0 5px", fontSize: 13, color: "#9a9a9a" }}>
+            <p style={{ margin: "0 0 5px", fontSize: 13, color: "var(--gm-subtle)" }}>
               {patientLookupSummary(patient)}
             </p>
-            <p style={{ margin: 0, fontSize: 12, color: "#777777", fontFamily: "ui-monospace, monospace" }}>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--gm-subtle)", fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}>
               {patientLookupReference(patient)}
             </p>
           </div>
-	          <p style={{ margin: 0, fontSize: 13, color: "#b8b8b8", fontWeight: 800 }}>
+	          <p style={{ margin: 0, fontSize: 13, color: "var(--gm-muted)", fontWeight: 800 }}>
 	            {patientLookupActivitySummary(patient)}
 	          </p>
 	        </div>
@@ -555,16 +555,16 @@ function PatientProfile({
             ["Gender", genderLabel(patient.gender)],
             ["State", patient.serviceState ?? "Unknown"],
           ].map(([label, value]) => (
-            <div key={label} style={{ padding: 12, border: "1px solid #343434", borderRadius: 8, background: "#202020" }}>
-              <dt style={{ marginBottom: 4, color: "#9a9a9a", fontSize: 12, fontWeight: 800 }}>{label}</dt>
-              <dd style={{ margin: 0, color: "#f2f2f2", fontSize: 13, fontWeight: 800 }}>{value}</dd>
+            <div key={label} style={{ padding: 12, border: "1px solid var(--gm-border)", borderRadius: 8, background: "var(--gm-surface)" }}>
+              <dt style={{ marginBottom: 4, color: "var(--gm-subtle)", fontSize: 12, fontWeight: 800 }}>{label}</dt>
+              <dd style={{ margin: 0, color: "var(--gm-text)", fontSize: 13, fontWeight: 800 }}>{value}</dd>
             </div>
           ))}
         </dl>
 
         {patient.bookings.length > 0 ? (
           <div>
-            <p style={{ margin: "0 0 8px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--gm-subtle)", fontWeight: 800 }}>
               Booking requests
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
@@ -577,13 +577,13 @@ function PatientProfile({
                       display: "grid",
                       gap: 5,
                       padding: 12,
-                      background: "#202020",
-                      border: "1px solid #343434",
+                      background: "var(--gm-surface)",
+                      border: "1px solid var(--gm-border)",
                       borderRadius: 8,
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-                      <span style={{ fontSize: 13, color: "#f2f2f2", fontWeight: 800 }}>
+                      <span style={{ fontSize: 13, color: "var(--gm-text)", fontWeight: 800 }}>
                         {bookingQueueSlotLabel(booking)}
                       </span>
                       <span
@@ -599,7 +599,7 @@ function PatientProfile({
                         {status.label}
                       </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: 12, color: "#9a9a9a" }}>
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--gm-subtle)" }}>
                       {bookingQueueTreatmentLabel(booking)}
                     </p>
                     <dl
@@ -616,14 +616,14 @@ function PatientProfile({
                         ["Shipping", booking.shippingComplete ? "Complete" : "Missing"],
                       ].map(([label, value]) => (
                         <div key={label}>
-                          <dt style={{ color: "#777777", fontSize: 11, fontWeight: 800 }}>{label}</dt>
-                          <dd style={{ margin: "2px 0 0", color: "#c9c9c9", fontSize: 12, fontWeight: 800 }}>
+                          <dt style={{ color: "var(--gm-subtle)", fontSize: 11, fontWeight: 800 }}>{label}</dt>
+                          <dd style={{ margin: "2px 0 0", color: "var(--gm-muted)", fontSize: 12, fontWeight: 800 }}>
                             {value}
                           </dd>
                         </div>
                       ))}
                     </dl>
-                    <p style={{ margin: 0, fontSize: 11, color: "#777777", fontFamily: "ui-monospace, monospace" }}>
+                    <p style={{ margin: 0, fontSize: 11, color: "var(--gm-subtle)", fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}>
                       {booking.olaOrderGuid || booking.id}
                       {booking.hasNextSteps ? " · next steps" : ""}
                     </p>
@@ -632,7 +632,7 @@ function PatientProfile({
                       style={{
                         width: "fit-content",
                         marginTop: 2,
-                        color: "#73d2ff",
+                        color: "#2563eb",
                         fontSize: 12,
                         fontWeight: 900,
                         textDecoration: "none",
@@ -649,7 +649,7 @@ function PatientProfile({
 
         {patient.appointments.length > 0 ? (
           <div>
-            <p style={{ margin: "0 0 8px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--gm-subtle)", fontWeight: 800 }}>
               Provider appointments
             </p>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 8 }}>
@@ -658,15 +658,15 @@ function PatientProfile({
                   key={appointment.id}
                   style={{
                     padding: 12,
-                    background: "#202020",
-                    border: "1px solid #343434",
+                    background: "var(--gm-surface)",
+                    border: "1px solid var(--gm-border)",
                     borderRadius: 8,
                   }}
                 >
-                  <p style={{ margin: "0 0 5px", fontSize: 13, color: "#f2f2f2", fontWeight: 800 }}>
+                  <p style={{ margin: "0 0 5px", fontSize: 13, color: "var(--gm-text)", fontWeight: 800 }}>
                     {patientLookupAppointmentLabel(appointment)}
                   </p>
-                  <p style={{ margin: 0, fontSize: 12, color: "#9a9a9a" }}>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--gm-subtle)" }}>
                     Status {appointment.status ?? "unknown"} · Updated {formatUpdated(appointment.updatedAt)}
                   </p>
                 </li>
@@ -788,9 +788,9 @@ export function PatientLookupPanel({
             minHeight: 36,
             padding: "0 12px",
             borderRadius: 8,
-            border: "1px solid #575757",
-            background: "#202020",
-            color: "#f2f2f2",
+            border: "1px solid var(--gm-border-strong)",
+            background: "var(--gm-surface)",
+            color: "var(--gm-text)",
             fontSize: 13,
             fontWeight: 800,
             cursor: loading ? "not-allowed" : "pointer",
@@ -809,19 +809,19 @@ export function PatientLookupPanel({
           display: "grid",
           gap: 12,
           padding: 16,
-          border: "1px solid #343434",
+          border: "1px solid var(--gm-border)",
           borderRadius: 7,
-          background: "#181818",
+          background: "rgba(255, 255, 255, 0.72)",
         }}
       >
         {!searched && !loading ? (
-          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#9a9a9a" }}>
+          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "var(--gm-subtle)" }}>
             Loading patients...
           </p>
         ) : null}
 
         {loading ? (
-          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#9a9a9a" }}>
+          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "var(--gm-subtle)" }}>
             Loading patients...
           </p>
         ) : null}
@@ -829,14 +829,14 @@ export function PatientLookupPanel({
         {error ? (
           <p
             role="alert"
-            style={{ margin: 0, alignSelf: "center", justifySelf: "center", color: "#fca5a5", fontSize: 14 }}
+            style={{ margin: 0, alignSelf: "center", justifySelf: "center", color: "var(--gm-error)", fontSize: 14 }}
           >
             {error}
           </p>
         ) : null}
 
         {searched && !loading && !error && patients.length === 0 ? (
-          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "#9a9a9a" }}>
+          <p style={{ margin: 0, alignSelf: "center", justifySelf: "center", fontSize: 14, color: "var(--gm-subtle)" }}>
             No patients found.
           </p>
         ) : null}

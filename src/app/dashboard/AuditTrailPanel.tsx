@@ -107,17 +107,17 @@ export function AuditTrailPanel({
         gap: 10,
         padding: 12,
         borderRadius: 8,
-        border: "1px solid #343434",
-        background: "#202020",
+        border: "1px solid var(--gm-border)",
+        background: "var(--gm-surface)",
       }}
       aria-label={title}
     >
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
         <div>
-          <h4 style={{ margin: "0 0 4px", fontSize: 13, color: "#f2f2f2" }}>
+          <h4 style={{ margin: "0 0 4px", fontSize: 13, color: "var(--gm-text)" }}>
             {title}
           </h4>
-          <p style={{ margin: 0, fontSize: 12, color: "#9a9a9a" }}>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--gm-subtle)" }}>
             Notes and system events for this {auditTargetLabel(target)}.
           </p>
         </div>
@@ -128,9 +128,9 @@ export function AuditTrailPanel({
           style={{
             padding: "6px 9px",
             borderRadius: 7,
-            border: "1px solid #575757",
-            background: "#202020",
-            color: "#f2f2f2",
+            border: "1px solid var(--gm-border-strong)",
+            background: "var(--gm-surface)",
+            color: "var(--gm-text)",
             fontSize: 12,
             fontWeight: 800,
             cursor: loading ? "not-allowed" : "pointer",
@@ -150,10 +150,10 @@ export function AuditTrailPanel({
             minWidth: 0,
             padding: "9px 10px",
             borderRadius: 8,
-            border: "1px solid #575757",
-            background: "#151515",
+            border: "1px solid var(--gm-border-strong)",
+            background: "rgba(255, 255, 255, 0.78)",
             fontSize: 13,
-            color: "#f2f2f2",
+            color: "var(--gm-text)",
           }}
         />
         <button
@@ -164,7 +164,7 @@ export function AuditTrailPanel({
             padding: "9px 11px",
             borderRadius: 8,
             border: "1px solid #3487ed",
-            background: saving || !note.trim() ? "#3f3f3f" : "#3487ed",
+            background: saving || !note.trim() ? "var(--gm-disabled-bg)" : "#3487ed",
             color: "#ffffff",
             fontSize: 12,
             fontWeight: 800,
@@ -176,13 +176,13 @@ export function AuditTrailPanel({
       </div>
 
       {error ? (
-        <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 13 }}>
+        <p role="alert" style={{ margin: 0, color: "var(--gm-error)", fontSize: 13 }}>
           {error}
         </p>
       ) : null}
 
       {!loading && events.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 12, color: "#777777" }}>
+        <p style={{ margin: 0, fontSize: 12, color: "var(--gm-subtle)" }}>
           No audit events yet.
         </p>
       ) : null}
@@ -191,13 +191,13 @@ export function AuditTrailPanel({
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
           {events.map((event) => (
             <li key={event.id} style={{ display: "grid", gap: 3 }}>
-              <p style={{ margin: 0, fontSize: 12, color: "#f2f2f2", fontWeight: 800 }}>
+              <p style={{ margin: 0, fontSize: 12, color: "var(--gm-text)", fontWeight: 800 }}>
                 {auditEventLabel(event)}
               </p>
-              <p style={{ margin: 0, fontSize: 12, color: "#b8b8b8", lineHeight: 1.4 }}>
+              <p style={{ margin: 0, fontSize: 12, color: "var(--gm-muted)", lineHeight: 1.4 }}>
                 {auditEventSummary(event)}
               </p>
-              <p style={{ margin: 0, fontSize: 11, color: "#777777" }}>
+              <p style={{ margin: 0, fontSize: 11, color: "var(--gm-subtle)" }}>
                 {auditEventWhen(event)}
               </p>
             </li>

@@ -1,18 +1,49 @@
 :root {
-  color-scheme: dark;
-  font-family: Inter, Arial, sans-serif;
-  background: #121212;
-  color: #f2f2f2;
+  color-scheme: light;
+  --gm-bg-top: #b4b4b4;
+  --gm-bg-bottom: #fdfdfd;
+  --gm-page-bg: linear-gradient(
+    180deg,
+    var(--gm-bg-top) 0%,
+    #d2d2d2 36%,
+    #eeeeee 72%,
+    var(--gm-bg-bottom) 100%
+  );
+  --gm-text: #171717;
+  --gm-muted: #4f4f4f;
+  --gm-subtle: #6f6f6f;
+  --gm-surface: rgba(255, 255, 255, 0.82);
+  --gm-surface-solid: #ffffff;
+  --gm-surface-muted: #f3f3f3;
+  --gm-border: #d8d8d8;
+  --gm-border-strong: #b4b4b4;
+  --gm-accent: #3487ed;
+  --gm-accent-hover: #2878df;
+  --gm-disabled-bg: #d0d0d0;
+  --gm-disabled-text: #707070;
+  --gm-error: #b91c1c;
+  --gm-success: #166534;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  background: var(--gm-page-bg);
+  color: var(--gm-text);
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  min-height: 100%;
+  background: var(--gm-bg-bottom);
+}
+
 body {
   margin: 0;
-  background: #121212;
+  min-height: 100vh;
+  background: var(--gm-page-bg);
+  background-attachment: fixed;
   color: inherit;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
 }
 
 main {
@@ -24,11 +55,25 @@ a {
   text-decoration: none;
 }
 
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
 select {
   appearance: none;
   -webkit-appearance: none;
   padding-right: 44px !important;
-  background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%238f9ba8' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%236f6f6f' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
   background-position: right 16px center !important;
   background-size: 14px 14px !important;

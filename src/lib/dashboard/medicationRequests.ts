@@ -83,13 +83,13 @@ export const medicationRequestToneStyles: Record<
   MedicationRequestTone,
   { color: string; background: string }
 > = {
-  confirmed: { color: "#86efac", background: "rgba(22, 163, 74, 0.16)" },
-  pending: { color: "#8ec5ff", background: "rgba(52, 135, 237, 0.16)" },
-  action: { color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" },
-  review: { color: "#fdba74", background: "rgba(180, 83, 9, 0.16)" },
-  cancelled: { color: "#b8b8b8", background: "#242424" },
-  failed: { color: "#fca5a5", background: "rgba(127, 29, 29, 0.24)" },
-  neutral: { color: "#b8b8b8", background: "#242424" },
+  confirmed: { color: "#166534", background: "rgba(22, 163, 74, 0.16)" },
+  pending: { color: "#2563eb", background: "rgba(52, 135, 237, 0.16)" },
+  action: { color: "#92400e", background: "rgba(180, 83, 9, 0.16)" },
+  review: { color: "#92400e", background: "rgba(180, 83, 9, 0.16)" },
+  cancelled: { color: "var(--gm-muted)", background: "var(--gm-border)" },
+  failed: { color: "var(--gm-error)", background: "rgba(127, 29, 29, 0.24)" },
+  neutral: { color: "var(--gm-muted)", background: "var(--gm-border)" },
 };
 
 function asRecord(value: unknown): UnknownRecord {

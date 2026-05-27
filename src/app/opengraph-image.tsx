@@ -17,8 +17,8 @@ export default function Image() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#121212",
-          fontFamily: "Arial, sans-serif",
+          background: "linear-gradient(180deg, #b4b4b4 0%, #d2d2d2 36%, #eeeeee 72%, #fdfdfd 100%)",
+          fontFamily: "Geist, Arial, sans-serif",
         }}
       >
         <div
@@ -29,9 +29,9 @@ export default function Image() {
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 42,
-            background: "#181818",
-            border: "1px solid #343434",
-            boxShadow: "0 30px 90px rgba(0, 0, 0, 0.34)",
+            background: "rgba(255, 255, 255, 0.72)",
+            border: "1px solid #d8d8d8",
+            boxShadow: "0 30px 90px rgba(23, 23, 23, 0.18)",
           }}
         >
           <div
@@ -45,7 +45,7 @@ export default function Image() {
             }}
           >
             <div style={{ display: "flex", alignItems: "baseline", gap: 20 }}>
-              <span style={{ color: "#f2f2f2", fontSize: 112, fontWeight: 900 }}>
+              <span style={{ color: "#171717", fontSize: 112, fontWeight: 900 }}>
                 GM
               </span>
             </div>

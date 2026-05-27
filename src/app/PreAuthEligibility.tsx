@@ -25,23 +25,26 @@ import { useState } from "react";
 const card = {
   width: "100%" as const,
   maxWidth: 408,
+  minWidth: 0,
   minHeight: "auto",
   display: "grid" as const,
 };
 
 const brand = {
-  graphite: "#121212",
-  surface: "#171717",
-  surface2: "#454545",
-  text: "#f2f2f2",
-  muted: "#c9c9c9",
-  quiet: "#858585",
+  graphite: "var(--gm-page-bg)",
+  surface: "#ffffff",
+  surface2: "rgba(255, 255, 255, 0.78)",
+  text: "#171717",
+  muted: "#4f4f4f",
+  quiet: "#6f6f6f",
   border: "#d8d8d8",
   accent: "#3487ed",
+  error: "#b91c1c",
 };
 
 const field = {
   display: "grid" as const,
+  minWidth: 0,
   gap: 12,
   fontSize: 15,
   fontWeight: 400,
@@ -49,6 +52,8 @@ const field = {
 };
 
 const input = {
+  width: "100%" as const,
+  minWidth: 0,
   minHeight: 54,
   padding: "0 20px",
   borderRadius: 7,
@@ -89,12 +94,15 @@ const linkButton = {
 
 const optionGrid = {
   display: "grid" as const,
+  minWidth: 0,
   gap: 10,
   marginTop: 2,
 };
 
 const optionCard = {
   position: "relative" as const,
+  width: "100%" as const,
+  minWidth: 0,
   minHeight: 58,
   display: "flex" as const,
   alignItems: "center",
@@ -111,6 +119,7 @@ const optionCard = {
 
 const selectedOptionCard = {
   background: brand.accent,
+  color: "#ffffff",
   boxShadow: "none",
 };
 
@@ -122,8 +131,8 @@ const optionMark = {
   flexShrink: 0,
   borderRadius: 999,
   border: "1px solid rgba(148, 163, 184, 0.34)",
-  background: "#080c11",
-  color: "#061016",
+  background: "#ffffff",
+  color: brand.text,
   fontSize: 12,
   fontWeight: 900,
 };
@@ -158,7 +167,7 @@ const progressTrack = {
   width: "100%",
   height: 4,
   borderRadius: 999,
-  background: "#666666",
+  background: "#d0d0d0",
   overflow: "hidden",
 };
 
@@ -177,7 +186,7 @@ const bmiCard = {
   margin: "2px 0 4px",
   padding: "14px 16px",
   borderRadius: 7,
-  background: "#1f2b3a",
+  background: "#eaf3ff",
   color: brand.text,
 };
 
@@ -282,7 +291,7 @@ function BmiPreview({ answers }: { answers: IntakeQuestionAnswers }) {
           {bmi.toFixed(1)}
         </strong>
       </span>
-      <span style={{ color: "#d7e8ff", fontSize: 14, fontWeight: 500 }}>
+      <span style={{ color: "#2563eb", fontSize: 14, fontWeight: 500 }}>
         {bmiLabel(bmi)}
       </span>
     </div>
@@ -315,7 +324,7 @@ function HeightPicker({
   }
 
   return (
-    <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
+    <fieldset style={{ ...field, border: "none", padding: 0, margin: 0, minInlineSize: 0 }}>
       {label ? <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend> : null}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <label style={{ ...field, gap: 8, fontSize: 13, color: brand.muted }}>
@@ -387,6 +396,7 @@ function QuestionField({
       <label style={field}>
         {label}
         <textarea
+          aria-label={question.prompt}
           value={stringAnswer(answer)}
           onChange={(e) => onChange(e.target.value)}
           style={{ ...input, minHeight: 134, paddingTop: 16, resize: "vertical" }}
@@ -402,6 +412,7 @@ function QuestionField({
       <label style={field}>
         {label}
         <select
+          aria-label={question.prompt}
           value={stringAnswer(answer)}
           onChange={(e) => onChange(e.target.value)}
           style={input}
@@ -421,7 +432,7 @@ function QuestionField({
   if (question.question_type === "multi_select") {
     const selected = arrayAnswer(answer);
     return (
-      <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
+      <fieldset style={{ ...field, border: "none", padding: 0, margin: 0, minInlineSize: 0 }}>
         {label ? <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend> : null}
         {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
         <div style={optionGrid}>
@@ -450,7 +461,7 @@ function QuestionField({
                 <span style={{ ...optionMark, ...(checked ? selectedOptionMark : {}) }}>
                   {checked ? "" : ""}
                 </span>
-                <span>{option.label}</span>
+                <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{option.label}</span>
               </label>
             );
           })}
@@ -461,7 +472,7 @@ function QuestionField({
 
   if (question.question_type === "yes_no") {
     return (
-      <fieldset style={{ ...field, border: "none", padding: 0, margin: 0 }}>
+      <fieldset style={{ ...field, border: "none", padding: 0, margin: 0, minInlineSize: 0 }}>
         {label ? <legend style={{ padding: 0, marginBottom: 12, fontWeight: 400 }}>{label}</legend> : null}
         {question.help_text ? <span style={{ color: brand.quiet, fontSize: 13 }}>{question.help_text}</span> : null}
         <div style={optionGrid}>
@@ -489,7 +500,7 @@ function QuestionField({
                 <span style={{ ...optionMark, ...(checked ? selectedOptionMark : {}) }}>
                   {checked ? "" : ""}
                 </span>
-                <span>{text}</span>
+                <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>{text}</span>
               </label>
             );
           })}
@@ -502,6 +513,7 @@ function QuestionField({
     <label style={field}>
       {label}
       <input
+        aria-label={question.prompt}
         type={question.question_type === "date" ? "date" : question.question_type === "number" ? "number" : "text"}
         value={stringAnswer(answer)}
         onChange={(e) => onChange(e.target.value)}
@@ -524,6 +536,7 @@ export function PreAuthEligibility() {
   const [selectedTreatment, setSelectedTreatment] = useState<TreatmentKey | null>(null);
   const [treatmentAnswers, setTreatmentAnswers] = useState<IntakeQuestionAnswers>({});
   const [intakePageIndex, setIntakePageIndex] = useState(0);
+  const [medicationPageIndex, setMedicationPageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const questionPages = groupQuestionsByPage(questions);
   const currentQuestions = questionPages[intakePageIndex] ?? questionPages[0] ?? [];
@@ -532,17 +545,26 @@ export function PreAuthEligibility() {
     intakeAnswerComplete(question, answers[question.question_key]),
   );
   const medicationQuestions = treatmentQuestions(selectedTreatment);
+  const currentMedicationQuestion = medicationQuestions[medicationPageIndex] ?? null;
+  const hasNextMedicationQuestionPage = medicationPageIndex < medicationQuestions.length - 1;
+  const currentMedicationQuestionComplete = currentMedicationQuestion
+    ? intakeAnswerComplete(
+        currentMedicationQuestion,
+        treatmentAnswers[currentMedicationQuestion.question_key],
+      )
+    : false;
   const medicationQuestionsComplete = medicationQuestions.every((question) =>
     intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
   );
-  const totalFlowSteps = questionPages.length + 3;
+  const medicationFlowStepCount = selectedTreatment ? Math.max(medicationQuestions.length, 1) : 1;
+  const totalFlowSteps = questionPages.length + medicationFlowStepCount + 2;
   const currentFlowStep =
     step === "eligibility"
       ? intakePageIndex + 1
       : step === "treatment"
         ? questionPages.length + 1
         : step === "treatment_questions"
-          ? questionPages.length + 2
+          ? questionPages.length + 2 + medicationPageIndex
           : totalFlowSteps;
   const progressPercent = Math.min(
     100,
@@ -556,6 +578,10 @@ export function PreAuthEligibility() {
   function goBack() {
     setError(null);
     if (step === "treatment_questions") {
+      if (medicationPageIndex > 0) {
+        setMedicationPageIndex((current) => Math.max(0, current - 1));
+        return;
+      }
       setStep("treatment");
       return;
     }
@@ -684,7 +710,7 @@ export function PreAuthEligibility() {
             ))}
 
             {error ? (
-              <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
+              <p role="alert" style={{ margin: 0, color: brand.error, fontSize: 14 }}>
                 {error}
               </p>
             ) : null}
@@ -695,8 +721,8 @@ export function PreAuthEligibility() {
                 disabled={!currentPageComplete}
                 style={{
                   ...primaryAction,
-                  background: currentPageComplete ? brand.accent : "#3f3f3f",
-                  color: currentPageComplete ? "#ffffff" : "#a9a9a9",
+                  background: currentPageComplete ? brand.accent : "#d0d0d0",
+                  color: currentPageComplete ? "#ffffff" : "#707070",
                   cursor: currentPageComplete ? "pointer" : "not-allowed",
                 }}
               >
@@ -733,6 +759,7 @@ export function PreAuthEligibility() {
                     onClick={() => {
                       setSelectedTreatment(treatment.key);
                       setTreatmentAnswers({});
+                      setMedicationPageIndex(0);
                     }}
                     style={{
                       display: "grid",
@@ -743,7 +770,7 @@ export function PreAuthEligibility() {
                       borderRadius: 7,
                       border: "none",
                       background: selected ? brand.accent : brand.surface2,
-                      color: brand.text,
+                      color: selected ? "#ffffff" : brand.text,
                       cursor: "pointer",
                       boxShadow: "none",
                       alignItems: "center",
@@ -756,7 +783,7 @@ export function PreAuthEligibility() {
               })}
             </div>
             {error ? (
-              <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
+              <p role="alert" style={{ margin: 0, color: brand.error, fontSize: 14 }}>
                 {error}
               </p>
             ) : null}
@@ -766,8 +793,8 @@ export function PreAuthEligibility() {
                 disabled={!selectedTreatment}
                 style={{
                   ...primaryAction,
-                  background: selectedTreatment ? brand.accent : "#3f3f3f",
-                  color: selectedTreatment ? "#ffffff" : "#a9a9a9",
+                  background: selectedTreatment ? brand.accent : "#d0d0d0",
+                  color: selectedTreatment ? "#ffffff" : "#707070",
                   cursor: selectedTreatment ? "pointer" : "not-allowed",
                 }}
                 onClick={() => {
@@ -776,6 +803,7 @@ export function PreAuthEligibility() {
                     return;
                   }
                   setError(null);
+                  setMedicationPageIndex(0);
                   setStep("treatment_questions");
                 }}
               >
@@ -791,50 +819,68 @@ export function PreAuthEligibility() {
             onSubmit={(event) => {
               event.preventDefault();
               setError(null);
-              const unanswered = medicationQuestions.find(
-                (question) => !intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
-              );
-              if (unanswered) {
-                setError(`Answer: ${unanswered.prompt}`);
+              if (!currentMedicationQuestion) {
+                setError("Select a treatment.");
+                setStep("treatment");
+                return;
+              }
+              if (
+                !intakeAnswerComplete(
+                  currentMedicationQuestion,
+                  treatmentAnswers[currentMedicationQuestion.question_key],
+                )
+              ) {
+                setError(`Answer: ${currentMedicationQuestion.prompt}`);
+                return;
+              }
+              if (hasNextMedicationQuestionPage) {
+                setMedicationPageIndex((current) => current + 1);
+                return;
+              }
+              if (!medicationQuestionsComplete) {
+                const unanswered = medicationQuestions.find(
+                  (question) => !intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
+                );
+                setError(`Answer: ${unanswered?.prompt ?? "all treatment questions"}`);
                 return;
               }
               saveIntakeAndContinue();
             }}
           >
-            {medicationQuestions.map((question) => (
-              <div key={question.id} style={{ display: "grid", gap: 12 }}>
+            {currentMedicationQuestion ? (
+              <div key={currentMedicationQuestion.id} style={{ display: "grid", minWidth: 0, gap: 12 }}>
                 <QuestionField
-                  question={question}
-                  answer={treatmentAnswers[question.question_key]}
+                  question={currentMedicationQuestion}
+                  answer={treatmentAnswers[currentMedicationQuestion.question_key]}
                   onChange={(value) =>
                     setTreatmentAnswers((current) => ({
                       ...current,
-                      [question.question_key]: value,
+                      [currentMedicationQuestion.question_key]: value,
                     }))
                   }
                 />
-                {selectedTreatment === "glp_1" && question.question_key === "glp_1_current_weight" ? (
+                {selectedTreatment === "glp_1" && currentMedicationQuestion.question_key === "glp_1_current_weight" ? (
                   <BmiPreview answers={treatmentAnswers} />
                 ) : null}
               </div>
-            ))}
+            ) : null}
             {error ? (
-              <p role="alert" style={{ margin: 0, color: "#fca5a5", fontSize: 14 }}>
+              <p role="alert" style={{ margin: 0, color: brand.error, fontSize: 14 }}>
                 {error}
               </p>
             ) : null}
             <div style={flowActions}>
               <button
                 type="submit"
-                disabled={!medicationQuestionsComplete}
+                disabled={!currentMedicationQuestionComplete}
                 style={{
                   ...primaryAction,
-                  background: medicationQuestionsComplete ? brand.accent : "#3f3f3f",
-                  color: medicationQuestionsComplete ? "#ffffff" : "#a9a9a9",
-                  cursor: medicationQuestionsComplete ? "pointer" : "not-allowed",
+                  background: currentMedicationQuestionComplete ? brand.accent : "#d0d0d0",
+                  color: currentMedicationQuestionComplete ? "#ffffff" : "#707070",
+                  cursor: currentMedicationQuestionComplete ? "pointer" : "not-allowed",
                 }}
               >
-                Create account
+                {hasNextMedicationQuestionPage ? "Next step" : "Create account"}
               </button>
             </div>
           </form>

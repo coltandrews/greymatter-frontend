@@ -17,12 +17,12 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "#121212",
-          color: "#f2f2f2",
+          background: "#fdfdfd",
+          color: "#171717",
           fontSize: 30,
           fontWeight: 800,
           letterSpacing: 0,
-          fontFamily: "Arial, sans-serif",
+          fontFamily: "Geist, Arial, sans-serif",
         }}
       >
         GM

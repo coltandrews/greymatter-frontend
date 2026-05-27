@@ -11,7 +11,7 @@ const field = {
   display: "grid" as const,
   gap: 8,
   fontSize: 14,
-  color: "#d7d7d7",
+  color: "#333333",
   fontWeight: 400,
 };
 
@@ -19,9 +19,9 @@ const input = {
   minHeight: 48,
   padding: "0 14px",
   borderRadius: 7,
-  border: "1px solid #575757",
-  background: "#151515",
-  color: "#f2f2f2",
+  border: "1px solid #b4b4b4",
+  background: "rgba(255, 255, 255, 0.78)",
+  color: "#171717",
   fontSize: 16,
   outlineColor: "#3487ed",
 };
@@ -41,20 +41,20 @@ const logo = {
   margin: "8px auto 24px",
 };
 
-const pageBackground = "#121212";
+const pageBackground = "var(--gm-page-bg)";
 
 const progressTrack = {
   width: "100%",
   height: 4,
   borderRadius: 999,
-  background: "#666666",
+  background: "#d0d0d0",
   marginBottom: 38,
 };
 
 const messageSlot = {
   minHeight: 18,
   margin: 0,
-  color: "#fca5a5",
+  color: "#b91c1c",
   fontSize: 14,
   lineHeight: 1.3,
 };
@@ -220,10 +220,10 @@ export function AuthEntry({
             <div style={progressTrack} />
           </header>
           <div style={{ display: "grid", minHeight: 0 }}>
-            <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#f2f2f2" }}>
+            <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#171717" }}>
               Check your email
             </h1>
-            <p style={{ margin: 0, fontSize: 15, color: "#c9c9c9", lineHeight: 1.45 }}>
+            <p style={{ margin: 0, fontSize: 15, color: "#4f4f4f", lineHeight: 1.45 }}>
               We sent a link to <strong>{email}</strong>. Open it to finish.
             </p>
           <button
@@ -268,7 +268,7 @@ export function AuthEntry({
           <div style={progressTrack} />
         </header>
         <div style={{ display: "grid", minHeight: 0 }}>
-          <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#f2f2f2" }}>
+          <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: "#171717" }}>
             {mode === "signup" ? "Create account" : "Sign in"}
           </h1>
 
@@ -345,7 +345,7 @@ export function AuthEntry({
                   padding: 0,
                   border: "none",
                   background: "none",
-                  color: "#73d2ff",
+                  color: "#2563eb",
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: loading ? "not-allowed" : "pointer",
@@ -367,7 +367,7 @@ export function AuthEntry({
               padding: "0 18px",
               borderRadius: 7,
               border: "none",
-              background: loading ? "#454545" : "#3487ed",
+              background: loading ? "#d0d0d0" : "#3487ed",
               color: "#ffffff",
               fontSize: 15,
               fontWeight: 600,
@@ -388,7 +388,7 @@ export function AuthEntry({
           style={{
             margin: "18px 0 0",
             fontSize: 14,
-            color: "#c9c9c9",
+            color: "#4f4f4f",
             textAlign: "center",
           }}
         >

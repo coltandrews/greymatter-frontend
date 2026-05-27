@@ -110,12 +110,12 @@ export function StaffRecoveryPanel({
   return (
     <section style={{ margin: 0 }}>
       <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Booking requests that need help</h2>
-      <p style={{ margin: "0 0 16px", fontSize: 14, color: "#9a9a9a", lineHeight: 1.5 }}>
+      <p style={{ margin: "0 0 16px", fontSize: 14, color: "var(--gm-subtle)", lineHeight: 1.5 }}>
         Paid booking requests that need staff review before provider confirmation.
       </p>
 
       {initialBookings.length === 0 ? (
-        <p style={{ margin: 0, fontSize: 15, color: "#9a9a9a" }}>
+        <p style={{ margin: 0, fontSize: 15, color: "var(--gm-subtle)" }}>
           No booking request issues right now.
         </p>
       ) : (
@@ -130,20 +130,20 @@ export function StaffRecoveryPanel({
                   display: "grid",
                   gap: 14,
                   padding: 16,
-                  border: "1px solid #343434",
+                  border: "1px solid var(--gm-border)",
                   borderRadius: 7,
-                  background: "#181818",
+                  background: "rgba(255, 255, 255, 0.72)",
                 }}
               >
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div>
-                    <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 800, color: "#f2f2f2" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 800, color: "var(--gm-text)" }}>
                       {recoveryBookingTitle(row)}
                     </p>
-                    <p style={{ margin: "0 0 4px", fontSize: 13, color: "#9a9a9a" }}>
+                    <p style={{ margin: "0 0 4px", fontSize: 13, color: "var(--gm-subtle)" }}>
                       {recoveryBookingTime(row)}
                     </p>
-                    <p style={{ margin: 0, fontSize: 12, color: "#9a9a9a" }}>
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--gm-subtle)" }}>
                       {recoveryStateSummary(row)}
                     </p>
                   </div>
@@ -157,7 +157,7 @@ export function StaffRecoveryPanel({
                       padding: "9px 13px",
                       borderRadius: 8,
                       border: "1px solid #3487ed",
-                      background: retryingId === row.id ? "#3f3f3f" : "#3487ed",
+                      background: retryingId === row.id ? "var(--gm-disabled-bg)" : "#3487ed",
                       color: "#ffffff",
                       fontSize: 13,
                       fontWeight: 700,
@@ -176,19 +176,19 @@ export function StaffRecoveryPanel({
                     gap: 10,
                   }}
                 >
-                  <div style={{ padding: 12, borderRadius: 8, background: "#202020", border: "1px solid #343434" }}>
-                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
+                  <div style={{ padding: 12, borderRadius: 8, background: "var(--gm-surface)", border: "1px solid var(--gm-border)" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--gm-subtle)", fontWeight: 800 }}>
                       Treatment
                     </p>
-                    <p style={{ margin: 0, fontSize: 13, color: "#f2f2f2", lineHeight: 1.45 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "var(--gm-text)", lineHeight: 1.45 }}>
                       {recoveryTreatmentSummary(row)}
                     </p>
                   </div>
-                  <div style={{ padding: 12, borderRadius: 8, background: "#202020", border: "1px solid #343434" }}>
-                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
+                  <div style={{ padding: 12, borderRadius: 8, background: "var(--gm-surface)", border: "1px solid var(--gm-border)" }}>
+                    <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--gm-subtle)", fontWeight: 800 }}>
                       Failure
                     </p>
-                    <p style={{ margin: 0, fontSize: 13, color: "#fdba74", lineHeight: 1.45 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "#92400e", lineHeight: 1.45 }}>
                       {details[0]?.value ?? "Provider handoff did not complete."}
                     </p>
                   </div>
@@ -204,15 +204,15 @@ export function StaffRecoveryPanel({
                 >
                   {details.map((detail) => (
                     <div key={`${detail.label}-${detail.value}`}>
-                      <dt style={{ marginBottom: 3, fontSize: 11, color: "#777777", fontWeight: 800 }}>
+                      <dt style={{ marginBottom: 3, fontSize: 11, color: "var(--gm-subtle)", fontWeight: 800 }}>
                         {detail.label}
                       </dt>
                       <dd
                         style={{
                           margin: 0,
                           fontSize: detail.mono ? 11 : 13,
-                          color: "#b8b8b8",
-                          fontFamily: detail.mono ? "ui-monospace, monospace" : undefined,
+                          color: "var(--gm-muted)",
+                          fontFamily: detail.mono ? "var(--font-geist-mono), ui-monospace, monospace" : undefined,
                           wordBreak: "break-word",
                         }}
                       >
@@ -223,14 +223,14 @@ export function StaffRecoveryPanel({
                 </dl>
 
                 {messageById[row.id] ? (
-                  <p role="status" style={{ margin: 0, fontSize: 13, color: "#b8b8b8" }}>
+                  <p role="status" style={{ margin: 0, fontSize: 13, color: "var(--gm-muted)" }}>
                     {messageById[row.id]}
                   </p>
                 ) : null}
 
                 {attempts.length > 0 ? (
-                  <div style={{ borderTop: "1px solid #343434", paddingTop: 10 }}>
-                    <p style={{ margin: "0 0 8px", fontSize: 12, color: "#9a9a9a", fontWeight: 800 }}>
+                  <div style={{ borderTop: "1px solid var(--gm-border)", paddingTop: 10 }}>
+                    <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--gm-subtle)", fontWeight: 800 }}>
                       Retry history
                     </p>
                     <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 }}>
@@ -239,7 +239,7 @@ export function StaffRecoveryPanel({
                           key={`${attempt.at}-${attempt.message}`}
                           style={{
                             fontSize: 12,
-                            color: attempt.status === "success" ? "#86efac" : "#fca5a5",
+                            color: attempt.status === "success" ? "#166534" : "var(--gm-error)",
                             lineHeight: 1.4,
                           }}
                         >

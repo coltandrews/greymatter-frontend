@@ -11,7 +11,7 @@ const cards: {
     key: "paymentPending",
     label: "Payment Pending",
     hint: "Checkout started, not paid yet",
-    accent: "#73d2ff",
+    accent: "#2563eb",
   },
   {
     key: "olaPending",
@@ -23,7 +23,7 @@ const cards: {
     key: "booked",
     label: "Booked",
     hint: "Payment and provider handoff complete",
-    accent: "#86efac",
+    accent: "#166534",
   },
   {
     key: "needsReview",

@@ -2,7 +2,7 @@
   max-width: 380px;
   margin: 0 auto;
   padding: 28px 20px 56px;
-  color: #f2f2f2;
+  color: var(--gm-text);
 }
 
 .card {
@@ -29,7 +29,7 @@
   width: 100%;
   height: 4px;
   border-radius: 999px;
-  background: #666666;
+  background: #d0d0d0;
 }
 
 .icon {
@@ -44,30 +44,30 @@
 
 .success {
   background: rgba(22, 163, 74, 0.16);
-  color: #86efac;
+  color: #166534;
 }
 
 .pending {
   background: rgba(115, 210, 255, 0.14);
-  color: #73d2ff;
+  color: #2563eb;
   font-size: 20px;
 }
 
 .review {
   background: rgba(251, 146, 60, 0.14);
-  color: #fdba74;
+  color: #92400e;
 }
 
 .action {
   background: rgba(251, 191, 36, 0.14);
-  color: #fde68a;
+  color: #92400e;
 }
 
 .title {
   margin: 0 0 8px;
   font-size: 1.55rem;
   font-weight: 400;
-  color: #f2f2f2;
+  color: var(--gm-text);
 }
 
 .lead {
@@ -75,7 +75,7 @@
   max-width: 360px;
   font-size: 16px;
   font-weight: 400;
-  color: #d8d8d8;
+  color: var(--gm-muted);
   line-height: 1.45;
 }
 
@@ -83,14 +83,14 @@
   margin: 0 auto 18px;
   max-width: 340px;
   font-size: 15px;
-  color: #c9c9c9;
+  color: var(--gm-muted);
   line-height: 1.45;
 }
 
 .hint {
   margin: 0 0 24px;
   font-size: 13px;
-  color: #c9c9c9;
+  color: var(--gm-muted);
   line-height: 1.5;
 }
 
@@ -98,7 +98,7 @@
   min-height: 18px;
   margin: 0 0 28px;
   font-size: 12px;
-  color: #8f9ba8;
+  color: var(--gm-subtle);
 }
 
 .processingBlock {
@@ -109,7 +109,7 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
-  color: #8f9ba8;
+  color: var(--gm-subtle);
   font-size: 12px;
 }
 
@@ -119,7 +119,7 @@
   height: 6px;
   overflow: hidden;
   border-radius: 999px;
-  background: #303030;
+  background: #d0d0d0;
 }
 
 .processingIndicator::after {
@@ -183,9 +183,9 @@
 }
 
 .secondaryBtn {
-  background: #111922;
-  color: #eef3f8;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: var(--gm-surface);
+  color: var(--gm-text);
+  border: 1px solid var(--gm-border);
 }
 
 .secondaryBtn:hover {
