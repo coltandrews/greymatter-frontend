@@ -1,4 +1,7 @@
-import type { IntakeQuestion } from "@/lib/intake/intakeQuestions";
+import type {
+  IntakeQuestion,
+  IntakeQuestionAnswers,
+} from "@/lib/intake/intakeQuestions";
 
 export type TreatmentKey = "peptides" | "glp_1" | "testosterone";
 
@@ -619,4 +622,45 @@ export function treatmentQuestionSet(key: TreatmentKey | null): TreatmentQuestio
 
 export function treatmentQuestions(key: TreatmentKey | null): IntakeQuestion[] {
   return treatmentQuestionSet(key)?.questions.filter((question) => question.is_active) ?? [];
+}
+
+const GLP_1_PREVIOUS_EXPERIENCE_QUESTION_KEYS = new Set([
+  "glp_1_current_medication",
+  "glp_1_other_current_medication",
+  "glp_1_side_effects",
+  "glp_1_other_side_effects",
+  "glp_1_muscle_loss",
+  "glp_1_experience_success",
+  "glp_1_current_dose_satisfaction",
+]);
+
+const GLP_1_CURRENT_MEDICATION_QUESTION_KEYS = new Set([
+  "glp_1_current_medication",
+  "glp_1_other_current_medication",
+  "glp_1_current_dose_satisfaction",
+]);
+
+export function visibleTreatmentQuestions(
+  key: TreatmentKey | null,
+  answers: IntakeQuestionAnswers = {},
+): IntakeQuestion[] {
+  const questions = treatmentQuestions(key);
+  if (key !== "glp_1") {
+    return questions;
+  }
+
+  const priorMedicationStatus = answers.glp_1_prior_medication_status;
+  if (priorMedicationStatus === "never_taken") {
+    return questions.filter(
+      (question) => !GLP_1_PREVIOUS_EXPERIENCE_QUESTION_KEYS.has(question.question_key),
+    );
+  }
+
+  if (priorMedicationStatus === "taken_in_past") {
+    return questions.filter(
+      (question) => !GLP_1_CURRENT_MEDICATION_QUESTION_KEYS.has(question.question_key),
+    );
+  }
+
+  return questions;
 }

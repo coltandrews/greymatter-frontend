@@ -21,6 +21,8 @@ describe("buildTreatmentBookingIntentPayload", () => {
         glp_1_goal_weight: "180",
         glp_1_previous_weight_loss_attempts: ["diet_exercise", "fasting"],
         glp_1_prior_medication_status: "never_taken",
+        glp_1_current_medication: "injectable_semaglutide",
+        glp_1_experience_success: "very_successful",
       },
     });
 
@@ -38,6 +40,12 @@ describe("buildTreatmentBookingIntentPayload", () => {
         "Are you currently or have you ever taken a GLP-1 medication?": "I have never taken a GLP-1 medication",
       },
     });
+    expect(payload.appointmentAnswers).not.toHaveProperty(
+      "If you are currently taking a GLP-1 medication which one are you currently taking?",
+    );
+    expect(payload.appointmentAnswers).not.toHaveProperty(
+      "How successful has your GLP-1 experience been?",
+    );
     expect(payload.selectedSlot).toBeUndefined();
   });
 

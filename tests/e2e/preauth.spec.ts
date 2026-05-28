@@ -37,32 +37,9 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
 
   await page.getByLabel(/ever taken a GLP-1 medication/i).selectOption("never_taken");
   await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.getByLabel(/which one are you currently taking/i)).toBeVisible();
-
-  await page.getByLabel(/which one are you currently taking/i).selectOption("none");
-  await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.getByLabel(/other GLP-1 medication/i)).toBeVisible();
-
-  await page.getByLabel(/other GLP-1 medication/i).fill("None");
-  await page.getByRole("button", { name: "Next step" }).click();
-
-  await page.locator("label").filter({ hasText: "Not Applicable" }).click();
-  await page.getByRole("button", { name: "Next step" }).click();
-
-  await page.getByLabel(/other side effects/i).fill("None");
-  await page.getByRole("button", { name: "Next step" }).click();
-
-  await page.getByLabel(/muscle loss/i).selectOption("does_not_apply");
-  await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.getByLabel(/successful has your GLP-1 experience/i)).toBeVisible();
-
-  await page.getByLabel(/successful has your GLP-1 experience/i).selectOption("none_not_applicable");
-  await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.getByLabel(/happy with your current GLP-1 dose/i)).toBeVisible();
-
-  await page.getByLabel(/happy with your current GLP-1 dose/i).selectOption("not_applicable");
-  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByText("Do you have, or have you ever had")).toBeVisible();
+  await expect(page.getByLabel(/which one are you currently taking/i)).toHaveCount(0);
+  await expect(page.getByLabel(/successful has your GLP-1 experience/i)).toHaveCount(0);
 
   await page.locator("label").filter({ hasText: "None of the above" }).click();
   await page.getByRole("button", { name: "Next step" }).click();

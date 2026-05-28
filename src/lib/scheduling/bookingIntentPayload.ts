@@ -3,7 +3,7 @@ import {
   defaultPreSignupQuestions,
   formatQuestionAnswersForPayload,
 } from "@/lib/intake/intakeQuestions";
-import { treatmentByKey, treatmentQuestions } from "@/lib/treatments";
+import { treatmentByKey, visibleTreatmentQuestions } from "@/lib/treatments";
 
 export const GREYMATTER_SERVICE_KEY =
   "MetaHealthRX - Oral Semaglutide Dissolvable Tablets";
@@ -26,8 +26,9 @@ export function buildTreatmentBookingIntentPayload(
   patient: IntakeDraftData,
 ): BookingIntentPayload {
   const treatment = treatmentByKey(patient.selected_treatment);
-  const medicationQuestions = treatmentQuestions(
+  const medicationQuestions = visibleTreatmentQuestions(
     treatment ? treatment.key : null,
+    patient.treatment_answers,
   );
   return {
     serviceState: (patient.service_state ?? patient.address_state ?? "").trim(),

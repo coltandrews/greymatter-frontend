@@ -20,7 +20,7 @@ import {
 import {
   PATIENT_TREATMENTS,
   TREATMENTS,
-  treatmentQuestions,
+  visibleTreatmentQuestions,
   type TreatmentKey,
 } from "@/lib/treatments";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -634,7 +634,7 @@ export function PreAuthEligibility({
   const currentPageComplete = currentQuestions.every((question) =>
     intakeAnswerComplete(question, answers[question.question_key]),
   );
-  const medicationQuestions = treatmentQuestions(selectedTreatment);
+  const medicationQuestions = visibleTreatmentQuestions(selectedTreatment, treatmentAnswers);
   const currentMedicationQuestion = medicationQuestions[medicationPageIndex] ?? null;
   const hasNextMedicationQuestionPage = medicationPageIndex < medicationQuestions.length - 1;
   const currentMedicationQuestionComplete = currentMedicationQuestion
