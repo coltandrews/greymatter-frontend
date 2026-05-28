@@ -11,7 +11,7 @@ export function PatientTopBar({
   return (
     <header className={styles.header}>
       <div className={styles.brand}>
-        <img src="/brand/gmmd-navbar-logo.png" alt="GMMD" className={styles.logo} />
+        <img src="/brand/logo-horizontal.svg" alt="GMMD" className={styles.logo} />
       </div>
       <div className={styles.actions}>
         <PatientUserMenu welcomeName={welcomeName} email={email} />
