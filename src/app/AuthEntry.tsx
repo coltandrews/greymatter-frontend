@@ -80,6 +80,28 @@ const messageSlot = {
   lineHeight: 1.3,
 };
 
+const termsBox = {
+  maxHeight: 132,
+  overflowY: "auto" as const,
+  padding: "12px 14px",
+  border: "1px solid rgba(23, 23, 23, 0.22)",
+  borderRadius: 7,
+  background: "rgba(255, 255, 255, 0.58)",
+  color: "#242424",
+  fontSize: 12,
+  lineHeight: 1.45,
+};
+
+const termsCheck = {
+  display: "flex" as const,
+  alignItems: "flex-start",
+  gap: 10,
+  color: "#171717",
+  fontSize: 13,
+  lineHeight: 1.4,
+  cursor: "pointer",
+};
+
 function isExistingUserSignupError(message: string) {
   const m = message.toLowerCase();
   return (
@@ -111,6 +133,8 @@ export function AuthEntry({
   const [existingEmailError, setExistingEmailError] = useState(false);
   const [awaitingEmail, setAwaitingEmail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [termsScrolled, setTermsScrolled] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const submittingRef = useRef(false);
 
   useEffect(() => {
@@ -129,6 +153,10 @@ export function AuthEntry({
     }
     setError(null);
     setExistingEmailError(false);
+    if (!termsAccepted) {
+      setError("Review the terms and privacy information before creating your account.");
+      return;
+    }
     if (password !== passwordConfirm) {
       setError("Passwords do not match.");
       return;
@@ -234,6 +262,17 @@ export function AuthEntry({
     }
     router.push("/");
   }
+
+  function onTermsScroll(event: React.UIEvent<HTMLDivElement>) {
+    const target = event.currentTarget;
+    const scrolledToBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - 4;
+    if (scrolledToBottom) {
+      setTermsScrolled(true);
+    }
+  }
+
+  const submitDisabled = loading || (mode === "signup" && !termsAccepted);
 
   if (awaitingEmail) {
     return (
@@ -366,6 +405,53 @@ export function AuthEntry({
           ) : (
             <div style={{ display: "none" }} aria-hidden="true" />
           )}
+          {mode === "signup" ? (
+            <div style={{ display: "grid", gap: 10 }}>
+              <div
+                style={termsBox}
+                onScroll={onTermsScroll}
+                tabIndex={0}
+                aria-label="Terms of service and privacy information"
+              >
+                <p style={{ margin: "0 0 8px" }}>
+                  By creating an account, you request telehealth services through GreyMatter MD
+                  and consent to electronic communications about your intake, consultation,
+                  payment, and medication request.
+                </p>
+                <p style={{ margin: "0 0 8px" }}>
+                  Clinical eligibility is determined by a licensed provider. Completing intake
+                  and payment does not guarantee that medication will be prescribed or shipped.
+                </p>
+                <p style={{ margin: "0 0 8px" }}>
+                  You agree to provide accurate information, upload your own government ID, and
+                  keep your contact, shipping, and health information current.
+                </p>
+                <p style={{ margin: 0 }}>
+                  Placeholder notice: replace this block with the client-approved Terms of
+                  Service, Privacy Policy, consent language, and refund policy before launch.
+                </p>
+              </div>
+              <label
+                style={{
+                  ...termsCheck,
+                  opacity: termsScrolled ? 1 : 0.62,
+                  cursor: termsScrolled ? "pointer" : "not-allowed",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  disabled={!termsScrolled || loading}
+                  onChange={(event) => setTermsAccepted(event.target.checked)}
+                  style={{ marginTop: 2 }}
+                />
+                <span>
+                  I have reviewed and agree to the Terms of Service, Privacy Policy, telehealth
+                  consent, and refund policy.
+                </span>
+              </label>
+            </div>
+          ) : null}
           <div style={{ minHeight: existingEmailError ? 38 : 18 }}>
             {error ? (
               <p role="alert" style={messageSlot}>
@@ -402,7 +488,7 @@ export function AuthEntry({
           </div>
           <button
             type="submit"
-            disabled={loading}
+            disabled={submitDisabled}
             aria-busy={loading}
             style={{
               marginTop: 20,
@@ -410,11 +496,11 @@ export function AuthEntry({
               padding: "0 18px",
               borderRadius: 999,
               border: "1px solid rgba(255, 255, 255, 0.78)",
-              background: loading ? "var(--gm-disabled-bg)" : "var(--gm-action-bg)",
-              color: loading ? "var(--gm-disabled-text)" : "#171717",
+              background: submitDisabled ? "var(--gm-disabled-bg)" : "var(--gm-action-bg)",
+              color: submitDisabled ? "var(--gm-disabled-text)" : "#171717",
               fontSize: 15,
               fontWeight: 600,
-              cursor: loading ? "not-allowed" : "pointer",
+              cursor: submitDisabled ? "not-allowed" : "pointer",
             }}
           >
             {loading

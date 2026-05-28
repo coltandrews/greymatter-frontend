@@ -11,7 +11,7 @@ export default async function AppointmentsPage() {
       role={role}
       currentPage="appointments"
       title="Medication Requests"
-      subtitle="Review patient intake, payment, ID, shipping, and provider handoff status."
+      subtitle="Review patient intake, payment, ID, shipping, and provider review status."
       email={user.email ?? user.id}
     >
       <div className={styles.appointmentsStack}>

@@ -70,8 +70,8 @@ export default async function MedicationDetailPage({ params }: Props) {
   );
 
   let treatmentName = "Medication";
-  let statusLabel = "Under review";
-  let statusText = "Your request is being reviewed.";
+  let statusLabel = "Provider review";
+  let statusText = "The provider network is reviewing your request.";
   let submittedAt = "";
   let updatedAt = "";
   let orderGuid: string | null = null;

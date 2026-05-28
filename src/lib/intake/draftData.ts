@@ -4,7 +4,7 @@
  * when reading; after writes, call {@link syncProfileDemographics}.
  */
 
-export type DraftGender = "male" | "female" | "non_binary" | "prefer_not";
+export type DraftGender = "male" | "female";
 
 export type IntakeDraftData = {
   legal_first_name?: string;
@@ -32,13 +32,13 @@ export type IntakeDraftData = {
   treatment_answers?: Record<string, string | string[]>;
 };
 
-const GENDERS: readonly string[] = ["male", "female", "non_binary", "prefer_not"];
+const GENDERS: readonly string[] = ["male", "female"];
 
 export function isDraftGender(v: string): v is DraftGender {
   return GENDERS.includes(v);
 }
 
-/** Legal name, DOB, gender (intake step 1). */
+/** Legal name, DOB, sex assigned at birth (intake step 1). */
 export function demographicsIdentityComplete(d: IntakeDraftData | undefined): boolean {
   if (!d) {
     return false;

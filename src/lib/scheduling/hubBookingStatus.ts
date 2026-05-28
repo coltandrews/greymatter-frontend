@@ -20,7 +20,7 @@ export function hubBookingIntentStatusView(
   ) {
     return {
       label: "Confirmed",
-      subtitle: "Provider review received. Watch for medication updates.",
+      subtitle: "Provider review received. Watch for medication and shipment updates.",
       tone: "confirmed",
     };
   }
@@ -28,15 +28,15 @@ export function hubBookingIntentStatusView(
   if (input.booking_status === "action_required") {
     return {
       label: "Next steps",
-      subtitle: "Provider next steps are ready. Review them before continuing.",
+      subtitle: "Provider next steps are ready. If you are not eligible, your payment will be refunded.",
       tone: "action",
     };
   }
 
   if (input.booking_status === "needs_review") {
     return {
-      label: "Under review",
-      subtitle: "Payment received. Your request is being reviewed.",
+      label: "Provider review",
+      subtitle: "Payment received. The provider network is reviewing your request. If you are not eligible, your payment will be refunded.",
       tone: "review",
     };
   }
@@ -52,7 +52,7 @@ export function hubBookingIntentStatusView(
   if (input.payment_status === "paid") {
     return {
       label: "Processing",
-      subtitle: "Payment received. Provider review is in progress.",
+      subtitle: "Payment received. Provider review is in progress. If you are not eligible, your payment will be refunded.",
       tone: "pending",
     };
   }

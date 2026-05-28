@@ -76,15 +76,13 @@ export const defaultPreSignupQuestions: IntakeQuestion[] = [
   {
     id: "default-gender",
     question_key: "gender",
-    prompt: "Gender",
+    prompt: "For medical eligibility, what sex were you assigned at birth?",
     help_text: null,
     question_type: "select",
     required: true,
     options: [
       { value: "male", label: "Male" },
       { value: "female", label: "Female" },
-      { value: "non_binary", label: "Non-Binary" },
-      { value: "prefer_not", label: "Prefer Not To Say" },
     ],
     position: 40,
     is_active: true,

@@ -74,7 +74,7 @@ function attentionReasons(row: BookingQueueRow) {
     reasons.push("Payment failed");
   }
   if (status.key === "needs_attention") {
-    reasons.push("Provider handoff");
+    reasons.push("Provider send failed");
   }
   if (status.submitted && !row.idDocumentStatus.complete) {
     reasons.push("ID");

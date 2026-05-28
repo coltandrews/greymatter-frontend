@@ -18,6 +18,7 @@ import {
   serializePreAuthIntake,
 } from "@/lib/intake/preAuthIntake";
 import {
+  PATIENT_TREATMENTS,
   TREATMENTS,
   treatmentQuestions,
   type TreatmentKey,
@@ -218,8 +219,6 @@ const bmiCard = {
 const genderOptions = [
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
-  { value: "non_binary", label: "Non-Binary" },
-  { value: "prefer_not", label: "Prefer Not To Say" },
 ];
 
 const heightFeetOptions = Array.from({ length: 7 }, (_, index) => index + 3);
@@ -940,7 +939,7 @@ export function PreAuthEligibility({
                 gap: 12,
               }}
             >
-              {TREATMENTS.map((treatment) => {
+              {PATIENT_TREATMENTS.map((treatment) => {
                 const selected = selectedTreatment === treatment.key;
                 return (
                   <button
@@ -957,9 +956,9 @@ export function PreAuthEligibility({
                     }}
                     style={{
                       display: "grid",
-                      gap: 0,
-                      minHeight: 52,
-                      padding: "0 22px",
+                      gap: 5,
+                      minHeight: 68,
+                      padding: "13px 18px",
                       textAlign: "left",
                       borderRadius: 7,
                       border: `1px solid ${selected ? brand.accent : "rgba(23, 23, 23, 0.72)"}`,
@@ -971,7 +970,17 @@ export function PreAuthEligibility({
                     }}
                     aria-pressed={selected}
                   >
-                    <strong style={{ fontSize: 15, fontWeight: 500 }}>{treatment.name}</strong>
+                    <span style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <strong style={{ fontSize: 15, fontWeight: 500 }}>{treatment.name}</strong>
+                      {treatment.billingType === "subscription" ? (
+                        <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>
+                          Subscription
+                        </span>
+                      ) : null}
+                    </span>
+                    <span style={{ color: selected ? "rgba(255, 255, 255, 0.82)" : brand.muted, fontSize: 13, lineHeight: 1.35 }}>
+                      {treatment.summary}
+                    </span>
                   </button>
                 );
               })}

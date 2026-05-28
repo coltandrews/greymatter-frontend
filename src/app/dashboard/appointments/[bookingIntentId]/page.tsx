@@ -17,7 +17,7 @@ export default async function MedicationRequestDetailPage({ params }: Props) {
       role={role}
       currentPage="appointments"
       title="Medication Request"
-      subtitle="Patient intake, payment, ID, shipping, and provider handoff details."
+      subtitle="Patient intake, payment, ID, shipping, and provider review details."
       email={user.email ?? user.id}
     >
       <MedicationRequestDetail bookingIntentId={bookingIntentId} />

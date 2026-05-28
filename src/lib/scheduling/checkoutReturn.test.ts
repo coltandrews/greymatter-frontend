@@ -77,8 +77,9 @@ describe("checkoutReturnView", () => {
       }),
     ).toMatchObject({
       tone: "review",
-      title: "Under review",
-      lead: "Your request is being reviewed.",
+      title: "Provider review",
+      lead: "The provider network is reviewing your request.",
+      hint: "If the provider determines you are not eligible, your payment will be refunded.",
     });
   });
 

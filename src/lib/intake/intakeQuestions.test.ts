@@ -121,4 +121,17 @@ describe("intake question helpers", () => {
     expect(merged.map((question) => question.question_key)).toContain("for_self");
     expect(isCorePreSignupQuestionKey("service_state")).toBe(true);
   });
+
+  it("uses male and female options for sex assigned at birth", () => {
+    const merged = mergePreSignupQuestions([]);
+    const gender = merged.find((question) => question.question_key === "gender");
+
+    expect(gender).toMatchObject({
+      prompt: "For medical eligibility, what sex were you assigned at birth?",
+      options: [
+        { value: "male", label: "Male" },
+        { value: "female", label: "Female" },
+      ],
+    });
+  });
 });

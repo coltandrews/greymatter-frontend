@@ -11,7 +11,7 @@ describe("hubBookingIntentStatusView", () => {
       }),
     ).toEqual({
       label: "Confirmed",
-      subtitle: "Provider review received. Watch for medication updates.",
+      subtitle: "Provider review received. Watch for medication and shipment updates.",
       tone: "confirmed",
     });
   });
@@ -38,7 +38,7 @@ describe("hubBookingIntentStatusView", () => {
       }),
     ).toEqual({
       label: "Next steps",
-      subtitle: "Provider next steps are ready. Review them before continuing.",
+      subtitle: "Provider next steps are ready. If you are not eligible, your payment will be refunded.",
       tone: "action",
     });
   });
@@ -51,7 +51,7 @@ describe("hubBookingIntentStatusView", () => {
         ola_status: "failed",
       }),
     ).toMatchObject({
-      label: "Under review",
+      label: "Provider review",
       tone: "review",
     });
   });

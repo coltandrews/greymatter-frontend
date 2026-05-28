@@ -100,7 +100,7 @@ export function AccountProfileForm({
       setSaved(false);
       const patch = toDraftPatch(form);
       if (!patch.gender || !patch.address_state) {
-        setError("Please choose gender and state.");
+        setError("Please choose sex assigned at birth and state.");
         return;
       }
 
@@ -235,7 +235,7 @@ export function AccountProfileForm({
       <div className={styles.fieldGrid}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="acct-gender">
-            Gender *
+            Sex assigned at birth *
           </label>
           <select
             id="acct-gender"
@@ -247,8 +247,6 @@ export function AccountProfileForm({
             <option value="">Select…</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
-            <option value="non_binary">Non-binary</option>
-            <option value="prefer_not">Prefer not to say</option>
           </select>
         </div>
         <div className={styles.field}>

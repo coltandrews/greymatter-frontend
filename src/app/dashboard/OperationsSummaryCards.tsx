@@ -16,13 +16,13 @@ const cards: {
   {
     key: "olaPending",
     label: "Provider Pending",
-    hint: "Payment complete, provider handoff in progress",
+    hint: "Payment complete, sending to provider",
     accent: "#7c3aed",
   },
   {
     key: "booked",
     label: "Booked",
-    hint: "Payment and provider handoff complete",
+    hint: "Provider network submission complete",
     accent: "#166534",
   },
   {
@@ -55,7 +55,7 @@ export function OperationsSummaryCards({
           </h2>
           <p className={styles.overviewText}>
             Track where each paid consultation is in the payment, provider booking,
-            and staff follow-up flow.
+            and exception follow-up flow.
           </p>
         </div>
         <div className={styles.overviewSide}>

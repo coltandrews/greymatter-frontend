@@ -323,6 +323,7 @@ export function TreatmentCheckout({
     () => treatmentByKey(intake.selected_treatment),
     [intake.selected_treatment],
   );
+  const isSubscription = treatment?.billingType === "subscription";
   const consultationFee = treatment ? treatment.consultationFeeCents / 100 : 0;
   const medicationFee = treatment ? treatment.medicationFeeCents / 100 : 0;
   const totalFee = consultationFee + medicationFee;
@@ -886,16 +887,29 @@ export function TreatmentCheckout({
                       <strong>{currency(consultationFee)}</strong>
                     </div>
                     <div>
-                      <dt>Medication fee</dt>
-                      <dd>{treatment.priceLabel}</dd>
+                      <dt>{isSubscription ? "Subscription plan" : "Medication fee"}</dt>
+                      <dd>
+                        {treatment.priceLabel}
+                        {isSubscription ? (
+                          <span className={styles.planNote}>
+                            Recurring GLP-1 treatment billing stays active while your plan is
+                            active.
+                          </span>
+                        ) : null}
+                      </dd>
                       <strong>{currency(medicationFee)}</strong>
                     </div>
                     <div className={styles.totalRow}>
                       <dt>Total</dt>
-                      <dd>Due today</dd>
+                      <dd>{isSubscription ? "Due today to start provider review" : "Due today"}</dd>
                       <strong>{currency(totalFee)}</strong>
                     </div>
                   </dl>
+                  <p className={styles.refundNotice}>
+                    Provider approval is required before medication ships. If the provider
+                    determines you are not eligible for this treatment, your payment will be
+                    refunded.
+                  </p>
                 </>
               ) : (
                 <div className={styles.emptyState}>

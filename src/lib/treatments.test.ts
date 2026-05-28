@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  PATIENT_TREATMENTS,
   TREATMENTS,
   treatmentByKey,
   treatmentQuestions,
@@ -18,7 +19,25 @@ describe("treatment registry", () => {
       expect(treatmentQuestions(treatment.key).length).toBeGreaterThan(0);
       expect(treatment.consultationFeeCents).toBeGreaterThan(0);
       expect(treatment.medicationFeeCents).toBeGreaterThan(0);
+      expect(["one_time", "subscription"]).toContain(treatment.billingType);
     }
+  });
+
+  it("marks GLP-1 as the initial subscription treatment", () => {
+    expect(treatmentByKey("glp_1")).toMatchObject({
+      billingType: "subscription",
+      priceLabel: "GLP-1 subscription plan",
+      patientVisible: true,
+    });
+    expect(treatmentByKey("peptides")).toMatchObject({
+      billingType: "one_time",
+      patientVisible: false,
+    });
+    expect(treatmentByKey("testosterone")).toMatchObject({
+      billingType: "one_time",
+      patientVisible: false,
+    });
+    expect(PATIENT_TREATMENTS.map((treatment) => treatment.key)).toEqual(["glp_1"]);
   });
 
   it("contains the launch initial intake depth for each medication", () => {

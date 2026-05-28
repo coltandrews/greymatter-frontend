@@ -17,50 +17,101 @@ async function fillCoreIntake(page: import("@playwright/test").Page, forSelf: "Y
   await page.locator("label").filter({ hasText: new RegExp(`^${forSelf}$`) }).click();
 }
 
-async function fillPeptidesQuestions(page: import("@playwright/test").Page) {
-  await expect(page.getByText("What are you hoping to achieve with peptide therapy?")).toBeVisible();
-  await page.locator("label").filter({ hasText: "Increased energy" }).click();
+async function fillGlpQuestions(page: import("@playwright/test").Page) {
+  await expect(page.getByRole("heading", { name: "GLP-1 intake" })).toBeVisible();
+  await page.getByLabel(/pregnancy or breastfeeding status/i).selectOption("none_not_applicable");
+  await expect(page.getByText("How would you describe your ethnicity?")).toBeVisible();
+
+  await page.locator("label").filter({ hasText: "I prefer not to answer" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
 
-  await page.getByLabel(/additional goals/i).fill("More energy.");
+  await page.getByLabel(/goal weight/i).fill("180");
   await page.getByRole("button", { name: "Next step" }).click();
 
-  await page.locator("label").filter({ hasText: "None of the above applies" }).click();
+  await page.locator("label").filter({ hasText: "None of the above" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
 
-  await page.getByLabel(/blood pressure/i).selectOption("120_130_70_80");
-  await expect(page.getByLabel(/monitor your blood sugar/i)).toBeVisible();
+  await page.getByLabel(/ever taken a GLP-1 medication/i).selectOption("never_taken");
+  await expect(page.getByLabel(/which one are you currently taking/i)).toBeVisible();
 
-  await page.getByLabel(/monitor your blood sugar/i).selectOption("does_not_apply");
-  await expect(page.getByText("Are you currently taking any growth hormone therapy?")).toBeVisible();
+  await page.getByLabel(/which one are you currently taking/i).selectOption("none");
+  await expect(page.getByLabel(/other GLP-1 medication/i)).toBeVisible();
+
+  await page.getByLabel(/other GLP-1 medication/i).fill("None");
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.locator("label").filter({ hasText: "Not Applicable" }).click();
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.getByLabel(/other side effects/i).fill("None");
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.getByLabel(/muscle loss/i).selectOption("does_not_apply");
+  await expect(page.getByLabel(/successful has your GLP-1 experience/i)).toBeVisible();
+
+  await page.getByLabel(/successful has your GLP-1 experience/i).selectOption("none_not_applicable");
+  await expect(page.getByLabel(/happy with your current GLP-1 dose/i)).toBeVisible();
+
+  await page.getByLabel(/happy with your current GLP-1 dose/i).selectOption("not_applicable");
+  await expect(page.getByText("Do you have, or have you ever had")).toBeVisible();
+
+  await page.locator("label").filter({ hasText: "None of the above" }).click();
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.locator("label").filter({ hasText: "Not Applicable" }).click();
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.getByLabel(/stable in treatment/i).selectOption("does_not_apply");
+  await expect(page.getByLabel(/specific cancer/i)).toBeVisible();
+
+  await page.getByLabel(/specific cancer/i).fill("N/A");
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.getByLabel(/chemotherapy or surgical treatment/i).selectOption("does_not_apply");
+  await expect(page.getByLabel(/diagnosed with liver conditions/i)).toBeVisible();
+
+  await page.getByLabel(/diagnosed with liver conditions/i).fill("N/A");
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.locator("label").filter({ hasText: "No, none of these" }).click();
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.getByLabel(/supplements/i).fill("None");
+  await page.getByRole("button", { name: "Next step" }).click();
+
+  await page.getByLabel(/drink alcohol/i).selectOption("never");
+  await expect(page.getByText("Do you smoke or use nicotine?")).toBeVisible();
 
   await page.locator("label").filter({ hasText: /^No$/ }).click();
-  await expect(page.getByText("Do you have any of the following symptoms?")).toBeVisible();
+  await expect(page.getByLabel(/exercise routine/i)).toBeVisible();
 
-  await page.locator("label").filter({ hasText: "Fatigue" }).click();
-  await page.getByRole("button", { name: "Next step" }).click();
+  await page.getByLabel(/exercise routine/i).selectOption("light");
+  await expect(page.getByLabel(/further information/i)).toBeVisible();
 
-  await page.getByLabel(/severity/i).fill("2");
-  await page.getByRole("button", { name: "Next step" }).click();
-
-  await page.locator("label").filter({ hasText: /^No$/ }).click();
-  await expect(page.getByLabel(/inform the doctor/i)).toBeVisible();
-
-  await page.getByLabel(/inform the doctor/i).fill("No other notes.");
+  await page.getByLabel(/further information/i).fill("No other notes.");
 }
 
 test("eligible patient completes pre-account intake before account creation", async ({ page }) => {
   await page.goto("/");
 
   await fillCoreIntake(page);
-  await page.getByRole("button", { name: "Peptides" }).click();
+  await expect(page.getByRole("button", { name: "GLP-1" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Peptides" })).toHaveCount(0);
+  await page.getByRole("button", { name: "GLP-1" }).click();
 
-  await expect(page.getByRole("heading", { name: "Peptides intake" })).toBeVisible();
-  await expect(page.getByText("Are there any additional goals")).not.toBeVisible();
-  await fillPeptidesQuestions(page);
+  await fillGlpQuestions(page);
   await page.getByRole("button", { name: "Create account" }).click();
 
   await expect(page.getByRole("heading", { name: "Create account" })).toBeVisible();
+  const terms = page.getByLabel("Terms of service and privacy information");
+  await expect(terms).toBeVisible();
+  await expect(page.getByLabel(/I have reviewed and agree/i)).toBeDisabled();
+  await terms.evaluate((node) => {
+    const element = node as HTMLElement;
+    element.scrollTop = element.scrollHeight;
+    element.dispatchEvent(new Event("scroll", { bubbles: true }));
+  });
+  await expect(page.getByLabel(/I have reviewed and agree/i)).toBeEnabled();
   const saved = await page.evaluate((key) => window.localStorage.getItem(key), storageKey);
   expect(saved).not.toBeNull();
   expect(JSON.parse(saved ?? "{}")).toMatchObject({
@@ -70,10 +121,11 @@ test("eligible patient completes pre-account intake before account creation", as
     gender: "female",
     service_state: "SC",
     for_self: true,
-    selected_treatment: "peptides",
+    selected_treatment: "glp_1",
     treatment_answers: {
-      peptides_goals: ["increased_energy"],
-      peptides_provider_notes: "No other notes.",
+      glp_1_pregnancy_breastfeeding_status: "none_not_applicable",
+      glp_1_ethnicity: ["prefer_not_answer"],
+      glp_1_provider_notes: "No other notes.",
     },
   });
 });

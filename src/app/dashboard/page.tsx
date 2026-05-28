@@ -99,7 +99,7 @@ function attentionReasonLabel(reason: string) {
     case "payment_failed":
       return "Payment failed";
     case "provider_handoff_failed":
-      return "Provider handoff failed";
+      return "Provider send failed";
     case "missing_id":
       return "ID missing";
     case "missing_shipping":
@@ -143,7 +143,7 @@ export default async function DashboardPage() {
       role={role}
       currentPage="overview"
       title="Admin Portal"
-      subtitle="Medication request intake, payment, provider handoff, and review status."
+      subtitle="Medication request intake, payment, provider review, and operational status."
       email={user.email ?? user.id}
     >
       {bookingsError ? (
@@ -160,7 +160,7 @@ export default async function DashboardPage() {
               {attentionRows.length} request exception{attentionRows.length === 1 ? "" : "s"}
             </h2>
             <p className={styles.overviewText}>
-              Track intake completion, treatment selection, payment, provider handoff, and review
+              Track intake completion, treatment selection, payment, provider review, and operational
               status from one place.
             </p>
           </div>
@@ -179,7 +179,7 @@ export default async function DashboardPage() {
             <strong className={styles.overviewKpiValue}>{lifecycle.underReview}</strong>
           </div>
           <div className={styles.overviewKpi}>
-            <p className={styles.overviewKpiLabel}>Provider handoff</p>
+            <p className={styles.overviewKpiLabel}>Sending to provider</p>
             <strong className={styles.overviewKpiValue}>{lifecycle.providerHandoff}</strong>
           </div>
           <div className={styles.overviewKpi}>
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
             <ul className={styles.overviewStatRows}>
               {[
                 { label: "Payment pending", value: lifecycle.paymentPending },
-                { label: "Provider handoff", value: lifecycle.providerHandoff },
+                { label: "Sending to provider", value: lifecycle.providerHandoff },
                 { label: "Provider review", value: lifecycle.underReview },
                 { label: "Exceptions", value: lifecycle.needsAttention },
                 { label: "Next steps", value: lifecycle.nextSteps },

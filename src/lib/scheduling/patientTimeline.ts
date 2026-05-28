@@ -37,14 +37,14 @@ export function patientBookingTimeline(
       description: providerBooked
         ? "Provider review ready"
         : needsReview
-          ? "Under review"
+          ? "Waiting for provider network response"
           : paymentComplete
             ? "Provider review in progress"
             : "Starts after payment is complete",
       state: providerBooked
         ? "complete"
         : needsReview
-          ? "attention"
+          ? "current"
           : paymentComplete
             ? "current"
             : "pending",
@@ -69,7 +69,7 @@ export function patientBookingTimeline(
       description: providerBooked
         ? "Follow provider instructions"
         : needsReview
-          ? "We will follow up"
+          ? "If you are not eligible, your payment will be refunded"
           : "Pending provider review",
       state: providerBooked && !hasNextSteps ? "current" : "pending",
     },

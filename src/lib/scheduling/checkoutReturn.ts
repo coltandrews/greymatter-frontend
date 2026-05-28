@@ -68,10 +68,10 @@ export function checkoutReturnView(
     return {
       tone: "review",
       icon: "...",
-      title: "Under review",
-      lead: "Your request is being reviewed.",
+      title: "Provider review",
+      lead: "The provider network is reviewing your request.",
       summary,
-      hint: "We will follow up if anything else is needed.",
+      hint: "If the provider determines you are not eligible, your payment will be refunded.",
     };
   }
 

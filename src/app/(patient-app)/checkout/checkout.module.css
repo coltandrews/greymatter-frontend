@@ -163,6 +163,23 @@
   color: var(--gm-subtle);
 }
 
+.planNote {
+  display: block;
+  margin-top: 4px;
+  color: var(--gm-subtle);
+}
+
+.refundNotice {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border-radius: 7px;
+  border: 1px solid rgba(23, 23, 23, 0.16);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--gm-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .muted {
   margin: 8px 0 0;
   color: var(--gm-muted);

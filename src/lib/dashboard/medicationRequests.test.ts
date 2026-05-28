@@ -46,7 +46,7 @@ describe("medication request dashboard helpers", () => {
         paymentStatus: "paid",
         olaStatus: "pending",
       }),
-    ).toMatchObject({ key: "provider_handoff", label: "Provider handoff", submitted: true });
+    ).toMatchObject({ key: "provider_handoff", label: "Sending to provider", submitted: true });
 
     expect(
       medicationRequestStatusView({

@@ -12,6 +12,8 @@ export type TreatmentOption = {
   priceLabel: string;
   consultationFeeCents: number;
   medicationFeeCents: number;
+  billingType: "one_time" | "subscription";
+  patientVisible: boolean;
 };
 
 export type TreatmentQuestionSet = {
@@ -59,17 +61,21 @@ export const TREATMENTS: TreatmentOption[] = [
     priceLabel: "Provider consult and peptide review",
     consultationFeeCents: 9900,
     medicationFeeCents: 19900,
+    billingType: "one_time",
+    patientVisible: false,
   },
   {
     key: "glp_1",
     name: "GLP-1",
-    label: "Metabolic and weight management",
-    summary: "A consult path for GLP-1 medication eligibility and care planning.",
+    label: "Recurring metabolic care plan",
+    summary: "A subscription path for GLP-1 eligibility, provider review, and ongoing care.",
     accent: "G",
     serviceKey: "MetaHealthRX - Oral Semaglutide Dissolvable Tablets",
-    priceLabel: "Provider consult and GLP-1 review",
+    priceLabel: "GLP-1 subscription plan",
     consultationFeeCents: 9900,
     medicationFeeCents: 24900,
+    billingType: "subscription",
+    patientVisible: true,
   },
   {
     key: "testosterone",
@@ -81,8 +87,12 @@ export const TREATMENTS: TreatmentOption[] = [
     priceLabel: "Provider consult and hormone review",
     consultationFeeCents: 9900,
     medicationFeeCents: 14900,
+    billingType: "one_time",
+    patientVisible: false,
   },
 ];
+
+export const PATIENT_TREATMENTS = TREATMENTS.filter((treatment) => treatment.patientVisible);
 
 export const TREATMENT_QUESTION_SETS: Record<TreatmentKey, TreatmentQuestionSet> = {
   peptides: {

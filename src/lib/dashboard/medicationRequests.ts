@@ -177,7 +177,7 @@ export function medicationRequestStatusView(
     return {
       key: "confirmed",
       label: "Confirmed",
-      description: "Payment and provider handoff are complete.",
+      description: "Payment and provider network submission are complete.",
       tone: "confirmed",
       submitted: true,
       terminal: true,
@@ -201,7 +201,7 @@ export function medicationRequestStatusView(
     return {
       key: "needs_attention",
       label: "Exception",
-      description: "Provider handoff failed or needs staff follow-up.",
+      description: "Provider network submission failed or needs staff follow-up.",
       tone: "failed",
       submitted: true,
       terminal: false,
@@ -211,8 +211,8 @@ export function medicationRequestStatusView(
 
   return {
     key: "provider_handoff",
-    label: "Provider handoff",
-    description: "Payment received. The request is being sent to the provider.",
+    label: "Sending to provider",
+    description: "Payment received. The request is being sent to the provider network.",
     tone: "pending",
     submitted: true,
     terminal: false,
