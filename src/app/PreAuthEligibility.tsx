@@ -165,17 +165,27 @@ const backArrow = {
   position: "absolute" as const,
   left: 0,
   top: 64,
+  padding: 0,
   border: "none",
   width: 28,
   height: 28,
   display: "grid" as const,
   placeItems: "center",
+  appearance: "none" as const,
   borderRadius: 999,
   background: "rgba(255, 255, 255, 0.72)",
   color: brand.text,
-  fontSize: 20,
+  fontSize: 18,
+  fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+  fontWeight: 500,
   lineHeight: 1,
   cursor: "pointer",
+};
+
+const backArrowGlyph = {
+  display: "block",
+  lineHeight: 1,
+  transform: "translateY(-1px)",
 };
 
 const progressTrack = {
@@ -862,7 +872,7 @@ export function PreAuthEligibility({
         <header style={flowHeader}>
           {canGoBack ? (
             <button type="button" onClick={goBack} style={backArrow} aria-label="Back">
-              ←
+              <span aria-hidden="true" style={backArrowGlyph}>←</span>
             </button>
           ) : null}
           <img
