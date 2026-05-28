@@ -102,6 +102,22 @@ const termsCheck = {
   cursor: "pointer",
 };
 
+const buttonLabel = {
+  display: "inline-flex" as const,
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 10,
+};
+
+const spinner = {
+  width: 16,
+  height: 16,
+  borderRadius: 999,
+  border: "2px solid currentColor",
+  borderRightColor: "transparent",
+  animation: "gm-spin 700ms linear infinite",
+};
+
 function isExistingUserSignupError(message: string) {
   const m = message.toLowerCase();
   return (
@@ -273,6 +289,9 @@ export function AuthEntry({
   }
 
   const submitDisabled = loading || (mode === "signup" && !termsAccepted);
+  const submitBlocked = mode === "signup" && !termsAccepted;
+  const submitLabel = mode === "signup" ? "Create account" : "Sign in";
+  const loadingLabel = mode === "signup" ? "Creating account..." : "Signing in...";
 
   if (awaitingEmail) {
     return (
@@ -491,21 +510,18 @@ export function AuthEntry({
               minHeight: 52,
               padding: "0 18px",
               borderRadius: 999,
-              border: "1px solid rgba(255, 255, 255, 0.78)",
-              background: submitDisabled ? "var(--gm-disabled-bg)" : "var(--gm-action-bg)",
-              color: submitDisabled ? "var(--gm-disabled-text)" : "#171717",
+              border: loading ? "1px solid #171717" : "1px solid rgba(255, 255, 255, 0.78)",
+              background: submitBlocked ? "var(--gm-disabled-bg)" : "var(--gm-action-bg)",
+              color: submitBlocked ? "var(--gm-disabled-text)" : "#171717",
               fontSize: 15,
               fontWeight: 600,
-              cursor: submitDisabled ? "not-allowed" : "pointer",
+              cursor: loading ? "wait" : submitBlocked ? "not-allowed" : "pointer",
             }}
           >
-            {loading
-              ? mode === "signup"
-                ? "Creating account..."
-                : "Signing in..."
-              : mode === "signup"
-                ? "Continue"
-                : "Sign in"}
+            <span style={buttonLabel}>
+              {loading ? <span aria-hidden="true" style={spinner} /> : null}
+              {loading ? loadingLabel : submitLabel}
+            </span>
           </button>
         </form>
 

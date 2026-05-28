@@ -106,3 +106,9 @@ input[type="date"]::-webkit-date-and-time-value {
   line-height: 58px;
   text-align: left;
 }
+
+@keyframes gm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
