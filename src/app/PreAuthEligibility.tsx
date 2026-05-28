@@ -252,7 +252,12 @@ function groupQuestionsByPage(questions: IntakeQuestion[]): IntakeQuestion[][] {
 }
 
 function questionCanAutoAdvance(question: IntakeQuestion): boolean {
-  return question.question_type === "yes_no" || question.question_type === "select";
+  // Auto-advance is intentionally paused for now. It made select/radio steps feel
+  // jumpy, especially around medication selection. Keep the previous rule here so
+  // we can re-enable it deliberately later.
+  // return question.question_type === "yes_no" || question.question_type === "select";
+  void question;
+  return false;
 }
 
 function answersFromPatientData(data: IntakeDraftData | null | undefined): IntakeQuestionAnswers {
@@ -964,9 +969,11 @@ export function PreAuthEligibility({
                       setTreatmentAnswers({});
                       setMedicationPageIndex(0);
                       setError(null);
-                      window.setTimeout(() => {
-                        setStep("treatment_questions");
-                      }, 120);
+                      // Auto-advance after selecting a treatment is paused. Patients
+                      // should confirm with the Continue button before leaving this step.
+                      // window.setTimeout(() => {
+                      //   setStep("treatment_questions");
+                      // }, 120);
                     }}
                     style={{
                       display: "grid",

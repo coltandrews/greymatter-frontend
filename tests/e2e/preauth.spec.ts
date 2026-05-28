@@ -11,15 +11,19 @@ async function fillCoreIntake(page: import("@playwright/test").Page, forSelf: "Y
   await page.locator("input").fill("1990-01-01");
   await page.getByRole("button", { name: "Next step" }).click();
   await page.locator("select").selectOption("female");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByRole("heading", { name: "State" })).toBeVisible();
   await page.locator("select").selectOption("SC");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByRole("heading", { name: "Are You Booking Care For Yourself?" })).toBeVisible();
   await page.locator("label").filter({ hasText: new RegExp(`^${forSelf}$`) }).click();
+  await page.getByRole("button", { name: "Choose treatment" }).click();
 }
 
 async function fillGlpQuestions(page: import("@playwright/test").Page) {
   await expect(page.getByRole("heading", { name: "GLP-1 intake" })).toBeVisible();
   await page.getByLabel(/pregnancy or breastfeeding status/i).selectOption("none_not_applicable");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByText("How would you describe your ethnicity?")).toBeVisible();
 
   await page.locator("label").filter({ hasText: "I prefer not to answer" }).click();
@@ -32,9 +36,11 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Next step" }).click();
 
   await page.getByLabel(/ever taken a GLP-1 medication/i).selectOption("never_taken");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/which one are you currently taking/i)).toBeVisible();
 
   await page.getByLabel(/which one are you currently taking/i).selectOption("none");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/other GLP-1 medication/i)).toBeVisible();
 
   await page.getByLabel(/other GLP-1 medication/i).fill("None");
@@ -47,12 +53,15 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Next step" }).click();
 
   await page.getByLabel(/muscle loss/i).selectOption("does_not_apply");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/successful has your GLP-1 experience/i)).toBeVisible();
 
   await page.getByLabel(/successful has your GLP-1 experience/i).selectOption("none_not_applicable");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/happy with your current GLP-1 dose/i)).toBeVisible();
 
   await page.getByLabel(/happy with your current GLP-1 dose/i).selectOption("not_applicable");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByText("Do you have, or have you ever had")).toBeVisible();
 
   await page.locator("label").filter({ hasText: "None of the above" }).click();
@@ -62,12 +71,14 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Next step" }).click();
 
   await page.getByLabel(/stable in treatment/i).selectOption("does_not_apply");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/specific cancer/i)).toBeVisible();
 
   await page.getByLabel(/specific cancer/i).fill("N/A");
   await page.getByRole("button", { name: "Next step" }).click();
 
   await page.getByLabel(/chemotherapy or surgical treatment/i).selectOption("does_not_apply");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/diagnosed with liver conditions/i)).toBeVisible();
 
   await page.getByLabel(/diagnosed with liver conditions/i).fill("N/A");
@@ -80,12 +91,15 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Next step" }).click();
 
   await page.getByLabel(/drink alcohol/i).selectOption("never");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByText("Do you smoke or use nicotine?")).toBeVisible();
 
   await page.locator("label").filter({ hasText: /^No$/ }).click();
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/exercise routine/i)).toBeVisible();
 
   await page.getByLabel(/exercise routine/i).selectOption("light");
+  await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/further information/i)).toBeVisible();
 
   await page.getByLabel(/further information/i).fill("No other notes.");
@@ -98,6 +112,7 @@ test("eligible patient completes pre-account intake before account creation", as
   await expect(page.getByRole("button", { name: "GLP-1" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Peptides" })).toHaveCount(0);
   await page.getByRole("button", { name: "GLP-1" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
 
   await fillGlpQuestions(page);
   await page.getByRole("button", { name: "Create account" }).click();
