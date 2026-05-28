@@ -597,6 +597,7 @@ export function PreAuthEligibility({
   const router = useRouter();
   const searchParams = useSearchParams();
   const startsInSignIn = Boolean(searchParams.get("signin"));
+  const requestedNewMedication = Boolean(searchParams.get("new_medication"));
   const startsAtMedicationSelection = isAuthenticated && startAtMedication;
   const [step, setStep] = useState<
     "eligibility" | "treatment" | "treatment_questions" | "account"
@@ -642,6 +643,7 @@ export function PreAuthEligibility({
     Math.max(8, (currentFlowStep / totalFlowSteps) * 100),
   );
   const canGoBack =
+    (isAuthenticated && requestedNewMedication && step === "eligibility" && intakePageIndex === 0) ||
     (step === "eligibility" && intakePageIndex > 0) ||
     step === "treatment" ||
     step === "treatment_questions" ||
@@ -668,6 +670,10 @@ export function PreAuthEligibility({
       }
       setStep("eligibility");
       setIntakePageIndex(Math.max(0, questionPages.length - 1));
+      return;
+    }
+    if (step === "eligibility" && intakePageIndex === 0 && isAuthenticated && requestedNewMedication) {
+      router.push("/hub");
       return;
     }
     setIntakePageIndex((current) => Math.max(0, current - 1));
@@ -831,7 +837,7 @@ export function PreAuthEligibility({
 
   const heading =
     step === "treatment"
-      ? "Choose treatment"
+      ? "Choose medication"
       : step === "treatment_questions"
         ? `${TREATMENTS.find((treatment) => treatment.key === selectedTreatment)?.name ?? "Treatment"} intake`
         : (currentQuestions[0]?.prompt ?? "Check eligibility");
@@ -873,10 +879,16 @@ export function PreAuthEligibility({
           <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: brand.text }}>
             {heading}
           </h1>
+          {isAuthenticated && requestedNewMedication && step === "eligibility" ? (
+            <p style={loggedInNote}>
+              Confirm the account details your provider needs for this new medication request.
+              You will choose a plan after these basics are complete.
+            </p>
+          ) : null}
           {startsAtMedicationSelection && step === "treatment" ? (
             <p style={loggedInNote}>
-              Choose the medication path you want to request. We will use your saved account
-              details and take you straight to checkout after the medication intake.
+              Choose the medication path you want to request. Your saved account details stay
+              attached, and after the medication intake you will confirm shipping and payment.
             </p>
           ) : null}
 
@@ -918,16 +930,18 @@ export function PreAuthEligibility({
                 {hasNextQuestionPage ? "Next step" : "Choose treatment"}
               </button>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setAccountMode("signin");
-                setStep("account");
-              }}
-              style={{ ...linkButton, justifySelf: "center", marginTop: 14 }}
-            >
-              Already have an account? Sign in
-            </button>
+            {!isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setAccountMode("signin");
+                  setStep("account");
+                }}
+                style={{ ...linkButton, justifySelf: "center", marginTop: 14 }}
+              >
+                Already have an account? Sign in
+              </button>
+            ) : null}
           </form>
         ) : null}
 
@@ -977,6 +991,9 @@ export function PreAuthEligibility({
                           Subscription
                         </span>
                       ) : null}
+                    </span>
+                    <span style={{ color: selected ? "rgba(255, 255, 255, 0.9)" : brand.text, fontSize: 13, fontWeight: 500 }}>
+                      {treatment.label}
                     </span>
                     <span style={{ color: selected ? "rgba(255, 255, 255, 0.82)" : brand.muted, fontSize: 13, lineHeight: 1.35 }}>
                       {treatment.summary}

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
+import { shouldStartAtMedicationSelection } from "@/lib/intake/loggedInRequestFlow";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
-import { isPreAuthIntakeComplete } from "@/lib/intake/preAuthIntake";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
 import { createClient } from "@/lib/supabase/server";
 import { PatientTopBar } from "./(patient-app)/PatientTopBar";
@@ -38,10 +38,11 @@ export default async function Page({ searchParams }: Props) {
     );
   }
 
-  const startAtMedication =
-    Boolean(user) &&
-    Boolean(sp.new_medication) &&
-    Boolean(initialPatientData && isPreAuthIntakeComplete(initialPatientData));
+  const startAtMedication = shouldStartAtMedicationSelection({
+    initialPatientData,
+    isAuthenticated: Boolean(user),
+    requestedNewMedication: Boolean(sp.new_medication),
+  });
 
   return (
     <>

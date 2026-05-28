@@ -914,8 +914,8 @@ export function TreatmentCheckout({
               ) : (
                 <div className={styles.emptyState}>
                   <p className={styles.muted}>No treatment selected.</p>
-                  <Link href="/" className={styles.secondary}>
-                    Return to intake
+                  <Link href="/?new_medication=1" className={styles.secondary}>
+                    Start medication request
                   </Link>
                 </div>
               )}

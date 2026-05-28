@@ -84,17 +84,26 @@ export default async function HubPage() {
       />
       <main className={styles.page}>
         <header className={styles.pageHeader}>
-          <h1>Patient Hub</h1>
+          <div>
+            <h1>Patient Hub</h1>
+            <p>Track provider review, payment, and medication request status.</p>
+          </div>
         </header>
 
         <div className={styles.stack}>
           <section className={styles.panel} aria-labelledby="appointments-title">
             <div className={styles.panelHeaderRow}>
-              <h2 id="appointments-title" className={styles.panelTitle}>
-                Medications
-              </h2>
+              <div>
+                <h2 id="appointments-title" className={styles.panelTitle}>
+                  Medications
+                </h2>
+                <p className={styles.panelSubtitle}>
+                  Start a GLP-1 subscription request or review active medication requests.
+                </p>
+              </div>
               <Link
                 href="/?new_medication=1"
+                aria-label="Request new GLP-1 medication"
                 className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}
               >
                 Request new medication
