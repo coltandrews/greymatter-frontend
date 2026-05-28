@@ -24,7 +24,7 @@ import {
   type TreatmentKey,
 } from "@/lib/treatments";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 
 const card = {
   width: "100%" as const,
@@ -277,6 +277,21 @@ function questionCanAutoAdvance(question: IntakeQuestion): boolean {
   // return question.question_type === "yes_no" || question.question_type === "select";
   void question;
   return false;
+}
+
+function shouldSubmitOnEnter(event: KeyboardEvent<HTMLElement>): boolean {
+  if (
+    event.key !== "Enter" ||
+    event.shiftKey ||
+    event.metaKey ||
+    event.altKey ||
+    event.ctrlKey ||
+    event.nativeEvent.isComposing
+  ) {
+    return false;
+  }
+  const target = event.target;
+  return !(target instanceof HTMLTextAreaElement);
 }
 
 function answersFromPatientData(data: IntakeDraftData | null | undefined): IntakeQuestionAnswers {
@@ -919,6 +934,15 @@ export function PreAuthEligibility({
         {step === "eligibility" ? (
           <form
             style={{ display: "grid", gap: 0 }}
+            onKeyDown={(event) => {
+              if (!shouldSubmitOnEnter(event)) {
+                return;
+              }
+              event.preventDefault();
+              if (currentPageComplete) {
+                continueEligibility();
+              }
+            }}
             onSubmit={(event) => {
               event.preventDefault();
               continueEligibility();
@@ -1062,6 +1086,15 @@ export function PreAuthEligibility({
         {step === "treatment_questions" ? (
           <form
             style={{ display: "grid", gap: 18 }}
+            onKeyDown={(event) => {
+              if (!shouldSubmitOnEnter(event)) {
+                return;
+              }
+              event.preventDefault();
+              if (currentMedicationQuestionComplete && !saving) {
+                continueMedicationQuestion();
+              }
+            }}
             onSubmit={(event) => {
               event.preventDefault();
               continueMedicationQuestion();

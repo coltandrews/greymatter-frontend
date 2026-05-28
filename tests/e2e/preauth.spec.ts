@@ -112,6 +112,22 @@ test("eligible patient completes pre-account intake before account creation", as
   });
 });
 
+test("enabled intake next action advances with Enter", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("heading", { name: "First Name" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next step" })).toBeDisabled();
+
+  await page.locator("input").fill("Pat");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Last Name" })).toBeVisible();
+
+  await page.locator("input").fill("Patient");
+  await page.getByRole("button", { name: "Next step" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("heading", { name: "Date Of Birth" })).toBeVisible();
+});
+
 test("pre-account intake blocks unsupported booking-for-someone-else flow", async ({ page }) => {
   await page.goto("/");
 
