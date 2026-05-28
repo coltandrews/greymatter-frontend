@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { shouldStartAtMedicationSelection } from "./loggedInRequestFlow";
+import {
+  shouldRedirectAuthenticatedRootToHub,
+  shouldStartAtMedicationSelection,
+} from "./loggedInRequestFlow";
 
 const completePatientData = {
   legal_first_name: "Pat",
@@ -41,6 +44,27 @@ describe("logged-in medication request flow", () => {
       shouldStartAtMedicationSelection({
         initialPatientData: completePatientData,
         isAuthenticated: true,
+        requestedNewMedication: false,
+      }),
+    ).toBe(false);
+  });
+
+  it("redirects plain authenticated root visits to the patient hub", () => {
+    expect(
+      shouldRedirectAuthenticatedRootToHub({
+        isAuthenticated: true,
+        requestedNewMedication: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldRedirectAuthenticatedRootToHub({
+        isAuthenticated: true,
+        requestedNewMedication: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldRedirectAuthenticatedRootToHub({
+        isAuthenticated: false,
         requestedNewMedication: false,
       }),
     ).toBe(false);

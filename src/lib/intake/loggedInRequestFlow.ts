@@ -17,3 +17,13 @@ export function shouldStartAtMedicationSelection({
       isPreAuthIntakeComplete(initialPatientData),
   );
 }
+
+export function shouldRedirectAuthenticatedRootToHub({
+  isAuthenticated,
+  requestedNewMedication,
+}: {
+  isAuthenticated: boolean;
+  requestedNewMedication: boolean;
+}): boolean {
+  return isAuthenticated && !requestedNewMedication;
+}

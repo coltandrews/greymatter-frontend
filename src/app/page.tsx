@@ -1,9 +1,13 @@
 import { Suspense } from "react";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
-import { shouldStartAtMedicationSelection } from "@/lib/intake/loggedInRequestFlow";
+import {
+  shouldRedirectAuthenticatedRootToHub,
+  shouldStartAtMedicationSelection,
+} from "@/lib/intake/loggedInRequestFlow";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { PatientTopBar } from "./(patient-app)/PatientTopBar";
 import { PreAuthEligibility } from "./PreAuthEligibility";
 
@@ -36,6 +40,15 @@ export default async function Page({ searchParams }: Props) {
       draftRow?.data as IntakeDraftData | undefined,
       profile?.demographics as IntakeDraftData | undefined,
     );
+  }
+
+  if (
+    shouldRedirectAuthenticatedRootToHub({
+      isAuthenticated: Boolean(user),
+      requestedNewMedication: Boolean(sp.new_medication),
+    })
+  ) {
+    redirect("/hub");
   }
 
   const startAtMedication = shouldStartAtMedicationSelection({
