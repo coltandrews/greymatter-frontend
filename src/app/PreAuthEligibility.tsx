@@ -43,8 +43,8 @@ const brand = {
   quiet: "#3f3f3f",
   border: "#171717",
   accent: "#171717",
-  actionBg: "#d6d6d6",
-  actionText: "#171717",
+  actionBg: "#171717",
+  actionText: "#ffffff",
   disabledBg: "var(--gm-disabled-bg)",
   disabledText: "#4a4a4a",
   error: "#b91c1c",
@@ -83,12 +83,12 @@ const primaryAction = {
   minHeight: 52,
   padding: "0 18px",
   borderRadius: 999,
-  border: "1px solid rgba(255, 255, 255, 0.78)",
+  border: "1px solid #171717",
   background: brand.actionBg,
   color: brand.actionText,
   fontSize: 15,
   fontWeight: 600,
-  boxShadow: "0 1px 0 rgba(255, 255, 255, 0.72) inset",
+  boxShadow: "0 10px 22px rgba(23, 23, 23, 0.14)",
 };
 
 const linkButton = {
