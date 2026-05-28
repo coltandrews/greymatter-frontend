@@ -426,10 +426,6 @@ export function AuthEntry({
                   You agree to provide accurate information, upload your own government ID, and
                   keep your contact, shipping, and health information current.
                 </p>
-                <p style={{ margin: 0 }}>
-                  Placeholder notice: replace this block with the client-approved Terms of
-                  Service, Privacy Policy, consent language, and refund policy before launch.
-                </p>
               </div>
               <label
                 style={{
