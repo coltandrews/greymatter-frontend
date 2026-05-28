@@ -242,6 +242,15 @@ function arrayAnswer(value: IntakeQuestionAnswer | undefined): string[] {
   return Array.isArray(value) ? value : [];
 }
 
+function defaultTreatmentAnswers(treatmentKey: TreatmentKey): IntakeQuestionAnswers {
+  if (treatmentKey === "glp_1") {
+    return {
+      glp_1_goal_weight: "0",
+    };
+  }
+  return {};
+}
+
 function optionsForQuestion(question: IntakeQuestion) {
   if (question.question_key === "service_state" && question.options.length === 0) {
     return US_STATES.map((state) => ({
@@ -976,7 +985,7 @@ export function PreAuthEligibility({
                     type="button"
                     onClick={() => {
                       setSelectedTreatment(treatment.key);
-                      setTreatmentAnswers({});
+                      setTreatmentAnswers(defaultTreatmentAnswers(treatment.key));
                       setMedicationPageIndex(0);
                       setError(null);
                       // Auto-advance after selecting a treatment is paused. Patients

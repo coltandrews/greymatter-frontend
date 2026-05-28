@@ -257,7 +257,7 @@ export const TREATMENT_QUESTION_SETS: Record<TreatmentKey, TreatmentQuestionSet>
           option("prefer_not_answer", "I prefer not to answer"),
         ],
       ),
-      question("glp_1", 1020, "glp_1_goal_weight", "Please enter your goal weight:", "textarea"),
+      question("glp_1", 1020, "glp_1_goal_weight", "Please enter your goal weight:", "number"),
       question(
         "glp_1",
         1030,

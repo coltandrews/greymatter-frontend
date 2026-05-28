@@ -47,6 +47,16 @@ describe("treatment registry", () => {
     expect(treatmentQuestions("testosterone")).toHaveLength(12);
   });
 
+  it("uses a numeric picker for GLP-1 goal weight", () => {
+    expect(
+      treatmentQuestions("glp_1").find(
+        (question) => question.question_key === "glp_1_goal_weight",
+      ),
+    ).toMatchObject({
+      question_type: "number",
+    });
+  });
+
   it("skips prior GLP-1 experience questions when the patient has never taken GLP-1s", () => {
     const keys = visibleTreatmentQuestions("glp_1", {
       glp_1_prior_medication_status: "never_taken",

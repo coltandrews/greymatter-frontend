@@ -29,6 +29,7 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
   await page.locator("label").filter({ hasText: "I prefer not to answer" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
 
+  await expect(page.getByLabel(/goal weight/i)).toHaveValue("0");
   await page.getByLabel(/goal weight/i).fill("180");
   await page.getByRole("button", { name: "Next step" }).click();
 
