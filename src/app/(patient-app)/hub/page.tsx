@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
+import Link from "next/link";
 import { PatientTopBar } from "../PatientTopBar";
 import { HubAppointments } from "./HubAppointments";
 import styles from "./hub.module.css";
@@ -92,6 +93,12 @@ export default async function HubPage() {
               <h2 id="appointments-title" className={styles.panelTitle}>
                 Medications
               </h2>
+              <Link
+                href="/?new_medication=1"
+                className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}
+              >
+                Request new medication
+              </Link>
             </div>
 
             <HubAppointments

@@ -51,6 +51,27 @@ const progressTrack = {
   marginBottom: 38,
 };
 
+const authHeader = {
+  position: "relative" as const,
+};
+
+const authBackArrow = {
+  position: "absolute" as const,
+  left: 0,
+  top: 64,
+  border: "none",
+  width: 28,
+  height: 28,
+  display: "grid" as const,
+  placeItems: "center",
+  borderRadius: 999,
+  background: "rgba(255, 255, 255, 0.72)",
+  color: "#171717",
+  fontSize: 20,
+  lineHeight: 1,
+  cursor: "pointer",
+};
+
 const messageSlot = {
   minHeight: 18,
   margin: 0,
@@ -72,9 +93,13 @@ function isExistingUserSignupError(message: string) {
 export function AuthEntry({
   initialMode = "signup",
   intakeReady = false,
+  onBack,
+  onStartIntake,
 }: {
   initialMode?: Mode;
   intakeReady?: boolean;
+  onBack?: () => void;
+  onStartIntake?: () => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -202,6 +227,14 @@ export function AuthEntry({
     setExistingEmailError(false);
   }
 
+  function startIntake() {
+    if (onStartIntake) {
+      onStartIntake();
+      return;
+    }
+    router.push("/");
+  }
+
   if (awaitingEmail) {
     return (
       <main
@@ -215,7 +248,12 @@ export function AuthEntry({
         }}
       >
         <section style={card}>
-          <header>
+          <header style={authHeader}>
+            {onBack ? (
+              <button type="button" onClick={onBack} style={authBackArrow} aria-label="Back">
+                ←
+              </button>
+            ) : null}
             <img src="/brand/logo-square.svg" alt="GMMD" style={logo} />
             <div style={progressTrack} />
           </header>
@@ -263,7 +301,12 @@ export function AuthEntry({
       }}
     >
       <section style={card}>
-        <header>
+        <header style={authHeader}>
+          {onBack ? (
+            <button type="button" onClick={onBack} style={authBackArrow} aria-label="Back">
+              ←
+            </button>
+          ) : null}
           <img src="/brand/logo-square.svg" alt="GMMD" style={logo} />
           <div style={progressTrack} />
         </header>
@@ -424,13 +467,7 @@ export function AuthEntry({
               <button
                 type="button"
                 disabled={loading}
-                onClick={() => {
-                  setMode("signup");
-                  setPasswordConfirm("");
-                  setError(null);
-                  setExistingEmailError(false);
-                  setAwaitingEmail(false);
-                }}
+                onClick={startIntake}
                 style={{
                   padding: 0,
                   border: "none",

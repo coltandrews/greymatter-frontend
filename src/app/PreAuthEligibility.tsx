@@ -2,6 +2,9 @@
 
 import { AuthEntry } from "./AuthEntry";
 import { US_STATES } from "./intake/usStates";
+import { createClient } from "@/lib/supabase/client";
+import type { IntakeDraftData } from "@/lib/intake/draftData";
+import { persistPreAuthIntake } from "@/lib/intake/persistPreAuthIntake";
 import {
   intakeAnswerComplete,
   mergePreSignupQuestions,
@@ -19,7 +22,7 @@ import {
   treatmentQuestions,
   type TreatmentKey,
 } from "@/lib/treatments";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 const card = {
@@ -189,6 +192,17 @@ const progressFill = {
   transition: "width 160ms ease",
 };
 
+const loggedInNote = {
+  margin: "0 0 18px",
+  padding: "12px 14px",
+  borderRadius: 7,
+  background: "rgba(255, 255, 255, 0.62)",
+  border: "1px solid rgba(23, 23, 23, 0.2)",
+  color: brand.muted,
+  fontSize: 13,
+  lineHeight: 1.45,
+};
+
 const bmiCard = {
   display: "flex" as const,
   alignItems: "center",
@@ -236,6 +250,43 @@ function groupQuestionsByPage(questions: IntakeQuestion[]): IntakeQuestion[][] {
   return [...questions]
     .sort((a, b) => a.position - b.position)
     .map((question) => [question]);
+}
+
+function questionCanAutoAdvance(question: IntakeQuestion): boolean {
+  return question.question_type === "yes_no" || question.question_type === "select";
+}
+
+function answersFromPatientData(data: IntakeDraftData | null | undefined): IntakeQuestionAnswers {
+  if (!data) {
+    return {};
+  }
+  const state = data.service_state?.trim() || data.address_state?.trim() || "";
+  return {
+    legal_first_name: data.legal_first_name?.trim() ?? "",
+    legal_last_name: data.legal_last_name?.trim() ?? "",
+    date_of_birth: data.date_of_birth?.trim() ?? "",
+    gender: data.gender?.trim() ?? "",
+    service_state: state,
+    for_self: data.for_self === false ? "no" : "yes",
+    ...(data.pre_signup_answers ?? {}),
+  };
+}
+
+function mergeSavedPatientData(
+  base: IntakeDraftData | null | undefined,
+  intake: IntakeDraftData,
+): IntakeDraftData {
+  return {
+    ...(base ?? {}),
+    ...intake,
+    phone: intake.phone ?? base?.phone,
+    phone_secondary: intake.phone_secondary ?? base?.phone_secondary,
+    street_address: intake.street_address ?? base?.street_address,
+    address_line2: intake.address_line2 ?? base?.address_line2,
+    city: intake.city ?? base?.city,
+    zip: intake.zip ?? base?.zip,
+    country: intake.country ?? base?.country,
+  };
 }
 
 function parseHeightInches(value: IntakeQuestionAnswer | undefined): number | null {
@@ -535,20 +586,33 @@ function QuestionField({
   );
 }
 
-export function PreAuthEligibility() {
+export function PreAuthEligibility({
+  initialPatientData = null,
+  isAuthenticated = false,
+  startAtMedication = false,
+}: {
+  initialPatientData?: IntakeDraftData | null;
+  isAuthenticated?: boolean;
+  startAtMedication?: boolean;
+}) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const startsInSignIn = Boolean(searchParams.get("signin"));
+  const startsAtMedicationSelection = isAuthenticated && startAtMedication;
   const [step, setStep] = useState<
     "eligibility" | "treatment" | "treatment_questions" | "account"
-  >(startsInSignIn ? "account" : "eligibility");
+  >(startsInSignIn ? "account" : startsAtMedicationSelection ? "treatment" : "eligibility");
   const [accountMode, setAccountMode] = useState<"signup" | "signin">(startsInSignIn ? "signin" : "signup");
   const questions = mergePreSignupQuestions([]);
-  const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
+  const [answers, setAnswers] = useState<IntakeQuestionAnswers>(() =>
+    answersFromPatientData(initialPatientData),
+  );
   const [selectedTreatment, setSelectedTreatment] = useState<TreatmentKey | null>(null);
   const [treatmentAnswers, setTreatmentAnswers] = useState<IntakeQuestionAnswers>({});
   const [intakePageIndex, setIntakePageIndex] = useState(0);
   const [medicationPageIndex, setMedicationPageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const questionPages = groupQuestionsByPage(questions);
   const currentQuestions = questionPages[intakePageIndex] ?? questionPages[0] ?? [];
   const hasNextQuestionPage = intakePageIndex < questionPages.length - 1;
@@ -564,9 +628,6 @@ export function PreAuthEligibility() {
         treatmentAnswers[currentMedicationQuestion.question_key],
       )
     : false;
-  const medicationQuestionsComplete = medicationQuestions.every((question) =>
-    intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
-  );
   const medicationFlowStepCount = selectedTreatment ? Math.max(medicationQuestions.length, 1) : 1;
   const totalFlowSteps = questionPages.length + medicationFlowStepCount + 2;
   const currentFlowStep =
@@ -584,10 +645,15 @@ export function PreAuthEligibility() {
   const canGoBack =
     (step === "eligibility" && intakePageIndex > 0) ||
     step === "treatment" ||
-    step === "treatment_questions";
+    step === "treatment_questions" ||
+    step === "account";
 
   function goBack() {
     setError(null);
+    if (step === "account") {
+      setStep(selectedTreatment ? "treatment_questions" : "treatment");
+      return;
+    }
     if (step === "treatment_questions") {
       if (medicationPageIndex > 0) {
         setMedicationPageIndex((current) => Math.max(0, current - 1));
@@ -597,6 +663,10 @@ export function PreAuthEligibility() {
       return;
     }
     if (step === "treatment") {
+      if (startsAtMedicationSelection) {
+        router.push("/hub");
+        return;
+      }
       setStep("eligibility");
       setIntakePageIndex(Math.max(0, questionPages.length - 1));
       return;
@@ -604,12 +674,41 @@ export function PreAuthEligibility() {
     setIntakePageIndex((current) => Math.max(0, current - 1));
   }
 
-  function saveIntakeAndContinue() {
-    const intake = buildPreAuthIntakeData(questions, answers, {
+  function intakeForCurrentState() {
+    return mergeSavedPatientData(initialPatientData, buildPreAuthIntakeData(questions, answers, {
       selectedTreatment,
       questions: medicationQuestions,
       answers: treatmentAnswers,
-    });
+    }));
+  }
+
+  async function saveIntakeAndContinue() {
+    const intake = intakeForCurrentState();
+    if (isAuthenticated) {
+      setSaving(true);
+      setError(null);
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          setAccountMode("signin");
+          setStep("account");
+          return;
+        }
+        const { error: persistError } = await persistPreAuthIntake(supabase, user.id, intake);
+        if (persistError) {
+          setError(persistError);
+          return;
+        }
+        router.push("/checkout");
+        router.refresh();
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     window.localStorage.setItem(
       PRE_AUTH_INTAKE_STORAGE_KEY,
       serializePreAuthIntake(intake),
@@ -618,8 +717,117 @@ export function PreAuthEligibility() {
     setStep("account");
   }
 
+  function restartIntake() {
+    setAnswers({});
+    setSelectedTreatment(null);
+    setTreatmentAnswers({});
+    setIntakePageIndex(0);
+    setMedicationPageIndex(0);
+    setError(null);
+    setAccountMode("signup");
+    setStep("eligibility");
+  }
+
+  function continueEligibility(nextAnswers = answers) {
+    setError(null);
+    const unanswered = currentQuestions.find(
+      (question) => !intakeAnswerComplete(question, nextAnswers[question.question_key]),
+    );
+    if (unanswered) {
+      setError(`Answer: ${unanswered.prompt}`);
+      return;
+    }
+    if (hasNextQuestionPage) {
+      setIntakePageIndex((current) => current + 1);
+      return;
+    }
+
+    const intake = buildPreAuthIntakeData(questions, nextAnswers);
+
+    const unansweredAnyPage = questions.find(
+      (question) => !intakeAnswerComplete(question, nextAnswers[question.question_key]),
+    );
+    if (unansweredAnyPage) {
+      setError(`Answer: ${unansweredAnyPage.prompt}`);
+      return;
+    }
+    if (intake.for_self !== true) {
+      setError("Please continue only if you are completing this intake for yourself.");
+      return;
+    }
+    if (!intake.service_state) {
+      setError("Select the state where you will receive care.");
+      return;
+    }
+    setStep("treatment");
+  }
+
+  function updateEligibilityAnswer(question: IntakeQuestion, value: IntakeQuestionAnswer) {
+    const nextAnswers = {
+      ...answers,
+      [question.question_key]: value,
+    };
+    setAnswers(nextAnswers);
+    setError(null);
+    if (questionCanAutoAdvance(question) && intakeAnswerComplete(question, value)) {
+      window.setTimeout(() => continueEligibility(nextAnswers), 120);
+    }
+  }
+
+  function continueMedicationQuestion(nextTreatmentAnswers = treatmentAnswers) {
+    setError(null);
+    if (!currentMedicationQuestion) {
+      setError("Select a treatment.");
+      setStep("treatment");
+      return;
+    }
+    if (
+      !intakeAnswerComplete(
+        currentMedicationQuestion,
+        nextTreatmentAnswers[currentMedicationQuestion.question_key],
+      )
+    ) {
+      setError(`Answer: ${currentMedicationQuestion.prompt}`);
+      return;
+    }
+    if (hasNextMedicationQuestionPage) {
+      setMedicationPageIndex((current) => current + 1);
+      return;
+    }
+    const complete = medicationQuestions.every((question) =>
+      intakeAnswerComplete(question, nextTreatmentAnswers[question.question_key]),
+    );
+    if (!complete) {
+      const unanswered = medicationQuestions.find(
+        (question) => !intakeAnswerComplete(question, nextTreatmentAnswers[question.question_key]),
+      );
+      setError(`Answer: ${unanswered?.prompt ?? "all treatment questions"}`);
+      return;
+    }
+    void saveIntakeAndContinue();
+  }
+
+  function updateMedicationAnswer(question: IntakeQuestion, value: IntakeQuestionAnswer) {
+    const nextTreatmentAnswers = {
+      ...treatmentAnswers,
+      [question.question_key]: value,
+    };
+    setTreatmentAnswers(nextTreatmentAnswers);
+    setError(null);
+    if (questionCanAutoAdvance(question) && intakeAnswerComplete(question, value)) {
+      window.setTimeout(() => continueMedicationQuestion(nextTreatmentAnswers), 120);
+    }
+  }
+
   if (step === "account") {
-    return <AuthEntry initialMode={accountMode} intakeReady />;
+    return (
+      <AuthEntry
+        initialMode={accountMode}
+        intakeReady
+        onBack={canGoBack ? goBack : undefined}
+        onStartIntake={restartIntake}
+      />
+    );
   }
 
   const heading =
@@ -666,43 +874,19 @@ export function PreAuthEligibility() {
           <h1 style={{ margin: "0 0 14px", fontSize: 22, lineHeight: 1.1, fontWeight: 400, color: brand.text }}>
             {heading}
           </h1>
+          {startsAtMedicationSelection && step === "treatment" ? (
+            <p style={loggedInNote}>
+              Choose the medication path you want to request. We will use your saved account
+              details and take you straight to checkout after the medication intake.
+            </p>
+          ) : null}
 
         {step === "eligibility" ? (
           <form
             style={{ display: "grid", gap: 0 }}
             onSubmit={(event) => {
               event.preventDefault();
-              setError(null);
-              const unanswered = currentQuestions.find(
-                (question) => !intakeAnswerComplete(question, answers[question.question_key]),
-              );
-              if (unanswered) {
-                setError(`Answer: ${unanswered.prompt}`);
-                return;
-              }
-              if (hasNextQuestionPage) {
-                setIntakePageIndex((current) => current + 1);
-                return;
-              }
-
-              const intake = buildPreAuthIntakeData(questions, answers);
-
-              const unansweredAnyPage = questions.find(
-                (question) => !intakeAnswerComplete(question, answers[question.question_key]),
-              );
-              if (unansweredAnyPage) {
-                setError(`Answer: ${unansweredAnyPage.prompt}`);
-                return;
-              }
-              if (intake.for_self !== true) {
-                setError("Please continue only if you are completing this intake for yourself.");
-                return;
-              }
-              if (!intake.service_state) {
-                setError("Select the state where you will receive care.");
-                return;
-              }
-              setStep("treatment");
+              continueEligibility();
             }}
           >
             {currentQuestions.map((question) => (
@@ -711,12 +895,7 @@ export function PreAuthEligibility() {
                 question={question}
                 hidePrompt
                 answer={answers[question.question_key]}
-                onChange={(value) =>
-                  setAnswers((current) => ({
-                    ...current,
-                    [question.question_key]: value,
-                  }))
-                }
+                onChange={(value) => updateEligibilityAnswer(question, value)}
               />
             ))}
 
@@ -771,6 +950,10 @@ export function PreAuthEligibility() {
                       setSelectedTreatment(treatment.key);
                       setTreatmentAnswers({});
                       setMedicationPageIndex(0);
+                      setError(null);
+                      window.setTimeout(() => {
+                        setStep("treatment_questions");
+                      }, 120);
                     }}
                     style={{
                       display: "grid",
@@ -829,33 +1012,7 @@ export function PreAuthEligibility() {
             style={{ display: "grid", gap: 18 }}
             onSubmit={(event) => {
               event.preventDefault();
-              setError(null);
-              if (!currentMedicationQuestion) {
-                setError("Select a treatment.");
-                setStep("treatment");
-                return;
-              }
-              if (
-                !intakeAnswerComplete(
-                  currentMedicationQuestion,
-                  treatmentAnswers[currentMedicationQuestion.question_key],
-                )
-              ) {
-                setError(`Answer: ${currentMedicationQuestion.prompt}`);
-                return;
-              }
-              if (hasNextMedicationQuestionPage) {
-                setMedicationPageIndex((current) => current + 1);
-                return;
-              }
-              if (!medicationQuestionsComplete) {
-                const unanswered = medicationQuestions.find(
-                  (question) => !intakeAnswerComplete(question, treatmentAnswers[question.question_key]),
-                );
-                setError(`Answer: ${unanswered?.prompt ?? "all treatment questions"}`);
-                return;
-              }
-              saveIntakeAndContinue();
+              continueMedicationQuestion();
             }}
           >
             {currentMedicationQuestion ? (
@@ -863,12 +1020,7 @@ export function PreAuthEligibility() {
                 <QuestionField
                   question={currentMedicationQuestion}
                   answer={treatmentAnswers[currentMedicationQuestion.question_key]}
-                  onChange={(value) =>
-                    setTreatmentAnswers((current) => ({
-                      ...current,
-                      [currentMedicationQuestion.question_key]: value,
-                    }))
-                  }
+                  onChange={(value) => updateMedicationAnswer(currentMedicationQuestion, value)}
                 />
                 {selectedTreatment === "glp_1" && currentMedicationQuestion.question_key === "glp_1_current_weight" ? (
                   <BmiPreview answers={treatmentAnswers} />
@@ -883,15 +1035,21 @@ export function PreAuthEligibility() {
             <div style={flowActions}>
               <button
                 type="submit"
-                disabled={!currentMedicationQuestionComplete}
+                disabled={!currentMedicationQuestionComplete || saving}
                 style={{
                   ...primaryAction,
-                  background: currentMedicationQuestionComplete ? brand.actionBg : brand.disabledBg,
-                  color: currentMedicationQuestionComplete ? brand.actionText : brand.disabledText,
-                  cursor: currentMedicationQuestionComplete ? "pointer" : "not-allowed",
+                  background: currentMedicationQuestionComplete && !saving ? brand.actionBg : brand.disabledBg,
+                  color: currentMedicationQuestionComplete && !saving ? brand.actionText : brand.disabledText,
+                  cursor: currentMedicationQuestionComplete && !saving ? "pointer" : "not-allowed",
                 }}
               >
-                {hasNextMedicationQuestionPage ? "Next step" : "Create account"}
+                {saving
+                  ? "Saving..."
+                  : hasNextMedicationQuestionPage
+                    ? "Next step"
+                    : isAuthenticated
+                      ? "Continue to checkout"
+                      : "Create account"}
               </button>
             </div>
           </form>

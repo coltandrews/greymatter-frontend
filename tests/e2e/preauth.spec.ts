@@ -11,9 +11,9 @@ async function fillCoreIntake(page: import("@playwright/test").Page, forSelf: "Y
   await page.locator("input").fill("1990-01-01");
   await page.getByRole("button", { name: "Next step" }).click();
   await page.locator("select").selectOption("female");
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByRole("heading", { name: "State" })).toBeVisible();
   await page.locator("select").selectOption("SC");
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByRole("heading", { name: "Are You Booking Care For Yourself?" })).toBeVisible();
   await page.locator("label").filter({ hasText: new RegExp(`^${forSelf}$`) }).click();
 }
 
@@ -29,13 +29,13 @@ async function fillPeptidesQuestions(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Next step" }).click();
 
   await page.getByLabel(/blood pressure/i).selectOption("120_130_70_80");
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByLabel(/monitor your blood sugar/i)).toBeVisible();
 
   await page.getByLabel(/monitor your blood sugar/i).selectOption("does_not_apply");
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByText("Are you currently taking any growth hormone therapy?")).toBeVisible();
 
   await page.locator("label").filter({ hasText: /^No$/ }).click();
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByText("Do you have any of the following symptoms?")).toBeVisible();
 
   await page.locator("label").filter({ hasText: "Fatigue" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
@@ -44,7 +44,7 @@ async function fillPeptidesQuestions(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Next step" }).click();
 
   await page.locator("label").filter({ hasText: /^No$/ }).click();
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByLabel(/inform the doctor/i)).toBeVisible();
 
   await page.getByLabel(/inform the doctor/i).fill("No other notes.");
 }
@@ -53,9 +53,7 @@ test("eligible patient completes pre-account intake before account creation", as
   await page.goto("/");
 
   await fillCoreIntake(page);
-  await page.getByRole("button", { name: "Choose treatment" }).click();
   await page.getByRole("button", { name: "Peptides" }).click();
-  await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Peptides intake" })).toBeVisible();
   await expect(page.getByText("Are there any additional goals")).not.toBeVisible();
@@ -84,7 +82,6 @@ test("pre-account intake blocks unsupported booking-for-someone-else flow", asyn
   await page.goto("/");
 
   await fillCoreIntake(page, "No");
-  await page.getByRole("button", { name: "Choose treatment" }).click();
 
   await expect(
     page.getByText("Please continue only if you are completing this intake for yourself."),
@@ -99,4 +96,6 @@ test("pre-account intake sign-in link opens the sign-in form", async ({ page }) 
 
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await page.getByRole("button", { name: "Sign up" }).click();
+  await expect(page.getByRole("heading", { name: "First Name" })).toBeVisible();
 });
