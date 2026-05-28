@@ -645,8 +645,24 @@ const GLP_1_MENTAL_HEALTH_MEDICAL_CONDITION_VALUES = new Set([
   "psychiatric_disorders",
 ]);
 
+const GLP_1_CANCER_FOLLOW_UP_QUESTION_KEYS = new Set([
+  "glp_1_cancer_details",
+  "glp_1_future_chemo_or_surgery",
+]);
+
+const GLP_1_LIVER_DISEASE_FOLLOW_UP_QUESTION_KEYS = new Set([
+  "glp_1_liver_disease_details",
+]);
+
 function answerValues(value: IntakeQuestionAnswers[string] | undefined): string[] {
   return Array.isArray(value) ? value : typeof value === "string" && value ? [value] : [];
+}
+
+function filterQuestionKeys(
+  questions: IntakeQuestion[],
+  hiddenQuestionKeys: Set<string>,
+): IntakeQuestion[] {
+  return questions.filter((question) => !hiddenQuestionKeys.has(question.question_key));
 }
 
 export function visibleTreatmentQuestions(
@@ -688,6 +704,14 @@ export function visibleTreatmentQuestions(
     questions = questions.filter(
       (question) => question.question_key !== "glp_1_stable_in_treatment",
     );
+  }
+
+  if (!medicalConditions.includes("cancer")) {
+    questions = filterQuestionKeys(questions, GLP_1_CANCER_FOLLOW_UP_QUESTION_KEYS);
+  }
+
+  if (!medicalConditions.includes("liver_disease")) {
+    questions = filterQuestionKeys(questions, GLP_1_LIVER_DISEASE_FOLLOW_UP_QUESTION_KEYS);
   }
 
   return questions;

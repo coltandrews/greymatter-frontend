@@ -46,17 +46,10 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
   await page.getByRole("button", { name: "Next step" }).click();
   await expect(page.getByLabel(/mental health conditions/i)).toHaveCount(0);
   await expect(page.getByLabel(/stable in treatment/i)).toHaveCount(0);
-  await expect(page.getByLabel(/specific cancer/i)).toBeVisible();
-
-  await page.getByLabel(/specific cancer/i).fill("N/A");
-  await page.getByRole("button", { name: "Next step" }).click();
-
-  await page.getByLabel(/chemotherapy or surgical treatment/i).selectOption("does_not_apply");
-  await page.getByRole("button", { name: "Next step" }).click();
-  await expect(page.getByLabel(/diagnosed with liver conditions/i)).toBeVisible();
-
-  await page.getByLabel(/diagnosed with liver conditions/i).fill("N/A");
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByLabel(/specific cancer/i)).toHaveCount(0);
+  await expect(page.getByLabel(/chemotherapy or surgical treatment/i)).toHaveCount(0);
+  await expect(page.getByLabel(/diagnosed with liver conditions/i)).toHaveCount(0);
+  await expect(page.getByText("Have you or a family member ever been diagnosed")).toBeVisible();
 
   await page.locator("label").filter({ hasText: "No, none of these" }).click();
   await page.getByRole("button", { name: "Next step" }).click();

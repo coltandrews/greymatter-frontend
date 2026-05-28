@@ -25,6 +25,9 @@ describe("buildTreatmentBookingIntentPayload", () => {
         glp_1_experience_success: "very_successful",
         glp_1_mental_health_conditions: ["major_depression"],
         glp_1_stable_in_treatment: "yes",
+        glp_1_cancer_details: "A prior cancer answer that should be ignored",
+        glp_1_future_chemo_or_surgery: "yes",
+        glp_1_liver_disease_details: "A prior liver disease answer that should be ignored",
       },
     });
 
@@ -52,6 +55,15 @@ describe("buildTreatmentBookingIntentPayload", () => {
       "If you checked Depression/Anxiety or Psychiatric Disorders, have you been diagnosed with any of the following mental health conditions?",
     );
     expect(payload.appointmentAnswers).not.toHaveProperty("Are you stable in treatment?");
+    expect(payload.appointmentAnswers).not.toHaveProperty(
+      "If you selected cancer, what specific cancer have you been diagnosed with?",
+    );
+    expect(payload.appointmentAnswers).not.toHaveProperty(
+      "Are you planning to undergo chemotherapy or surgical treatment in the future, other than surgery to remove melanoma from the skin?",
+    );
+    expect(payload.appointmentAnswers).not.toHaveProperty(
+      "If you selected liver disease, have you been diagnosed with liver conditions? Fatty liver, cirrhosis, hepatitis, or something else?",
+    );
     expect(payload.selectedSlot).toBeUndefined();
   });
 

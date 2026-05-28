@@ -95,6 +95,32 @@ describe("treatment registry", () => {
     expect(notApplicableMentalHealthFollowUp).not.toContain("glp_1_stable_in_treatment");
   });
 
+  it("only shows GLP-1 condition details for selected medical conditions", () => {
+    const withoutConditionalHistory = visibleTreatmentQuestions("glp_1", {
+      glp_1_medical_conditions: ["none"],
+    }).map((question) => question.question_key);
+
+    expect(withoutConditionalHistory).not.toContain("glp_1_cancer_details");
+    expect(withoutConditionalHistory).not.toContain("glp_1_future_chemo_or_surgery");
+    expect(withoutConditionalHistory).not.toContain("glp_1_liver_disease_details");
+
+    const withCancerHistory = visibleTreatmentQuestions("glp_1", {
+      glp_1_medical_conditions: ["cancer"],
+    }).map((question) => question.question_key);
+
+    expect(withCancerHistory).toContain("glp_1_cancer_details");
+    expect(withCancerHistory).toContain("glp_1_future_chemo_or_surgery");
+    expect(withCancerHistory).not.toContain("glp_1_liver_disease_details");
+
+    const withLiverHistory = visibleTreatmentQuestions("glp_1", {
+      glp_1_medical_conditions: ["liver_disease"],
+    }).map((question) => question.question_key);
+
+    expect(withLiverHistory).toContain("glp_1_liver_disease_details");
+    expect(withLiverHistory).not.toContain("glp_1_cancer_details");
+    expect(withLiverHistory).not.toContain("glp_1_future_chemo_or_surgery");
+  });
+
   it("skips current GLP-1 dosing questions when the patient used GLP-1s only in the past", () => {
     const keys = visibleTreatmentQuestions("glp_1", {
       glp_1_prior_medication_status: "taken_in_past",
