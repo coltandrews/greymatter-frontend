@@ -640,25 +640,53 @@ const GLP_1_CURRENT_MEDICATION_QUESTION_KEYS = new Set([
   "glp_1_current_dose_satisfaction",
 ]);
 
+const GLP_1_MENTAL_HEALTH_MEDICAL_CONDITION_VALUES = new Set([
+  "depression_anxiety",
+  "psychiatric_disorders",
+]);
+
+function answerValues(value: IntakeQuestionAnswers[string] | undefined): string[] {
+  return Array.isArray(value) ? value : typeof value === "string" && value ? [value] : [];
+}
+
 export function visibleTreatmentQuestions(
   key: TreatmentKey | null,
   answers: IntakeQuestionAnswers = {},
 ): IntakeQuestion[] {
-  const questions = treatmentQuestions(key);
+  let questions = treatmentQuestions(key);
   if (key !== "glp_1") {
     return questions;
   }
 
   const priorMedicationStatus = answers.glp_1_prior_medication_status;
   if (priorMedicationStatus === "never_taken") {
-    return questions.filter(
+    questions = questions.filter(
       (question) => !GLP_1_PREVIOUS_EXPERIENCE_QUESTION_KEYS.has(question.question_key),
     );
   }
 
   if (priorMedicationStatus === "taken_in_past") {
-    return questions.filter(
+    questions = questions.filter(
       (question) => !GLP_1_CURRENT_MEDICATION_QUESTION_KEYS.has(question.question_key),
+    );
+  }
+
+  const medicalConditions = answerValues(answers.glp_1_medical_conditions);
+  const hasMentalHealthCondition = medicalConditions.some((value) =>
+    GLP_1_MENTAL_HEALTH_MEDICAL_CONDITION_VALUES.has(value),
+  );
+  if (!hasMentalHealthCondition) {
+    questions = questions.filter(
+      (question) =>
+        question.question_key !== "glp_1_mental_health_conditions" &&
+        question.question_key !== "glp_1_stable_in_treatment",
+    );
+  }
+
+  const mentalHealthConditions = answerValues(answers.glp_1_mental_health_conditions);
+  if (mentalHealthConditions.includes("not_applicable")) {
+    questions = questions.filter(
+      (question) => question.question_key !== "glp_1_stable_in_treatment",
     );
   }
 

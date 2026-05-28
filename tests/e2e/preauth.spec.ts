@@ -44,12 +44,8 @@ async function fillGlpQuestions(page: import("@playwright/test").Page) {
 
   await page.locator("label").filter({ hasText: "None of the above" }).click();
   await page.getByRole("button", { name: "Next step" }).click();
-
-  await page.locator("label").filter({ hasText: "Not Applicable" }).click();
-  await page.getByRole("button", { name: "Next step" }).click();
-
-  await page.getByLabel(/stable in treatment/i).selectOption("does_not_apply");
-  await page.getByRole("button", { name: "Next step" }).click();
+  await expect(page.getByLabel(/mental health conditions/i)).toHaveCount(0);
+  await expect(page.getByLabel(/stable in treatment/i)).toHaveCount(0);
   await expect(page.getByLabel(/specific cancer/i)).toBeVisible();
 
   await page.getByLabel(/specific cancer/i).fill("N/A");

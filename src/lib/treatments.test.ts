@@ -71,6 +71,30 @@ describe("treatment registry", () => {
     expect(keys).not.toContain("glp_1_current_dose_satisfaction");
   });
 
+  it("only shows GLP-1 mental health follow-ups when mental health history applies", () => {
+    const withoutMentalHealthHistory = visibleTreatmentQuestions("glp_1", {
+      glp_1_medical_conditions: ["none"],
+    }).map((question) => question.question_key);
+
+    expect(withoutMentalHealthHistory).not.toContain("glp_1_mental_health_conditions");
+    expect(withoutMentalHealthHistory).not.toContain("glp_1_stable_in_treatment");
+
+    const withMentalHealthHistory = visibleTreatmentQuestions("glp_1", {
+      glp_1_medical_conditions: ["depression_anxiety"],
+    }).map((question) => question.question_key);
+
+    expect(withMentalHealthHistory).toContain("glp_1_mental_health_conditions");
+    expect(withMentalHealthHistory).toContain("glp_1_stable_in_treatment");
+
+    const notApplicableMentalHealthFollowUp = visibleTreatmentQuestions("glp_1", {
+      glp_1_medical_conditions: ["psychiatric_disorders"],
+      glp_1_mental_health_conditions: ["not_applicable"],
+    }).map((question) => question.question_key);
+
+    expect(notApplicableMentalHealthFollowUp).toContain("glp_1_mental_health_conditions");
+    expect(notApplicableMentalHealthFollowUp).not.toContain("glp_1_stable_in_treatment");
+  });
+
   it("skips current GLP-1 dosing questions when the patient used GLP-1s only in the past", () => {
     const keys = visibleTreatmentQuestions("glp_1", {
       glp_1_prior_medication_status: "taken_in_past",

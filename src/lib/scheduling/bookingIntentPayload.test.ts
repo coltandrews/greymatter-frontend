@@ -23,6 +23,8 @@ describe("buildTreatmentBookingIntentPayload", () => {
         glp_1_prior_medication_status: "never_taken",
         glp_1_current_medication: "injectable_semaglutide",
         glp_1_experience_success: "very_successful",
+        glp_1_mental_health_conditions: ["major_depression"],
+        glp_1_stable_in_treatment: "yes",
       },
     });
 
@@ -46,6 +48,10 @@ describe("buildTreatmentBookingIntentPayload", () => {
     expect(payload.appointmentAnswers).not.toHaveProperty(
       "How successful has your GLP-1 experience been?",
     );
+    expect(payload.appointmentAnswers).not.toHaveProperty(
+      "If you checked Depression/Anxiety or Psychiatric Disorders, have you been diagnosed with any of the following mental health conditions?",
+    );
+    expect(payload.appointmentAnswers).not.toHaveProperty("Are you stable in treatment?");
     expect(payload.selectedSlot).toBeUndefined();
   });
 
