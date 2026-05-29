@@ -410,6 +410,14 @@
   font-size: 16px;
 }
 
+.flowActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
 .hubFormStack {
   display: grid;
   gap: 14px;
@@ -526,6 +534,31 @@
 .idUploadBox input {
   margin-top: 6px;
   max-width: 100%;
+}
+
+.savedIdOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  padding: 12px 14px;
+  border: 1px solid rgba(23, 23, 23, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--gm-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.savedIdOption input {
+  flex-shrink: 0;
+}
+
+.fieldError {
+  margin: 0;
+  color: #9f1239;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .reviewList {
@@ -658,6 +691,37 @@
   border-color: #171717;
   box-shadow: 0 10px 22px rgba(23, 23, 23, 0.14);
   transform: translateY(-1px);
+}
+
+.scheduleNewBtn:disabled {
+  border-color: rgba(23, 23, 23, 0.16);
+  background: rgba(23, 23, 23, 0.26);
+  color: rgba(255, 255, 255, 0.88);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.secondaryButton {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid rgba(23, 23, 23, 0.2);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--gm-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryButton:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.secondaryButton:disabled {
+  color: var(--gm-disabled-text);
+  cursor: not-allowed;
 }
 
 .scheduleNewLink {

@@ -7,6 +7,11 @@ import {
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
 import { createClient } from "@/lib/supabase/server";
+import {
+  FALLBACK_TREATMENT_PRODUCTS,
+  treatmentProductFromRow,
+  type TreatmentProduct,
+} from "@/lib/treatmentProducts";
 import { redirect } from "next/navigation";
 import { PatientTopBar } from "./(patient-app)/PatientTopBar";
 import { PreAuthEligibility } from "./PreAuthEligibility";
@@ -56,6 +61,19 @@ export default async function Page({ searchParams }: Props) {
     isAuthenticated: Boolean(user),
     requestedNewMedication: Boolean(sp.new_medication),
   });
+  const { data: productRows } = await supabase
+    .from("treatment_products")
+    .select(
+      "id, product_key, name, label, summary, description, service_key, service_type, billing_type, price_id, consultation_fee_cents, medication_fee_cents, currency, question_set_key, sort_order",
+    )
+    .eq("patient_visible", true)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  const products =
+    (productRows ?? [])
+      .map((row) => treatmentProductFromRow(row))
+      .filter((row): row is TreatmentProduct => row != null);
+  const visibleProducts = products.length > 0 ? products : FALLBACK_TREATMENT_PRODUCTS;
 
   return (
     <>
@@ -70,6 +88,7 @@ export default async function Page({ searchParams }: Props) {
           initialPatientData={initialPatientData}
           isAuthenticated={Boolean(user)}
           startAtMedication={startAtMedication}
+          treatmentProducts={visibleProducts}
         />
       </Suspense>
     </>

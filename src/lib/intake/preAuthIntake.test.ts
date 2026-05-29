@@ -128,4 +128,43 @@ describe("pre-auth intake", () => {
       },
     });
   });
+
+  it("can save a product key with a separate question set key", () => {
+    const data = buildPreAuthIntakeData(
+      [
+        { question_key: "legal_first_name", question_type: "text" },
+        { question_key: "legal_last_name", question_type: "text" },
+        { question_key: "date_of_birth", question_type: "date" },
+        { question_key: "gender", question_type: "select" },
+        { question_key: "service_state", question_type: "select" },
+        { question_key: "for_self", question_type: "yes_no" },
+      ],
+      {
+        legal_first_name: "Pat",
+        legal_last_name: "Patient",
+        date_of_birth: "1990-01-01",
+        gender: "female",
+        service_state: "SC",
+        for_self: "yes",
+      },
+      {
+        selectedTreatment: "retatrutide_level_5",
+        questionSetKey: "glp_1",
+        questions: [{ question_key: "glp_1_goal_weight", question_type: "number" }],
+        answers: { glp_1_goal_weight: "185" },
+      },
+    );
+
+    expect(data).toMatchObject({
+      selected_treatment: "retatrutide_level_5",
+      selected_treatment_question_set: {
+        treatmentKey: "glp_1",
+        source: "ola",
+        version: "ola-initial-2026-05-26",
+      },
+      treatment_answers: {
+        glp_1_goal_weight: "185",
+      },
+    });
+  });
 });

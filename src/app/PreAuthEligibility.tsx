@@ -18,11 +18,13 @@ import {
   serializePreAuthIntake,
 } from "@/lib/intake/preAuthIntake";
 import {
-  PATIENT_TREATMENTS,
-  TREATMENTS,
   visibleTreatmentQuestions,
   type TreatmentKey,
 } from "@/lib/treatments";
+import {
+  FALLBACK_TREATMENT_PRODUCTS,
+  type TreatmentProduct,
+} from "@/lib/treatmentProducts";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type KeyboardEvent } from "react";
 
@@ -628,10 +630,12 @@ export function PreAuthEligibility({
   initialPatientData = null,
   isAuthenticated = false,
   startAtMedication = false,
+  treatmentProducts = FALLBACK_TREATMENT_PRODUCTS,
 }: {
   initialPatientData?: IntakeDraftData | null;
   isAuthenticated?: boolean;
   startAtMedication?: boolean;
+  treatmentProducts?: TreatmentProduct[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -646,7 +650,7 @@ export function PreAuthEligibility({
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>(() =>
     answersFromPatientData(initialPatientData),
   );
-  const [selectedTreatment, setSelectedTreatment] = useState<TreatmentKey | null>(null);
+  const [selectedTreatment, setSelectedTreatment] = useState<string | null>(null);
   const [treatmentAnswers, setTreatmentAnswers] = useState<IntakeQuestionAnswers>({});
   const [intakePageIndex, setIntakePageIndex] = useState(0);
   const [medicationPageIndex, setMedicationPageIndex] = useState(0);
@@ -658,7 +662,10 @@ export function PreAuthEligibility({
   const currentPageComplete = currentQuestions.every((question) =>
     intakeAnswerComplete(question, answers[question.question_key]),
   );
-  const medicationQuestions = visibleTreatmentQuestions(selectedTreatment, treatmentAnswers);
+  const selectedProduct =
+    treatmentProducts.find((product) => product.product_key === selectedTreatment) ?? null;
+  const selectedQuestionSetKey = selectedProduct?.question_set_key ?? null;
+  const medicationQuestions = visibleTreatmentQuestions(selectedQuestionSetKey, treatmentAnswers);
   const currentMedicationQuestion = medicationQuestions[medicationPageIndex] ?? null;
   const hasNextMedicationQuestionPage = medicationPageIndex < medicationQuestions.length - 1;
   const currentMedicationQuestionComplete = currentMedicationQuestion
@@ -721,6 +728,7 @@ export function PreAuthEligibility({
   function intakeForCurrentState() {
     return mergeSavedPatientData(initialPatientData, buildPreAuthIntakeData(questions, answers, {
       selectedTreatment,
+      questionSetKey: selectedQuestionSetKey,
       questions: medicationQuestions,
       answers: treatmentAnswers,
     }));
@@ -878,7 +886,7 @@ export function PreAuthEligibility({
     step === "treatment"
       ? "Choose medication"
       : step === "treatment_questions"
-        ? `${TREATMENTS.find((treatment) => treatment.key === selectedTreatment)?.name ?? "Treatment"} intake`
+        ? `${selectedProduct?.name ?? "Treatment"} intake`
         : (currentQuestions[0]?.prompt ?? "Check eligibility");
 
   return (
@@ -1001,15 +1009,15 @@ export function PreAuthEligibility({
                 gap: 12,
               }}
             >
-              {PATIENT_TREATMENTS.map((treatment) => {
-                const selected = selectedTreatment === treatment.key;
+              {treatmentProducts.map((treatment) => {
+                const selected = selectedTreatment === treatment.product_key;
                 return (
                   <button
-                    key={treatment.key}
+                    key={treatment.product_key}
                     type="button"
                     onClick={() => {
-                      setSelectedTreatment(treatment.key);
-                      setTreatmentAnswers(defaultTreatmentAnswers(treatment.key));
+                      setSelectedTreatment(treatment.product_key);
+                      setTreatmentAnswers(defaultTreatmentAnswers(treatment.question_set_key));
                       setMedicationPageIndex(0);
                       setError(null);
                       // Auto-advance after selecting a treatment is paused. Patients
@@ -1105,7 +1113,7 @@ export function PreAuthEligibility({
                   answer={treatmentAnswers[currentMedicationQuestion.question_key]}
                   onChange={(value) => updateMedicationAnswer(currentMedicationQuestion, value)}
                 />
-                {selectedTreatment === "glp_1" && currentMedicationQuestion.question_key === "glp_1_current_weight" ? (
+                {selectedQuestionSetKey === "glp_1" && currentMedicationQuestion.question_key === "glp_1_current_weight" ? (
                   <BmiPreview answers={treatmentAnswers} />
                 ) : null}
               </div>

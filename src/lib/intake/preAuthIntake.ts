@@ -134,15 +134,17 @@ export function buildPreAuthIntakeData(
   answers: IntakeQuestionAnswers,
   treatment?: {
     selectedTreatment?: TreatmentKey | string | null;
+    questionSetKey?: TreatmentKey | string | null;
     questions?: Pick<IntakeQuestion, "question_key" | "question_type">[];
     answers?: IntakeQuestionAnswers;
   },
 ): PreAuthIntakeData {
   const state = stringAnswer(answers, "service_state");
   const selectedTreatment = treatment?.selectedTreatment ?? "";
+  const questionSetKey = treatment?.questionSetKey ?? selectedTreatment;
   const questionSet =
-    selectedTreatment && typeof selectedTreatment === "string"
-      ? treatmentQuestionSet(selectedTreatment as TreatmentKey)
+    questionSetKey && typeof questionSetKey === "string"
+      ? treatmentQuestionSet(questionSetKey as TreatmentKey)
       : null;
   return {
     legal_first_name: stringAnswer(answers, "legal_first_name"),

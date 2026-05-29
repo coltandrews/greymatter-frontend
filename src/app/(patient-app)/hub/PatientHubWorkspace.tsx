@@ -39,6 +39,7 @@ const ID_MAX_BYTES = 10 * 1024 * 1024;
 const ID_MIME_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
 
 type HubTab = "treatments" | "new" | "account";
+type NewTreatmentStep = "select" | "questions" | "shipping" | "checkout";
 type CheckoutState = {
   bookingIntentId: string;
   checkoutSessionId: string | null;
@@ -53,10 +54,21 @@ type ShippingForm = {
 };
 type IdSide = "front" | "back";
 type IdUploads = Record<IdSide, File | null>;
+export type SavedIdDocument = {
+  kind: "government_id_front" | "government_id_back";
+  storage_path: string;
+  mime_type: string;
+  size_bytes: number;
+  created_at: string;
+};
+export type SavedIdDocuments = Record<IdSide, SavedIdDocument | null>;
+
+const EMPTY_ID_UPLOADS: IdUploads = { front: null, back: null };
+const EMPTY_SAVED_ID_DOCUMENTS: SavedIdDocuments = { front: null, back: null };
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
+    ? (value as Record<string, unknown>)
     : {};
 }
 
@@ -146,12 +158,14 @@ function shippingSummary(form: ShippingForm): string {
     form.street_address.trim(),
     form.address_line2.trim(),
     [form.city.trim(), form.address_state.trim(), form.zip.trim()].filter(Boolean).join(", "),
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 function validateIdFile(file: File | null): string | null {
   if (!file) {
-    return "Upload the front and back of your government ID.";
+    return null;
   }
   if (!ID_MIME_TYPES.has(file.type)) {
     return "Use a JPG, PNG, or PDF for your ID.";
@@ -162,14 +176,22 @@ function validateIdFile(file: File | null): string | null {
   return null;
 }
 
-function idExtension(file: File): string {
-  if (file.type === "application/pdf") {
+function idExtension(mimeType: string): string {
+  if (mimeType === "application/pdf") {
     return "pdf";
   }
-  if (file.type === "image/png") {
+  if (mimeType === "image/png") {
     return "png";
   }
   return "jpg";
+}
+
+function savedDocumentForSide(document: SavedIdDocument | null): boolean {
+  return Boolean(document?.storage_path && document.mime_type && document.size_bytes > 0);
+}
+
+function savedIdDocumentsComplete(documents: SavedIdDocuments): boolean {
+  return savedDocumentForSide(documents.front) && savedDocumentForSide(documents.back);
 }
 
 async function responseErrorMessage(prefix: string, res: Response): Promise<string> {
@@ -301,7 +323,13 @@ function ProductQuestionField({
     <label className={styles.hubField}>
       {question.prompt}
       <input
-        type={question.question_type === "date" ? "date" : question.question_type === "number" ? "number" : "text"}
+        type={
+          question.question_type === "date"
+            ? "date"
+            : question.question_type === "number"
+              ? "number"
+              : "text"
+        }
         value={stringAnswer(answer)}
         onChange={(event) => onChange(event.target.value)}
         className={styles.hubInput}
@@ -320,6 +348,7 @@ export function PatientHubWorkspace({
   olaUserGuid,
   patientId,
   products,
+  savedIdDocuments = EMPTY_SAVED_ID_DOCUMENTS,
   serverLoadError,
   welcomeName,
 }: {
@@ -332,6 +361,7 @@ export function PatientHubWorkspace({
   olaUserGuid: string | null;
   patientId: string;
   products: TreatmentProduct[];
+  savedIdDocuments?: SavedIdDocuments;
   serverLoadError: string | null;
   welcomeName: string;
 }) {
@@ -341,13 +371,16 @@ export function PatientHubWorkspace({
     initialBookingIntents[0]?.id ?? null,
   );
   const [selectedProductKey, setSelectedProductKey] = useState<string | null>(null);
+  const [newTreatmentStep, setNewTreatmentStep] = useState<NewTreatmentStep>("select");
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
   const mergedIntake = useMemo(
     () => mergeIntakeAndProfileDemographics(initialDraft, initialProfile),
     [initialDraft, initialProfile],
   );
   const [shipping, setShipping] = useState<ShippingForm>(() => shippingFromIntake(mergedIntake));
-  const [idUploads, setIdUploads] = useState<IdUploads>({ front: null, back: null });
+  const savedIdAvailable = savedIdDocumentsComplete(savedIdDocuments);
+  const [useSavedIdDocuments, setUseSavedIdDocuments] = useState(savedIdAvailable);
+  const [idUploads, setIdUploads] = useState<IdUploads>(EMPTY_ID_UPLOADS);
   const [detailCheckout, setDetailCheckout] = useState<CheckoutState | null>(null);
   const [newCheckout, setNewCheckout] = useState<CheckoutState | null>(null);
   const [busy, setBusy] = useState(false);
@@ -370,13 +403,40 @@ export function PatientHubWorkspace({
   const allQuestionsComplete = selectedQuestions.every((question) =>
     intakeAnswerComplete(question, answers[question.question_key]),
   );
-  const idError = validateIdFile(idUploads.front) ?? validateIdFile(idUploads.back);
+  const idFileError = validateIdFile(idUploads.front) ?? validateIdFile(idUploads.back);
+  const idFrontReady =
+    Boolean(idUploads.front) || (useSavedIdDocuments && Boolean(savedIdDocuments.front));
+  const idBackReady =
+    Boolean(idUploads.back) || (useSavedIdDocuments && Boolean(savedIdDocuments.back));
+  const idDocumentsComplete = idFrontReady && idBackReady;
+  const idError =
+    idFileError ?? (idDocumentsComplete ? null : "Upload the front and back of your government ID.");
+  const selectedProductComplete = selectedProduct != null;
+  const newTreatmentStepNumber =
+    newTreatmentStep === "questions" ? 2 : newTreatmentStep === "shipping" ? 3 : 4;
+  const shippingStepComplete = shippingComplete(shipping) && !idError;
 
   function selectProduct(product: TreatmentProduct) {
     setSelectedProductKey(product.product_key);
     setAnswers({});
     setNewCheckout(null);
     setError(null);
+  }
+
+  function resetNewTreatmentFlow() {
+    setSelectedProductKey(null);
+    setNewTreatmentStep("select");
+    setAnswers({});
+    setShipping(shippingFromIntake(mergedIntake));
+    setIdUploads(EMPTY_ID_UPLOADS);
+    setUseSavedIdDocuments(savedIdAvailable);
+    setNewCheckout(null);
+  }
+
+  function goToNewTreatmentStep(step: NewTreatmentStep) {
+    setNewTreatmentStep(step);
+    setError(null);
+    setNewCheckout(null);
   }
 
   async function currentSession() {
@@ -399,20 +459,22 @@ export function PatientHubWorkspace({
   async function saveGovernmentIdDocument({
     bookingIntentId,
     file,
+    mimeType,
     side,
     userId,
   }: {
     bookingIntentId: string;
-    file: File;
+    file: Blob;
+    mimeType: string;
     side: IdSide;
     userId: string;
   }) {
     const supabase = createClient();
-    const storagePath = `${userId}/${bookingIntentId}/government-id-${side}.${idExtension(file)}`;
+    const storagePath = `${userId}/${bookingIntentId}/government-id-${side}.${idExtension(mimeType)}`;
     const { error: uploadError } = await supabase.storage
       .from(ID_BUCKET)
       .upload(storagePath, file, {
-        contentType: file.type,
+        contentType: mimeType,
         upsert: true,
       });
     if (uploadError) {
@@ -427,7 +489,7 @@ export function PatientHubWorkspace({
           user_id: userId,
           kind: `government_id_${side}`,
           storage_path: storagePath,
-          mime_type: file.type,
+          mime_type: mimeType,
           size_bytes: file.size,
         },
         { onConflict: "booking_intent_id,kind" },
@@ -435,6 +497,33 @@ export function PatientHubWorkspace({
     if (documentError) {
       throw new Error(`Could not save ID upload: ${documentError.message}`);
     }
+  }
+
+  async function copySavedGovernmentIdDocument({
+    bookingIntentId,
+    document,
+    side,
+    userId,
+  }: {
+    bookingIntentId: string;
+    document: SavedIdDocument;
+    side: IdSide;
+    userId: string;
+  }) {
+    const supabase = createClient();
+    const { data, error } = await supabase.storage
+      .from(ID_BUCKET)
+      .download(document.storage_path);
+    if (error || !data) {
+      throw new Error(`Could not reuse the saved ${side} of your ID.`);
+    }
+    await saveGovernmentIdDocument({
+      bookingIntentId,
+      file: data,
+      mimeType: document.mime_type,
+      side,
+      userId,
+    });
   }
 
   async function openCheckoutForBooking(row: HubBookingIntentRow) {
@@ -506,9 +595,6 @@ export function PatientHubWorkspace({
       if (idError) {
         throw new Error(idError);
       }
-      if (!idUploads.front || !idUploads.back) {
-        throw new Error("Upload the front and back of your government ID.");
-      }
       if (!stripePublishableKey) {
         throw new Error("Payment is not configured yet.");
       }
@@ -556,28 +642,45 @@ export function PatientHubWorkspace({
       if (!bookingResponse.ok) {
         throw new Error(await responseErrorMessage("Medication request", bookingResponse));
       }
-      const bookingPayload = (await bookingResponse.json().catch(() => ({}))) as Record<string, unknown>;
+      const bookingPayload = (await bookingResponse.json().catch(() => ({}))) as Record<
+        string,
+        unknown
+      >;
       const bookingIntent =
         bookingPayload.bookingIntent && typeof bookingPayload.bookingIntent === "object"
-          ? bookingPayload.bookingIntent as Record<string, unknown>
+          ? (bookingPayload.bookingIntent as Record<string, unknown>)
           : null;
       const bookingIntentId = typeof bookingIntent?.id === "string" ? bookingIntent.id : "";
       if (!bookingIntentId) {
         throw new Error("Could not prepare this medication request.");
       }
 
-      await saveGovernmentIdDocument({
-        bookingIntentId,
-        file: idUploads.front,
-        side: "front",
-        userId: user.id,
-      });
-      await saveGovernmentIdDocument({
-        bookingIntentId,
-        file: idUploads.back,
-        side: "back",
-        userId: user.id,
-      });
+      await Promise.all(
+        (["front", "back"] as const).map(async (side) => {
+          const upload = idUploads[side];
+          if (upload) {
+            await saveGovernmentIdDocument({
+              bookingIntentId,
+              file: upload,
+              mimeType: upload.type,
+              side,
+              userId: user.id,
+            });
+            return;
+          }
+          const savedDocument = savedIdDocuments[side];
+          if (useSavedIdDocuments && savedDocument) {
+            await copySavedGovernmentIdDocument({
+              bookingIntentId,
+              document: savedDocument,
+              side,
+              userId: user.id,
+            });
+            return;
+          }
+          throw new Error("Upload the front and back of your government ID.");
+        }),
+      );
 
       const checkoutResponse = await createBookingIntentCheckout(
         session.access_token,
@@ -587,7 +690,10 @@ export function PatientHubWorkspace({
       if (!checkoutResponse.ok) {
         throw new Error(await responseErrorMessage("Checkout", checkoutResponse));
       }
-      const checkoutPayload = (await checkoutResponse.json().catch(() => ({}))) as Record<string, unknown>;
+      const checkoutPayload = (await checkoutResponse.json().catch(() => ({}))) as Record<
+        string,
+        unknown
+      >;
       const clientSecret =
         typeof checkoutPayload.clientSecret === "string" ? checkoutPayload.clientSecret : "";
       if (!clientSecret) {
@@ -612,9 +718,7 @@ export function PatientHubWorkspace({
   function selectTab(tab: HubTab) {
     setActiveTab(tab);
     if (tab === "new") {
-      setSelectedProductKey(null);
-      setAnswers({});
-      setNewCheckout(null);
+      resetNewTreatmentFlow();
     }
     setError(null);
   }
@@ -816,53 +920,66 @@ export function PatientHubWorkspace({
 
         {activeTab === "new" ? (
           <section className={styles.newTreatmentGrid} aria-labelledby="new-treatment-title">
-          <div className={styles.panel}>
-            <div className={styles.panelHeaderRow}>
-              <div>
-                <h2 id="new-treatment-title" className={styles.panelTitle}>
-                  New Treatment
-                </h2>
-                <p className={styles.panelSubtitle}>
-                  Choose a product, complete intake, confirm shipping, and check out.
-                </p>
+          {newTreatmentStep === "select" ? (
+            <div className={styles.panel}>
+              <div className={styles.panelHeaderRow}>
+                <div>
+                  <h2 id="new-treatment-title" className={styles.panelTitle}>
+                    New Treatment
+                  </h2>
+                  <p className={styles.panelSubtitle}>
+                    Select one active treatment to begin a new request.
+                  </p>
+                </div>
+              </div>
+              <div className={styles.productGrid}>
+                {products.map((product) => {
+                  const selected = product.product_key === selectedProduct?.product_key;
+                  return (
+                    <button
+                      key={product.product_key}
+                      type="button"
+                      className={`${styles.productCard} ${selected ? styles.productCardSelected : ""}`}
+                      onClick={() => selectProduct(product)}
+                    >
+                      <strong>{product.name}</strong>
+                      <span>{product.label}</span>
+                      <small>
+                        One-time ·{" "}
+                        {currencyFromCents(
+                          product.consultation_fee_cents + product.medication_fee_cents,
+                          product.currency,
+                        )}
+                      </small>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className={styles.flowActions}>
+                <button
+                  type="button"
+                  className={styles.scheduleNewBtn}
+                  disabled={!selectedProductComplete}
+                  onClick={() => goToNewTreatmentStep("questions")}
+                >
+                  Next
+                </button>
               </div>
             </div>
-            <div className={styles.productGrid}>
-              {products.map((product) => {
-                const selected = product.product_key === selectedProduct?.product_key;
-                return (
-                  <button
-                    key={product.product_key}
-                    type="button"
-                    className={`${styles.productCard} ${selected ? styles.productCardSelected : ""}`}
-                    onClick={() => selectProduct(product)}
-                  >
-                    <strong>{product.name}</strong>
-                    <span>{product.label}</span>
-                    <small>
-                      One-time ·{" "}
-                      {currencyFromCents(
-                        product.consultation_fee_cents + product.medication_fee_cents,
-                        product.currency,
-                      )}
-                    </small>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          ) : null}
 
-          {selectedProduct ? (
+          {selectedProduct && newTreatmentStep !== "select" ? (
             <div className={styles.panel}>
               <div className={styles.selectedProductBanner}>
                 <div>
-                  <p className={styles.kicker}>Selected product</p>
+                  <p className={styles.kicker}>Step {newTreatmentStepNumber} of 4</p>
                   <h2>{selectedProduct.name}</h2>
                   <p>{selectedProduct.summary || selectedProduct.description}</p>
                 </div>
                 <strong>{currencyFromCents(productTotal, selectedProduct.currency)}</strong>
               </div>
 
+              {newTreatmentStep === "questions" ? (
               <div className={styles.flowSection}>
                 <h3>Treatment questions</h3>
                 <div className={styles.hubFormStack}>
@@ -882,8 +999,27 @@ export function PatientHubWorkspace({
                     />
                   ))}
                 </div>
+                <div className={styles.flowActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => goToNewTreatmentStep("select")}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.scheduleNewBtn}
+                    disabled={!allQuestionsComplete}
+                    onClick={() => goToNewTreatmentStep("shipping")}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
+              ) : null}
 
+              {newTreatmentStep === "shipping" ? (
               <div className={styles.flowSection}>
                 <h3>Shipping address</h3>
                 <div className={styles.hubAddressGrid}>
@@ -954,30 +1090,69 @@ export function PatientHubWorkspace({
                     />
                   </label>
                 </div>
-              </div>
 
-              <div className={styles.flowSection}>
                 <h3>Identity verification</h3>
+                {savedIdAvailable ? (
+                  <label className={styles.savedIdOption}>
+                    <input
+                      type="checkbox"
+                      checked={useSavedIdDocuments}
+                      onChange={(event) => {
+                        setUseSavedIdDocuments(event.target.checked);
+                        setNewCheckout(null);
+                        setError(null);
+                      }}
+                    />
+                    <span>Use the government ID already on file</span>
+                  </label>
+                ) : null}
                 <div className={styles.idUploadGrid}>
                   {(["front", "back"] as const).map((side) => (
                     <label key={side} className={styles.idUploadBox}>
                       <span>{side === "front" ? "Front of ID" : "Back of ID"}</span>
-                      <small>{idUploads[side]?.name ?? "JPG, PNG, or PDF up to 10 MB"}</small>
+                      <small>
+                        {idUploads[side]?.name ??
+                          (useSavedIdDocuments && savedIdDocuments[side]
+                            ? "Saved ID on file"
+                            : "JPG, PNG, or PDF up to 10 MB")}
+                      </small>
                       <input
                         type="file"
                         accept="image/jpeg,image/png,application/pdf"
-                        onChange={(event) =>
+                        onChange={(event) => {
                           setIdUploads((current) => ({
                             ...current,
                             [side]: event.target.files?.[0] ?? null,
-                          }))
-                        }
+                          }));
+                          setNewCheckout(null);
+                          setError(null);
+                        }}
                       />
                     </label>
                   ))}
                 </div>
+                {idError ? <p className={styles.fieldError}>{idError}</p> : null}
+                <div className={styles.flowActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => goToNewTreatmentStep("questions")}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.scheduleNewBtn}
+                    disabled={!shippingStepComplete}
+                    onClick={() => goToNewTreatmentStep("checkout")}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
+              ) : null}
 
+              {newTreatmentStep === "checkout" ? (
               <div className={styles.flowSection}>
                 <h3>Review and checkout</h3>
                 <dl className={styles.reviewList}>
@@ -998,17 +1173,28 @@ export function PatientHubWorkspace({
                   Provider approval is required before medication ships. If the provider
                   determines you are not eligible, your payment will be refunded.
                 </p>
-                <button
-                  type="button"
-                  className={styles.scheduleNewBtn}
-                  disabled={busy || !allQuestionsComplete || !shippingComplete(shipping) || Boolean(idError)}
-                  onClick={createNewTreatmentCheckout}
-                >
-                  {busy ? "Preparing..." : "Continue to checkout"}
-                </button>
+                <div className={styles.flowActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    disabled={busy}
+                    onClick={() => goToNewTreatmentStep("shipping")}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.scheduleNewBtn}
+                    disabled={busy || !allQuestionsComplete || !shippingStepComplete}
+                    onClick={createNewTreatmentCheckout}
+                  >
+                    {busy ? "Preparing..." : "Continue to checkout"}
+                  </button>
+                </div>
               </div>
+              ) : null}
 
-              {newCheckout ? (
+              {newTreatmentStep === "checkout" && newCheckout ? (
                 <div className={styles.embeddedCheckoutFrame}>
                   <EmbeddedCheckoutProvider
                     stripe={stripePromise}

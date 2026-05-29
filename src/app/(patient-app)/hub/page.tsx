@@ -7,7 +7,42 @@ import {
   treatmentProductFromRow,
   type TreatmentProduct,
 } from "@/lib/treatmentProducts";
-import { PatientHubWorkspace } from "./PatientHubWorkspace";
+import {
+  PatientHubWorkspace,
+  type SavedIdDocument,
+  type SavedIdDocuments,
+} from "./PatientHubWorkspace";
+
+function latestSavedIdDocuments(rows: unknown[] | null | undefined): SavedIdDocuments {
+  const documents: SavedIdDocuments = { front: null, back: null };
+  for (const row of rows ?? []) {
+    if (!row || typeof row !== "object" || Array.isArray(row)) {
+      continue;
+    }
+    const record = row as Record<string, unknown>;
+    const kind = record.kind;
+    const side =
+      kind === "government_id_front" ? "front" : kind === "government_id_back" ? "back" : null;
+    if (!side || documents[side]) {
+      continue;
+    }
+    const storagePath = typeof record.storage_path === "string" ? record.storage_path : "";
+    const mimeType = typeof record.mime_type === "string" ? record.mime_type : "";
+    const sizeBytes = typeof record.size_bytes === "number" ? record.size_bytes : 0;
+    const createdAt = typeof record.created_at === "string" ? record.created_at : "";
+    if (!storagePath || !mimeType || sizeBytes <= 0) {
+      continue;
+    }
+    documents[side] = {
+      kind,
+      storage_path: storagePath,
+      mime_type: mimeType,
+      size_bytes: sizeBytes,
+      created_at: createdAt,
+    } as SavedIdDocument;
+  }
+  return documents;
+}
 
 export default async function HubPage() {
   const supabase = await createClient();
@@ -27,15 +62,20 @@ export default async function HubPage() {
     { data: productRows },
     { data: bookingOlaRows },
     { data: appointmentOlaRows },
+    { data: documentRows },
   ] = await Promise.all([
     supabase
       .from("appointments")
-      .select("id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message, ola_order_guid")
+      .select(
+        "id, status, starts_at, created_at, updated_at, provider_name, ola_redirect_url, ola_popup_message, ola_order_guid",
+      )
       .eq("user_id", user.id)
       .order("starts_at", { ascending: true }),
     supabase
       .from("booking_intents")
-      .select("id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid")
+      .select(
+        "id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid",
+      )
       .eq("user_id", user.id)
       .neq("booking_status", "draft")
       .order("created_at", { ascending: false }),
@@ -69,6 +109,12 @@ export default async function HubPage() {
       .not("ola_user_guid", "is", null)
       .order("created_at", { ascending: false })
       .limit(1),
+    supabase
+      .from("booking_intent_documents")
+      .select("kind, storage_path, mime_type, size_bytes, created_at")
+      .eq("user_id", user.id)
+      .in("kind", ["government_id_front", "government_id_back"])
+      .order("created_at", { ascending: false }),
   ]);
 
   const appointments = (rows ?? []).map((r) => ({
@@ -109,6 +155,7 @@ export default async function HubPage() {
   const email = user.email ?? user.id;
   const olaUserGuid =
     bookingOlaRows?.[0]?.ola_user_guid ?? appointmentOlaRows?.[0]?.ola_user_guid ?? null;
+  const savedIdDocuments = latestSavedIdDocuments(documentRows as unknown[] | null);
 
   return (
     <PatientHubWorkspace
@@ -121,6 +168,7 @@ export default async function HubPage() {
       olaUserGuid={olaUserGuid}
       patientId={user.id}
       products={visibleProducts}
+      savedIdDocuments={savedIdDocuments}
       serverLoadError={error?.message ?? bookingError?.message ?? null}
       welcomeName={welcomeName}
     />
