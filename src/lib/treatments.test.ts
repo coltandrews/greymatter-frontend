@@ -24,11 +24,23 @@ describe("treatment registry", () => {
     }
   });
 
-  it("marks GLP-1 as the initial visible one-time treatment", () => {
+  it("marks the current patient-visible treatments for launch", () => {
+    expect(treatmentByKey("retatrutide_level_5")).toMatchObject({
+      billingType: "one_time",
+      patientVisible: true,
+    });
+    expect(treatmentByKey("cashmere_cream")).toMatchObject({
+      billingType: "one_time",
+      patientVisible: true,
+    });
+    expect(treatmentByKey("olympus_troches")).toMatchObject({
+      billingType: "one_time",
+      patientVisible: true,
+    });
     expect(treatmentByKey("glp_1")).toMatchObject({
       billingType: "one_time",
       priceLabel: "GLP-1 consultation and medication review",
-      patientVisible: true,
+      patientVisible: false,
     });
     expect(treatmentByKey("peptides")).toMatchObject({
       billingType: "one_time",
@@ -38,10 +50,17 @@ describe("treatment registry", () => {
       billingType: "one_time",
       patientVisible: false,
     });
-    expect(PATIENT_TREATMENTS.map((treatment) => treatment.key)).toEqual(["glp_1"]);
+    expect(PATIENT_TREATMENTS.map((treatment) => treatment.key)).toEqual([
+      "retatrutide_level_5",
+      "cashmere_cream",
+      "olympus_troches",
+    ]);
   });
 
   it("contains the launch initial intake depth for each medication", () => {
+    expect(treatmentQuestions("retatrutide_level_5")).toHaveLength(24);
+    expect(treatmentQuestions("cashmere_cream")).toHaveLength(8);
+    expect(treatmentQuestions("olympus_troches")).toHaveLength(7);
     expect(treatmentQuestions("glp_1")).toHaveLength(24);
     expect(treatmentQuestions("peptides")).toHaveLength(10);
     expect(treatmentQuestions("testosterone")).toHaveLength(12);

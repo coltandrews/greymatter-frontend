@@ -141,6 +141,15 @@
   .fieldGridAddress {
     grid-template-columns: 1fr minmax(140px, 0.55fr) minmax(100px, 0.45fr);
   }
+
+  .fieldGridAddressFull {
+    grid-template-columns: minmax(0, 1.4fr) minmax(180px, 0.8fr);
+  }
+
+  .fieldGridAddressFull .field:first-child,
+  .fieldGridAddressFull .field:nth-child(2) {
+    grid-column: 1 / -1;
+  }
 }
 
 .inputEditable {

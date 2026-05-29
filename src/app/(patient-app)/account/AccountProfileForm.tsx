@@ -13,22 +13,50 @@ import { useCallback, useState } from "react";
 import styles from "./account.module.css";
 
 type FormState = {
+  legal_first_name: string;
+  legal_last_name: string;
+  preferred_name: string;
+  date_of_birth: string;
   gender: string;
+  phone: string;
+  street_address: string;
+  address_line2: string;
+  city: string;
   address_state: string;
+  zip: string;
 };
 
 function fromDraft(d: IntakeDraftData | undefined): FormState {
   return {
+    legal_first_name: d?.legal_first_name?.trim() ?? "",
+    legal_last_name: d?.legal_last_name?.trim() ?? "",
+    preferred_name: d?.preferred_name?.trim() ?? "",
+    date_of_birth: d?.date_of_birth?.trim() ?? "",
     gender: typeof d?.gender === "string" ? d.gender : "",
+    phone: d?.phone?.trim() ?? "",
+    street_address: d?.street_address?.trim() ?? "",
+    address_line2: d?.address_line2?.trim() ?? "",
+    city: d?.city?.trim() ?? "",
     address_state: d?.service_state?.trim() || d?.address_state?.trim() || "",
+    zip: d?.zip?.trim() ?? "",
   };
 }
 
 function toDraftPatch(f: FormState): IntakeDraftData {
   const state = f.address_state.trim() || undefined;
   return {
+    legal_first_name: f.legal_first_name.trim() || undefined,
+    legal_last_name: f.legal_last_name.trim() || undefined,
+    preferred_name: f.preferred_name.trim() || undefined,
+    date_of_birth: f.date_of_birth.trim() || undefined,
     gender: f.gender.trim() || undefined,
+    phone: f.phone.trim() || undefined,
+    street_address: f.street_address.trim() || undefined,
+    address_line2: f.address_line2.trim() || undefined,
+    city: f.city.trim() || undefined,
     address_state: state,
+    zip: f.zip.trim() || undefined,
+    country: "US",
     service_state: state,
   };
 }
@@ -99,8 +127,18 @@ export function AccountProfileForm({
       setError(null);
       setSaved(false);
       const patch = toDraftPatch(form);
-      if (!patch.gender || !patch.address_state) {
-        setError("Please choose sex assigned at birth and state.");
+      if (
+        !patch.legal_first_name ||
+        !patch.legal_last_name ||
+        !patch.date_of_birth ||
+        !patch.gender ||
+        !patch.phone ||
+        !patch.street_address ||
+        !patch.city ||
+        !patch.address_state ||
+        !patch.zip
+      ) {
+        setError("Complete the required account details before saving.");
         return;
       }
 
@@ -187,9 +225,9 @@ export function AccountProfileForm({
     [email, form, initialData, initialStep, olaUserGuid, router],
   );
 
-  const set =
+  const setField =
     (key: keyof FormState) =>
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setForm((p) => ({ ...p, [key]: e.target.value }));
       setSaved(false);
     };
@@ -230,9 +268,61 @@ export function AccountProfileForm({
         </div>
       </div>
 
-      <p className={styles.sectionLead}>Profile settings</p>
+      <p className={styles.sectionLead}>Patient details</p>
 
       <div className={styles.fieldGrid}>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-first-name">
+            Legal first name *
+          </label>
+          <input
+            id="acct-first-name"
+            className={styles.inputEditable}
+            required
+            autoComplete="given-name"
+            value={form.legal_first_name}
+            onChange={setField("legal_first_name")}
+          />
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-last-name">
+            Legal last name *
+          </label>
+          <input
+            id="acct-last-name"
+            className={styles.inputEditable}
+            required
+            autoComplete="family-name"
+            value={form.legal_last_name}
+            onChange={setField("legal_last_name")}
+          />
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-preferred-name">
+            Preferred name
+          </label>
+          <input
+            id="acct-preferred-name"
+            className={styles.inputEditable}
+            autoComplete="nickname"
+            value={form.preferred_name}
+            onChange={setField("preferred_name")}
+          />
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-dob">
+            Date of birth *
+          </label>
+          <input
+            id="acct-dob"
+            className={styles.inputEditable}
+            type="date"
+            required
+            autoComplete="bday"
+            value={form.date_of_birth}
+            onChange={setField("date_of_birth")}
+          />
+        </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="acct-gender">
             Sex assigned at birth *
@@ -242,12 +332,69 @@ export function AccountProfileForm({
             className={styles.inputEditable}
             required
             value={form.gender}
-            onChange={set("gender")}
+            onChange={setField("gender")}
           >
             <option value="">Select…</option>
             <option value="male">Male</option>
             <option value="female">Female</option>
           </select>
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-phone">
+            Phone *
+          </label>
+          <input
+            id="acct-phone"
+            className={styles.inputEditable}
+            required
+            type="tel"
+            autoComplete="tel"
+            value={form.phone}
+            onChange={setField("phone")}
+          />
+        </div>
+      </div>
+
+      <p className={styles.sectionLead}>Shipping address</p>
+
+      <div className={`${styles.fieldGrid} ${styles.fieldGridAddressFull}`}>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-street">
+            Street address *
+          </label>
+          <input
+            id="acct-street"
+            className={styles.inputEditable}
+            required
+            autoComplete="address-line1"
+            value={form.street_address}
+            onChange={setField("street_address")}
+          />
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-line2">
+            Apt, suite, etc.
+          </label>
+          <input
+            id="acct-line2"
+            className={styles.inputEditable}
+            autoComplete="address-line2"
+            value={form.address_line2}
+            onChange={setField("address_line2")}
+          />
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-city">
+            City *
+          </label>
+          <input
+            id="acct-city"
+            className={styles.inputEditable}
+            required
+            autoComplete="address-level2"
+            value={form.city}
+            onChange={setField("city")}
+          />
         </div>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="acct-state">
@@ -259,7 +406,7 @@ export function AccountProfileForm({
             required
             autoComplete="address-level1"
             value={form.address_state}
-            onChange={set("address_state")}
+            onChange={setField("address_state")}
           >
             <option value="">Select…</option>
             {US_STATES.map((s) => (
@@ -268,6 +415,20 @@ export function AccountProfileForm({
               </option>
             ))}
           </select>
+        </div>
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="acct-zip">
+            ZIP *
+          </label>
+          <input
+            id="acct-zip"
+            className={styles.inputEditable}
+            required
+            inputMode="numeric"
+            autoComplete="postal-code"
+            value={form.zip}
+            onChange={setField("zip")}
+          />
         </div>
       </div>
 

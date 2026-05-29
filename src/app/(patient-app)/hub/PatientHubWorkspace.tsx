@@ -5,6 +5,7 @@ import {
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { AccountProfileForm } from "@/app/(patient-app)/account/AccountProfileForm";
 import { SignOutButton } from "@/components/SignOutButton";
 import { US_STATES } from "@/app/intake/usStates";
 import {
@@ -315,6 +316,9 @@ export function PatientHubWorkspace({
   email,
   initialDraft,
   initialProfile,
+  initialStep,
+  olaUserGuid,
+  patientId,
   products,
   serverLoadError,
   welcomeName,
@@ -324,6 +328,9 @@ export function PatientHubWorkspace({
   email: string;
   initialDraft: IntakeDraftData | null;
   initialProfile: IntakeDraftData | null;
+  initialStep: string;
+  olaUserGuid: string | null;
+  patientId: string;
   products: TreatmentProduct[];
   serverLoadError: string | null;
   welcomeName: string;
@@ -333,9 +340,7 @@ export function PatientHubWorkspace({
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
     initialBookingIntents[0]?.id ?? null,
   );
-  const [selectedProductKey, setSelectedProductKey] = useState<string | null>(
-    products[0]?.product_key ?? null,
-  );
+  const [selectedProductKey, setSelectedProductKey] = useState<string | null>(null);
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
   const mergedIntake = useMemo(
     () => mergeIntakeAndProfileDemographics(initialDraft, initialProfile),
@@ -346,12 +351,15 @@ export function PatientHubWorkspace({
   const [detailCheckout, setDetailCheckout] = useState<CheckoutState | null>(null);
   const [newCheckout, setNewCheckout] = useState<CheckoutState | null>(null);
   const [busy, setBusy] = useState(false);
+  const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(serverLoadError);
 
   const selectedBooking =
     bookingIntents.find((row) => row.id === selectedBookingId) ?? bookingIntents[0] ?? null;
+  const selectedBookingCanceling =
+    selectedBooking != null && cancelingBookingId === selectedBooking.id;
   const selectedProduct =
-    products.find((product) => product.product_key === selectedProductKey) ?? products[0] ?? null;
+    products.find((product) => product.product_key === selectedProductKey) ?? null;
   const selectedQuestions = useMemo(
     () => visibleTreatmentQuestions(selectedProduct?.question_set_key ?? null, answers),
     [answers, selectedProduct?.question_set_key],
@@ -463,7 +471,7 @@ export function PatientHubWorkspace({
   }
 
   async function cancelUnpaidBooking(row: HubBookingIntentRow) {
-    setBusy(true);
+    setCancelingBookingId(row.id);
     setError(null);
     try {
       const { session } = await currentSession();
@@ -477,7 +485,7 @@ export function PatientHubWorkspace({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not cancel this request.");
     } finally {
-      setBusy(false);
+      setCancelingBookingId(null);
     }
   }
 
@@ -603,6 +611,11 @@ export function PatientHubWorkspace({
 
   function selectTab(tab: HubTab) {
     setActiveTab(tab);
+    if (tab === "new") {
+      setSelectedProductKey(null);
+      setAnswers({});
+      setNewCheckout(null);
+    }
     setError(null);
   }
 
@@ -754,7 +767,7 @@ export function PatientHubWorkspace({
                     <button
                       type="button"
                       className={styles.scheduleNewBtn}
-                      disabled={busy}
+                      disabled={busy || selectedBookingCanceling}
                       onClick={() => openCheckoutForBooking(selectedBooking)}
                     >
                       Pay now
@@ -762,10 +775,14 @@ export function PatientHubWorkspace({
                     <button
                       type="button"
                       className={styles.cancelButton}
-                      disabled={busy}
+                      disabled={busy || selectedBookingCanceling}
+                      aria-busy={selectedBookingCanceling}
                       onClick={() => cancelUnpaidBooking(selectedBooking)}
                     >
-                      Cancel
+                      {selectedBookingCanceling ? (
+                        <span className={styles.buttonSpinner} aria-hidden="true" />
+                      ) : null}
+                      {selectedBookingCanceling ? "Canceling" : "Cancel"}
                     </button>
                   </div>
                 ) : selectedBooking.ola_redirect_url ? (
@@ -1013,15 +1030,18 @@ export function PatientHubWorkspace({
           <section className={styles.panel} aria-labelledby="account-tab-title">
           <div className={styles.detailHeroCompact}>
             <p className={styles.kicker}>Account</p>
-            <h2 id="account-tab-title">Profile and care details</h2>
+            <h2 id="account-tab-title">Edit account information</h2>
             <p>
-              Keep your profile, contact information, and shipping details current before starting
-              a treatment request.
+              Update your profile, contact information, and shipping details.
             </p>
           </div>
-          <Link href="/account" className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}>
-            Open account
-          </Link>
+          <AccountProfileForm
+            email={email}
+            patientId={patientId}
+            olaUserGuid={olaUserGuid}
+            initialStep={initialStep}
+            initialData={mergedIntake ?? {}}
+          />
           </section>
         ) : null}
       </section>

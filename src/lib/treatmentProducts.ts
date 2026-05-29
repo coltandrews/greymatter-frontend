@@ -1,9 +1,9 @@
 import type { TreatmentKey, TreatmentOption } from "@/lib/treatments";
-import { PATIENT_TREATMENTS, treatmentByKey } from "@/lib/treatments";
+import { PATIENT_TREATMENTS, isTreatmentKey, treatmentByKey } from "@/lib/treatments";
 
 export type TreatmentProduct = {
   id: string | null;
-  product_key: TreatmentKey;
+  product_key: string;
   name: string;
   label: string;
   summary: string;
@@ -41,10 +41,6 @@ function fromTreatmentOption(treatment: TreatmentOption): TreatmentProduct {
 
 export const FALLBACK_TREATMENT_PRODUCTS = PATIENT_TREATMENTS.map(fromTreatmentOption);
 
-function isTreatmentKey(value: string): value is TreatmentKey {
-  return value === "glp_1" || value === "peptides" || value === "testosterone";
-}
-
 function stringValue(record: Record<string, unknown>, key: string): string {
   const value = record[key];
   return typeof value === "string" ? value : "";
@@ -62,26 +58,19 @@ export function treatmentProductFromRow(row: unknown): TreatmentProduct | null {
   const record = row as Record<string, unknown>;
   const productKey = stringValue(record, "product_key");
   const questionSetKey = stringValue(record, "question_set_key") || productKey;
-  if (!isTreatmentKey(productKey) || !isTreatmentKey(questionSetKey)) {
+  if (!productKey.trim() || !isTreatmentKey(questionSetKey)) {
     return null;
   }
-  const fallback = treatmentByKey(productKey);
+  const fallback = treatmentByKey(productKey) ?? treatmentByKey(questionSetKey);
   const rowName = stringValue(record, "name").replace(/\s+subscription$/i, "");
-  const useFallbackCopy = productKey === "glp_1";
 
   return {
     id: stringValue(record, "id") || null,
     product_key: productKey,
     name: rowName || fallback?.name || productKey,
-    label: useFallbackCopy
-      ? fallback?.label ?? stringValue(record, "label")
-      : stringValue(record, "label"),
-    summary: useFallbackCopy
-      ? fallback?.summary ?? stringValue(record, "summary")
-      : stringValue(record, "summary"),
-    description: useFallbackCopy
-      ? fallback?.summary ?? stringValue(record, "description")
-      : stringValue(record, "description"),
+    label: stringValue(record, "label") || fallback?.label || "",
+    summary: stringValue(record, "summary") || fallback?.summary || "",
+    description: stringValue(record, "description") || fallback?.summary || "",
     service_key: stringValue(record, "service_key"),
     service_type: "initial",
     billing_type: "one_time",

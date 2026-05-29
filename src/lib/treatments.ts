@@ -3,7 +3,22 @@ import type {
   IntakeQuestionAnswers,
 } from "@/lib/intake/intakeQuestions";
 
-export type TreatmentKey = "peptides" | "glp_1" | "testosterone";
+export type TreatmentKey =
+  | "retatrutide_level_5"
+  | "cashmere_cream"
+  | "olympus_troches"
+  | "peptides"
+  | "glp_1"
+  | "testosterone";
+
+const TREATMENT_KEYS: readonly TreatmentKey[] = [
+  "retatrutide_level_5",
+  "cashmere_cream",
+  "olympus_troches",
+  "peptides",
+  "glp_1",
+  "testosterone",
+];
 
 export type TreatmentOption = {
   key: TreatmentKey;
@@ -25,6 +40,10 @@ export type TreatmentQuestionSet = {
   version: string;
   questions: IntakeQuestion[];
 };
+
+export function isTreatmentKey(value: string | null | undefined): value is TreatmentKey {
+  return TREATMENT_KEYS.includes(value as TreatmentKey);
+}
 
 function option(value: string, label = value) {
   return { value, label };
@@ -55,6 +74,48 @@ function question(
 
 export const TREATMENTS: TreatmentOption[] = [
   {
+    key: "retatrutide_level_5",
+    name: "Retatrutide (Level 5)",
+    label: "Advanced metabolic provider review",
+    summary:
+      "Provider-reviewed request for retatrutide-based metabolic care. Retatrutide is investigational and eligibility is determined by a licensed clinician.",
+    accent: "R",
+    serviceKey: "Retatrutide (Level 5)",
+    priceLabel: "Retatrutide consultation and medication review",
+    consultationFeeCents: 9900,
+    medicationFeeCents: 39900,
+    billingType: "one_time",
+    patientVisible: true,
+  },
+  {
+    key: "cashmere_cream",
+    name: "Cashmere Cream",
+    label: "Prescription topical skin review",
+    summary:
+      "Provider-reviewed request for a compounded topical cream commonly positioned for texture, tone, firmness, and photoaging concerns.",
+    accent: "C",
+    serviceKey: "Cashmere Cream",
+    priceLabel: "Cashmere Cream consultation and prescription review",
+    consultationFeeCents: 4900,
+    medicationFeeCents: 12900,
+    billingType: "one_time",
+    patientVisible: true,
+  },
+  {
+    key: "olympus_troches",
+    name: "Olympus Troches",
+    label: "Intimate wellness provider review",
+    summary:
+      "Provider-reviewed request for compounded sublingual troches used in intimate wellness protocols. Formula and eligibility are determined by the provider.",
+    accent: "O",
+    serviceKey: "Olympus Troches",
+    priceLabel: "Olympus Troches consultation and prescription review",
+    consultationFeeCents: 4900,
+    medicationFeeCents: 19900,
+    billingType: "one_time",
+    patientVisible: true,
+  },
+  {
     key: "peptides",
     name: "Peptides",
     label: "Regeneration and recovery support",
@@ -78,7 +139,7 @@ export const TREATMENTS: TreatmentOption[] = [
     consultationFeeCents: 9900,
     medicationFeeCents: 24900,
     billingType: "one_time",
-    patientVisible: true,
+    patientVisible: false,
   },
   {
     key: "testosterone",
@@ -97,7 +158,10 @@ export const TREATMENTS: TreatmentOption[] = [
 
 export const PATIENT_TREATMENTS = TREATMENTS.filter((treatment) => treatment.patientVisible);
 
-export const TREATMENT_QUESTION_SETS: Record<TreatmentKey, TreatmentQuestionSet> = {
+const TREATMENT_QUESTION_SETS: Record<
+  Exclude<TreatmentKey, "retatrutide_level_5">,
+  TreatmentQuestionSet
+> = {
   peptides: {
     treatmentKey: "peptides",
     source: "ola",
@@ -610,6 +674,179 @@ export const TREATMENT_QUESTION_SETS: Record<TreatmentKey, TreatmentQuestionSet>
       ),
     ],
   },
+  cashmere_cream: {
+    treatmentKey: "cashmere_cream",
+    source: "ola",
+    version: "ola-initial-2026-05-29",
+    questions: [
+      question(
+        "cashmere_cream",
+        1000,
+        "cashmere_goals",
+        "What are your goals for Cashmere Cream?",
+        "multi_select",
+        [
+          option("texture", "Improve skin texture"),
+          option("firmness", "Support firmness or elasticity"),
+          option("fine_lines", "Reduce the appearance of fine lines"),
+          option("uneven_tone", "Improve uneven tone or photoaging concerns"),
+          option("crepey_skin", "Address crepey-looking skin"),
+          option("other", "Other"),
+        ],
+      ),
+      question(
+        "cashmere_cream",
+        1010,
+        "cashmere_treatment_areas",
+        "Which areas are you hoping to treat?",
+        "multi_select",
+        [
+          option("face_neck", "Face or neck"),
+          option("chest", "Chest"),
+          option("arms", "Arms"),
+          option("abdomen", "Abdomen"),
+          option("legs", "Legs"),
+          option("hands", "Hands"),
+          option("other", "Other"),
+        ],
+      ),
+      question(
+        "cashmere_cream",
+        1020,
+        "cashmere_pregnancy_status",
+        "Are you currently pregnant, breastfeeding, or planning pregnancy?",
+        "yes_no",
+      ),
+      question(
+        "cashmere_cream",
+        1030,
+        "cashmere_skin_history",
+        "Do you have any of the following skin history or sensitivities?",
+        "multi_select",
+        [
+          option("retinoid_sensitivity", "Sensitivity to retinoids or tretinoin"),
+          option("eczema_rosacea", "Eczema, rosacea, or very sensitive skin"),
+          option("recent_procedure", "Recent laser, peel, microneedling, or resurfacing procedure"),
+          option("active_irritation", "Active rash, irritation, open skin, or infection"),
+          option("none", "None of the above"),
+        ],
+      ),
+      question(
+        "cashmere_cream",
+        1040,
+        "cashmere_current_topicals",
+        "Please list prescription creams, retinoids, acne medications, exfoliating acids, or skin treatments you currently use.",
+        "textarea",
+      ),
+      question(
+        "cashmere_cream",
+        1050,
+        "cashmere_allergies",
+        "Please list any medication, skin-care, or topical allergies.",
+        "textarea",
+      ),
+      question(
+        "cashmere_cream",
+        1060,
+        "cashmere_provider_notes",
+        "Is there anything else you would like the provider to know?",
+        "textarea",
+        [],
+        false,
+      ),
+      question(
+        "cashmere_cream",
+        1070,
+        "cashmere_off_label_acknowledgement",
+        "Do you understand this prescription topical may be compounded or used off-label, and that the provider will determine whether it is appropriate for you?",
+        "select",
+        [option("yes_i_agree", "Yes, I agree")],
+      ),
+    ],
+  },
+  olympus_troches: {
+    treatmentKey: "olympus_troches",
+    source: "ola",
+    version: "ola-initial-2026-05-29",
+    questions: [
+      question(
+        "olympus_troches",
+        1000,
+        "olympus_goals",
+        "What are your goals for Olympus Troches?",
+        "multi_select",
+        [
+          option("libido", "Support libido or desire"),
+          option("arousal", "Support arousal or sensitivity"),
+          option("performance", "Support sexual performance"),
+          option("orgasm", "Support orgasm quality"),
+          option("performance_anxiety", "Reduce performance anxiety"),
+          option("intimacy", "Support intimacy or connection"),
+          option("other", "Other"),
+        ],
+      ),
+      question(
+        "olympus_troches",
+        1010,
+        "olympus_symptom_duration",
+        "How long have these concerns been present?",
+        "select",
+        [
+          option("less_than_3_months", "Less than 3 months"),
+          option("3_to_12_months", "3-12 months"),
+          option("more_than_12_months", "More than 12 months"),
+          option("not_applicable", "Not applicable"),
+        ],
+      ),
+      question(
+        "olympus_troches",
+        1020,
+        "olympus_medical_history",
+        "Do you currently have or have you ever had any of the following?",
+        "multi_select",
+        [
+          option("nitrate_medications", "Use of nitrate medications or nitric oxide donors"),
+          option("heart_disease", "Heart disease, chest pain, heart attack, or stroke"),
+          option("uncontrolled_blood_pressure", "Uncontrolled high or low blood pressure"),
+          option("fainting_dizziness", "Frequent fainting, severe dizziness, or lightheadedness"),
+          option("pregnant_breastfeeding", "Pregnant, breastfeeding, or planning pregnancy"),
+          option("severe_liver_kidney_disease", "Severe liver or kidney disease"),
+          option("none", "None of the above"),
+        ],
+      ),
+      question(
+        "olympus_troches",
+        1030,
+        "olympus_current_medications",
+        "Please list all current medications and supplements, including blood pressure medications, ED medications, nitrates, or hormone therapies.",
+        "textarea",
+      ),
+      question(
+        "olympus_troches",
+        1040,
+        "olympus_side_effect_history",
+        "Have you previously had side effects with tadalafil, sildenafil, bremelanotide/PT-141, oxytocin, or similar medications?",
+        "textarea",
+      ),
+      question(
+        "olympus_troches",
+        1050,
+        "olympus_provider_notes",
+        "Is there anything else you would like the provider to know?",
+        "textarea",
+        [],
+        false,
+      ),
+      question(
+        "olympus_troches",
+        1060,
+        "olympus_off_label_acknowledgement",
+        "Do you understand this medication may be compounded or used off-label, and that the provider will determine whether it is appropriate for you?",
+        "select",
+        [option("yes_i_agree", "Yes, I agree")],
+      ),
+    ],
+  },
 };
 
 export function treatmentByKey(key: string | null | undefined): TreatmentOption | null {
@@ -617,7 +854,22 @@ export function treatmentByKey(key: string | null | undefined): TreatmentOption 
 }
 
 export function treatmentQuestionSet(key: TreatmentKey | null): TreatmentQuestionSet | null {
-  return key ? TREATMENT_QUESTION_SETS[key] : null;
+  if (!key) {
+    return null;
+  }
+  if (key === "retatrutide_level_5") {
+    const glpSet = TREATMENT_QUESTION_SETS.glp_1;
+    return {
+      treatmentKey: "retatrutide_level_5",
+      source: glpSet.source,
+      version: `${glpSet.version}-retatrutide`,
+      questions: glpSet.questions.map((question) => ({
+        ...question,
+        id: `retatrutide_level_5-${question.question_key}`,
+      })),
+    };
+  }
+  return TREATMENT_QUESTION_SETS[key];
 }
 
 export function treatmentQuestions(key: TreatmentKey | null): IntakeQuestion[] {
@@ -670,7 +922,7 @@ export function visibleTreatmentQuestions(
   answers: IntakeQuestionAnswers = {},
 ): IntakeQuestion[] {
   let questions = treatmentQuestions(key);
-  if (key !== "glp_1") {
+  if (key !== "glp_1" && key !== "retatrutide_level_5") {
     return questions;
   }
 

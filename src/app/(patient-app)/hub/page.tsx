@@ -25,6 +25,8 @@ export default async function HubPage() {
     { data: profile },
     { data: draftRow },
     { data: productRows },
+    { data: bookingOlaRows },
+    { data: appointmentOlaRows },
   ] = await Promise.all([
     supabase
       .from("appointments")
@@ -44,7 +46,7 @@ export default async function HubPage() {
       .maybeSingle(),
     supabase
       .from("intake_drafts")
-      .select("data")
+      .select("step, data")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
@@ -53,6 +55,20 @@ export default async function HubPage() {
       .eq("patient_visible", true)
       .eq("is_active", true)
       .order("sort_order", { ascending: true }),
+    supabase
+      .from("booking_intents")
+      .select("ola_user_guid")
+      .eq("user_id", user.id)
+      .not("ola_user_guid", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1),
+    supabase
+      .from("appointments")
+      .select("ola_user_guid")
+      .eq("user_id", user.id)
+      .not("ola_user_guid", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1),
   ]);
 
   const appointments = (rows ?? []).map((r) => ({
@@ -91,6 +107,8 @@ export default async function HubPage() {
   );
   const welcomeName = patientWelcomeName(user, forWelcome);
   const email = user.email ?? user.id;
+  const olaUserGuid =
+    bookingOlaRows?.[0]?.ola_user_guid ?? appointmentOlaRows?.[0]?.ola_user_guid ?? null;
 
   return (
     <PatientHubWorkspace
@@ -99,6 +117,9 @@ export default async function HubPage() {
       email={email}
       initialDraft={(draftRow?.data ?? null) as IntakeDraftData | null}
       initialProfile={(profile?.demographics ?? null) as IntakeDraftData | null}
+      initialStep={draftRow?.step ?? "paused_before_scheduling"}
+      olaUserGuid={olaUserGuid}
+      patientId={user.id}
       products={visibleProducts}
       serverLoadError={error?.message ?? bookingError?.message ?? null}
       welcomeName={welcomeName}
