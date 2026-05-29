@@ -236,6 +236,10 @@ function mapBookingIntentRows(data: unknown[]): HubBookingIntentRow[] {
   });
 }
 
+function isPaymentPendingBooking(row: HubBookingIntentRow): boolean {
+  return row.payment_status === "pending" || row.booking_status === "payment_pending";
+}
+
 async function loadAppointmentsFromSupabase(): Promise<{
   rows: HubAppointmentRow[];
   bookingIntents: HubBookingIntentRow[];
@@ -613,8 +617,15 @@ export function HubAppointments({
                 <li key={`booking-${r.id}`} className={styles.visitRow}>
                   <Link
                     href={visitHref(row)}
-                    className={`${styles.visitItem} ${styles.visitItemButton}`}
+                    className={`${styles.visitItem} ${styles.visitItemButton} ${
+                      isPaymentPendingBooking(r) ? styles.visitItemPendingPayment : ""
+                    }`}
                   >
+                    {isPaymentPendingBooking(r) ? (
+                      <span className={styles.pendingPaymentX} aria-hidden="true">
+                        x
+                      </span>
+                    ) : null}
                     <div className={styles.visitTop}>
                       <div className={styles.visitLeft}>
                         <div className={styles.visitRowLine}>

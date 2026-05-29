@@ -154,6 +154,7 @@
 }
 
 .visitItem {
+  position: relative;
   padding: 14px 16px;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.72);
@@ -161,6 +162,22 @@
   color: inherit;
   text-decoration: none;
   transition: border-color 0.15s ease;
+}
+
+.visitItemPendingPayment {
+  padding-right: 44px;
+}
+
+.pendingPaymentX {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  color: #171717;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
 }
 
 .visitItemButton {
