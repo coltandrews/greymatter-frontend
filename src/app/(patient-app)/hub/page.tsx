@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
-import { patientWelcomeName } from "@/lib/patientDisplayName";
+import { patientDisplayName } from "@/lib/patientDisplayName";
 import {
   FALLBACK_TREATMENT_PRODUCTS,
   treatmentProductFromRow,
@@ -151,7 +151,7 @@ export default async function HubPage() {
     draftRow?.data as IntakeDraftData | undefined,
     profile?.demographics as IntakeDraftData | undefined,
   );
-  const welcomeName = patientWelcomeName(user, forWelcome);
+  const welcomeName = patientDisplayName(user, forWelcome);
   const email = user.email ?? user.id;
   const olaUserGuid =
     bookingOlaRows?.[0]?.ola_user_guid ?? appointmentOlaRows?.[0]?.ola_user_guid ?? null;

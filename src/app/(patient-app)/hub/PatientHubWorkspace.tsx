@@ -39,7 +39,7 @@ const ID_MAX_BYTES = 10 * 1024 * 1024;
 const ID_MIME_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
 
 type HubTab = "treatments" | "new" | "account";
-type NewTreatmentStep = "select" | "questions" | "shipping" | "checkout";
+type NewTreatmentStep = "select" | "questions" | "shipping" | "checkout" | "payment";
 type CheckoutState = {
   bookingIntentId: string;
   checkoutSessionId: string | null;
@@ -93,12 +93,12 @@ function patientInitials(name: string, email: string) {
     .map((part) => part.trim())
     .filter(Boolean);
   if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
   }
   if (parts[0]) {
-    return parts[0].slice(0, 2).toUpperCase();
+    return parts[0][0].toUpperCase();
   }
-  return email.slice(0, 2).toUpperCase();
+  return email.slice(0, 1).toUpperCase();
 }
 
 function requestDate(value: string): string {
@@ -708,6 +708,7 @@ export function PatientHubWorkspace({
             : null,
         clientSecret,
       });
+      setNewTreatmentStep("payment");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start checkout.");
     } finally {
@@ -1194,17 +1195,23 @@ export function PatientHubWorkspace({
               </div>
               ) : null}
 
-              {newTreatmentStep === "checkout" && newCheckout ? (
-                <div className={styles.embeddedCheckoutFrame}>
-                  <EmbeddedCheckoutProvider
-                    stripe={stripePromise}
-                    options={{
-                      clientSecret: newCheckout.clientSecret,
-                      onComplete: () => onCheckoutComplete(newCheckout),
-                    }}
-                  >
-                    <EmbeddedCheckout />
-                  </EmbeddedCheckoutProvider>
+              {newTreatmentStep === "payment" ? (
+                <div className={styles.stripeCheckoutStep}>
+                  {newCheckout ? (
+                    <div className={styles.embeddedCheckoutFrame}>
+                      <EmbeddedCheckoutProvider
+                        stripe={stripePromise}
+                        options={{
+                          clientSecret: newCheckout.clientSecret,
+                          onComplete: () => onCheckoutComplete(newCheckout),
+                        }}
+                      >
+                        <EmbeddedCheckout />
+                      </EmbeddedCheckoutProvider>
+                    </div>
+                  ) : (
+                    <p className={styles.emptyState}>Preparing checkout...</p>
+                  )}
                 </div>
               ) : null}
             </div>

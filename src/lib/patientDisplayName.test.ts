@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import { describe, expect, it } from "vitest";
-import { patientWelcomeName } from "./patientDisplayName";
+import { patientDisplayName, patientWelcomeName } from "./patientDisplayName";
 
 function user(overrides: Partial<User>): User {
   return {
@@ -42,5 +42,28 @@ describe("patientWelcomeName", () => {
 
   it("uses a neutral fallback when no patient label is available", () => {
     expect(patientWelcomeName(user({ email: undefined }))).toBe("there");
+  });
+});
+
+describe("patientDisplayName", () => {
+  it("prefers legal first and last name for identity surfaces", () => {
+    expect(
+      patientDisplayName(user({ email: "casey@example.com" }), {
+        legal_first_name: " colt ",
+        legal_last_name: " andrews ",
+        preferred_name: "co",
+      }),
+    ).toBe("Colt Andrews");
+  });
+
+  it("falls back to metadata full name and readable email local part", () => {
+    expect(
+      patientDisplayName(user({
+        email: "patient@example.com",
+        user_metadata: { full_name: "taylor grey" },
+      })),
+    ).toBe("Taylor Grey");
+
+    expect(patientDisplayName(user({ email: "jane.doe@example.com" }))).toBe("Jane Doe");
   });
 });
