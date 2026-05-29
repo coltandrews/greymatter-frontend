@@ -1036,11 +1036,9 @@ export function PreAuthEligibility({
                   >
                     <span style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                       <strong style={{ fontSize: 15, fontWeight: 500 }}>{treatment.name}</strong>
-                      {treatment.billingType === "subscription" ? (
-                        <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>
-                          Subscription
-                        </span>
-                      ) : null}
+                      <span style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase" }}>
+                        One-time
+                      </span>
                     </span>
                     <span style={{ color: selected ? "rgba(255, 255, 255, 0.9)" : brand.text, fontSize: 13, fontWeight: 500 }}>
                       {treatment.label}

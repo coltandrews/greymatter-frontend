@@ -5,6 +5,7 @@ import {
   EmbeddedCheckoutProvider,
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
+import { SignOutButton } from "@/components/SignOutButton";
 import { US_STATES } from "@/app/intake/usStates";
 import {
   createBookingIntent,
@@ -71,6 +72,20 @@ function treatmentName(row: HubBookingIntentRow): string {
   const treatmentKey =
     typeof intake.selected_treatment === "string" ? intake.selected_treatment : null;
   return treatmentByKey(treatmentKey)?.name ?? "Medication request";
+}
+
+function patientInitials(name: string, email: string) {
+  const parts = name
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  if (parts[0]) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return email.slice(0, 2).toUpperCase();
 }
 
 function requestDate(value: string): string {
@@ -297,17 +312,21 @@ function ProductQuestionField({
 export function PatientHubWorkspace({
   appointments,
   bookingIntents: initialBookingIntents,
+  email,
   initialDraft,
   initialProfile,
   products,
   serverLoadError,
+  welcomeName,
 }: {
   appointments: HubAppointmentRow[];
   bookingIntents: HubBookingIntentRow[];
+  email: string;
   initialDraft: IntakeDraftData | null;
   initialProfile: IntakeDraftData | null;
   products: TreatmentProduct[];
   serverLoadError: string | null;
+  welcomeName: string;
 }) {
   const [activeTab, setActiveTab] = useState<HubTab>("treatments");
   const [bookingIntents, setBookingIntents] = useState(initialBookingIntents);
@@ -582,6 +601,11 @@ export function PatientHubWorkspace({
     }
   }
 
+  function selectTab(tab: HubTab) {
+    setActiveTab(tab);
+    setError(null);
+  }
+
   function onCheckoutComplete(checkout: CheckoutState | null) {
     window.location.assign(
       checkout?.checkoutSessionId
@@ -591,33 +615,67 @@ export function PatientHubWorkspace({
   }
 
   return (
-    <>
-      <div className={styles.hubTabs} role="tablist" aria-label="Patient hub tabs">
-        {[
-          ["treatments", "My Treatments"],
-          ["new", "New Treatment"],
-          ["account", "Account"],
-        ].map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            role="tab"
-            aria-selected={activeTab === key}
-            className={`${styles.hubTab} ${activeTab === key ? styles.hubTabActive : ""}`}
-            onClick={() => {
-              setActiveTab(key as HubTab);
-              setError(null);
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+    <main className={styles.page}>
+      <aside className={styles.sidebar} aria-label="Patient navigation">
+        <div className={styles.sidebarBrand}>
+          <img
+            src="/brand/logo-horizontal.svg"
+            alt="Greymatter MD"
+            className={styles.sidebarLogo}
+          />
+        </div>
 
-      {error ? <p className={styles.error}>{error}</p> : null}
+        <div className={styles.sidebarUser}>
+          <div className={styles.sidebarAvatar} aria-hidden="true">
+            {patientInitials(welcomeName, email)}
+          </div>
+          <div className={styles.sidebarUserText}>
+            <p>{welcomeName}</p>
+            <span title={email}>{email}</span>
+          </div>
+        </div>
 
-      {activeTab === "treatments" ? (
-        <section className={styles.hubSplit} aria-labelledby="my-treatments-title">
+        <nav className={styles.sidebarNav} aria-label="Patient hub sections">
+          {[
+            ["treatments", "My Treatments"],
+            ["new", "New Treatment"],
+            ["account", "Account"],
+          ].map(([key, label]) => {
+            const tab = key as HubTab;
+            return (
+              <button
+                key={key}
+                type="button"
+                aria-current={activeTab === tab ? "page" : undefined}
+                className={`${styles.sidebarNavLink} ${
+                  activeTab === tab ? styles.sidebarNavLinkActive : ""
+                }`}
+                onClick={() => selectTab(tab)}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className={styles.sidebarFooter}>
+          <SignOutButton noMargin />
+        </div>
+      </aside>
+
+      <section className={styles.content}>
+        <header className={styles.pageHeader}>
+          <div>
+            <p className={styles.kicker}>Patient portal</p>
+            <h1>Patient Hub</h1>
+            <p>Track provider review, payment, and medication request status.</p>
+          </div>
+        </header>
+
+        {error ? <p className={styles.error}>{error}</p> : null}
+
+        {activeTab === "treatments" ? (
+          <section className={styles.hubSplit} aria-labelledby="my-treatments-title">
           <div className={styles.panel}>
             <div className={styles.panelHeaderRow}>
               <div>
@@ -736,11 +794,11 @@ export function PatientHubWorkspace({
               <p className={styles.emptyState}>Select a treatment to view details.</p>
             )}
           </div>
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      {activeTab === "new" ? (
-        <section className={styles.newTreatmentGrid} aria-labelledby="new-treatment-title">
+        {activeTab === "new" ? (
+          <section className={styles.newTreatmentGrid} aria-labelledby="new-treatment-title">
           <div className={styles.panel}>
             <div className={styles.panelHeaderRow}>
               <div>
@@ -765,7 +823,7 @@ export function PatientHubWorkspace({
                     <strong>{product.name}</strong>
                     <span>{product.label}</span>
                     <small>
-                      {product.billing_type === "subscription" ? "Subscription" : "One-time"} ·{" "}
+                      One-time ·{" "}
                       {currencyFromCents(
                         product.consultation_fee_cents + product.medication_fee_cents,
                         product.currency,
@@ -948,11 +1006,11 @@ export function PatientHubWorkspace({
               ) : null}
             </div>
           ) : null}
-        </section>
-      ) : null}
+          </section>
+        ) : null}
 
-      {activeTab === "account" ? (
-        <section className={styles.panel} aria-labelledby="account-tab-title">
+        {activeTab === "account" ? (
+          <section className={styles.panel} aria-labelledby="account-tab-title">
           <div className={styles.detailHeroCompact}>
             <p className={styles.kicker}>Account</p>
             <h2 id="account-tab-title">Profile and care details</h2>
@@ -964,8 +1022,9 @@ export function PatientHubWorkspace({
           <Link href="/account" className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}>
             Open account
           </Link>
-        </section>
-      ) : null}
-    </>
+          </section>
+        ) : null}
+      </section>
+    </main>
   );
 }

@@ -603,8 +603,8 @@ export function HubAppointments({
 
       {visitCount === 0 ? (
         <p className={styles.emptyState}>
-          No medication requests yet. Start a GLP-1 subscription request when you are ready
-          for provider review.
+          No medication requests yet. Start a GLP-1 treatment request when you are ready for
+          provider review.
         </p>
       ) : (
         <ul className={styles.visitList}>

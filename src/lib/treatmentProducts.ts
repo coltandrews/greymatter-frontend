@@ -1,5 +1,5 @@
 import type { TreatmentKey, TreatmentOption } from "@/lib/treatments";
-import { PATIENT_TREATMENTS } from "@/lib/treatments";
+import { PATIENT_TREATMENTS, treatmentByKey } from "@/lib/treatments";
 
 export type TreatmentProduct = {
   id: string | null;
@@ -23,13 +23,13 @@ function fromTreatmentOption(treatment: TreatmentOption): TreatmentProduct {
   return {
     id: null,
     product_key: treatment.key,
-    name: treatment.billingType === "subscription" ? `${treatment.name} Subscription` : treatment.name,
+    name: treatment.name,
     label: treatment.label,
     summary: treatment.summary,
     description: treatment.summary,
     service_key: treatment.serviceKey,
     service_type: "initial",
-    billing_type: treatment.billingType === "subscription" ? "subscription" : "one_time",
+    billing_type: "one_time",
     price_id: "",
     consultation_fee_cents: treatment.consultationFeeCents,
     medication_fee_cents: treatment.medicationFeeCents,
@@ -65,19 +65,26 @@ export function treatmentProductFromRow(row: unknown): TreatmentProduct | null {
   if (!isTreatmentKey(productKey) || !isTreatmentKey(questionSetKey)) {
     return null;
   }
-  const billingType = stringValue(record, "billing_type") === "one_time"
-    ? "one_time"
-    : "subscription";
+  const fallback = treatmentByKey(productKey);
+  const rowName = stringValue(record, "name").replace(/\s+subscription$/i, "");
+  const useFallbackCopy = productKey === "glp_1";
+
   return {
     id: stringValue(record, "id") || null,
     product_key: productKey,
-    name: stringValue(record, "name") || productKey,
-    label: stringValue(record, "label"),
-    summary: stringValue(record, "summary"),
-    description: stringValue(record, "description"),
+    name: rowName || fallback?.name || productKey,
+    label: useFallbackCopy
+      ? fallback?.label ?? stringValue(record, "label")
+      : stringValue(record, "label"),
+    summary: useFallbackCopy
+      ? fallback?.summary ?? stringValue(record, "summary")
+      : stringValue(record, "summary"),
+    description: useFallbackCopy
+      ? fallback?.summary ?? stringValue(record, "description")
+      : stringValue(record, "description"),
     service_key: stringValue(record, "service_key"),
     service_type: "initial",
-    billing_type: billingType,
+    billing_type: "one_time",
     price_id: stringValue(record, "price_id"),
     consultation_fee_cents: numberValue(record, "consultation_fee_cents"),
     medication_fee_cents: numberValue(record, "medication_fee_cents"),

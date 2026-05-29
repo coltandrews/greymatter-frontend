@@ -24,10 +24,10 @@ describe("treatment registry", () => {
     }
   });
 
-  it("marks GLP-1 as the initial subscription treatment", () => {
+  it("marks GLP-1 as the initial visible one-time treatment", () => {
     expect(treatmentByKey("glp_1")).toMatchObject({
-      billingType: "subscription",
-      priceLabel: "GLP-1 subscription plan",
+      billingType: "one_time",
+      priceLabel: "GLP-1 consultation and medication review",
       patientVisible: true,
     });
     expect(treatmentByKey("peptides")).toMatchObject({

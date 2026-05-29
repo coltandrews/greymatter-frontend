@@ -2,29 +2,12 @@ import { createClient } from "@/lib/supabase/server";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { patientWelcomeName } from "@/lib/patientDisplayName";
-import { SignOutButton } from "@/components/SignOutButton";
-import Link from "next/link";
 import {
   FALLBACK_TREATMENT_PRODUCTS,
   treatmentProductFromRow,
   type TreatmentProduct,
 } from "@/lib/treatmentProducts";
 import { PatientHubWorkspace } from "./PatientHubWorkspace";
-import styles from "./hub.module.css";
-
-function patientInitials(name: string, email: string) {
-  const parts = name
-    .split(/\s+/)
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (parts.length >= 2) {
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-  }
-  if (parts[0]) {
-    return parts[0].slice(0, 2).toUpperCase();
-  }
-  return email.slice(0, 2).toUpperCase();
-}
 
 export default async function HubPage() {
   const supabase = await createClient();
@@ -110,64 +93,15 @@ export default async function HubPage() {
   const email = user.email ?? user.id;
 
   return (
-    <main className={styles.page}>
-      <aside className={styles.sidebar} aria-label="Patient navigation">
-        <div className={styles.sidebarBrand}>
-          <img
-            src="/brand/logo-horizontal.svg"
-            alt="Greymatter MD"
-            className={styles.sidebarLogo}
-          />
-        </div>
-
-        <div className={styles.sidebarUser}>
-          <div className={styles.sidebarAvatar} aria-hidden="true">
-            {patientInitials(welcomeName, email)}
-          </div>
-          <div className={styles.sidebarUserText}>
-            <p>{welcomeName}</p>
-            <span title={email}>{email}</span>
-          </div>
-        </div>
-
-        <nav className={styles.sidebarNav} aria-label="Patient hub sections">
-          <a href="#overview" className={styles.sidebarNavLink}>
-            Overview
-          </a>
-          <a href="#my-treatments-title" className={styles.sidebarNavLink}>
-            My Treatments
-          </a>
-          <a href="#new-treatment-title" className={styles.sidebarNavLink}>
-            New Treatment
-          </a>
-          <Link href="/account" className={styles.sidebarNavLink}>
-            Account
-          </Link>
-        </nav>
-
-        <div className={styles.sidebarFooter}>
-          <SignOutButton noMargin />
-        </div>
-      </aside>
-
-      <section className={styles.content}>
-        <header id="overview" className={styles.pageHeader}>
-          <div>
-            <p className={styles.kicker}>Patient portal</p>
-            <h1>Patient Hub</h1>
-            <p>Track provider review, payment, and medication request status.</p>
-          </div>
-        </header>
-
-        <PatientHubWorkspace
-          appointments={appointments}
-          bookingIntents={bookingIntents}
-          initialDraft={(draftRow?.data ?? null) as IntakeDraftData | null}
-          initialProfile={(profile?.demographics ?? null) as IntakeDraftData | null}
-          products={visibleProducts}
-          serverLoadError={error?.message ?? bookingError?.message ?? null}
-        />
-      </section>
-    </main>
+    <PatientHubWorkspace
+      appointments={appointments}
+      bookingIntents={bookingIntents}
+      email={email}
+      initialDraft={(draftRow?.data ?? null) as IntakeDraftData | null}
+      initialProfile={(profile?.demographics ?? null) as IntakeDraftData | null}
+      products={visibleProducts}
+      serverLoadError={error?.message ?? bookingError?.message ?? null}
+      welcomeName={welcomeName}
+    />
   );
 }

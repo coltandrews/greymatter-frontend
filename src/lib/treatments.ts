@@ -70,14 +70,14 @@ export const TREATMENTS: TreatmentOption[] = [
   {
     key: "glp_1",
     name: "GLP-1",
-    label: "Recurring metabolic care plan",
-    summary: "A subscription path for GLP-1 eligibility, provider review, and ongoing care.",
+    label: "Metabolic care plan",
+    summary: "A one-time checkout path for GLP-1 eligibility, provider review, and treatment billing.",
     accent: "G",
     serviceKey: "MetaHealthRX - Oral Semaglutide Dissolvable Tablets",
-    priceLabel: "GLP-1 subscription plan",
+    priceLabel: "GLP-1 consultation and medication review",
     consultationFeeCents: 9900,
     medicationFeeCents: 24900,
-    billingType: "subscription",
+    billingType: "one_time",
     patientVisible: true,
   },
   {
