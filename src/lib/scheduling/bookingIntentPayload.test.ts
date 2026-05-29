@@ -32,6 +32,7 @@ describe("buildTreatmentBookingIntentPayload", () => {
     });
 
     expect(payload).toMatchObject({
+      productKey: "glp_1",
       serviceState: "SC",
       serviceKey: GREYMATTER_SERVICE_KEY,
       serviceType: "initial",

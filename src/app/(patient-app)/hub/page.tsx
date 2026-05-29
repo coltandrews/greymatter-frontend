@@ -4,8 +4,12 @@ import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographic
 import { patientWelcomeName } from "@/lib/patientDisplayName";
 import { SignOutButton } from "@/components/SignOutButton";
 import Link from "next/link";
-import { HubAppointments } from "./HubAppointments";
-import { HubMedications } from "./HubMedications";
+import {
+  FALLBACK_TREATMENT_PRODUCTS,
+  treatmentProductFromRow,
+  type TreatmentProduct,
+} from "@/lib/treatmentProducts";
+import { PatientHubWorkspace } from "./PatientHubWorkspace";
 import styles from "./hub.module.css";
 
 function patientInitials(name: string, email: string) {
@@ -37,6 +41,7 @@ export default async function HubPage() {
     { data: bookingRows, error: bookingError },
     { data: profile },
     { data: draftRow },
+    { data: productRows },
   ] = await Promise.all([
     supabase
       .from("appointments")
@@ -59,6 +64,12 @@ export default async function HubPage() {
       .select("data")
       .eq("user_id", user.id)
       .maybeSingle(),
+    supabase
+      .from("treatment_products")
+      .select("id, product_key, name, label, summary, description, service_key, service_type, billing_type, price_id, consultation_fee_cents, medication_fee_cents, currency, question_set_key, sort_order")
+      .eq("patient_visible", true)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
   ]);
 
   const appointments = (rows ?? []).map((r) => ({
@@ -86,6 +97,11 @@ export default async function HubPage() {
     ola_popup_message: r.ola_popup_message,
     ola_order_guid: r.ola_order_guid,
   }));
+  const products =
+    (productRows ?? [])
+      .map((row) => treatmentProductFromRow(row))
+      .filter((row): row is TreatmentProduct => row != null);
+  const visibleProducts = products.length > 0 ? products : FALLBACK_TREATMENT_PRODUCTS;
   const forWelcome = mergeIntakeAndProfileDemographics(
     draftRow?.data as IntakeDraftData | undefined,
     profile?.demographics as IntakeDraftData | undefined,
@@ -118,11 +134,11 @@ export default async function HubPage() {
           <a href="#overview" className={styles.sidebarNavLink}>
             Overview
           </a>
-          <a href="#my-medications" className={styles.sidebarNavLink}>
-            My medications
+          <a href="#my-treatments-title" className={styles.sidebarNavLink}>
+            My Treatments
           </a>
-          <a href="#new-medication" className={styles.sidebarNavLink}>
-            Select new medication
+          <a href="#new-treatment-title" className={styles.sidebarNavLink}>
+            New Treatment
           </a>
           <Link href="/account" className={styles.sidebarNavLink}>
             Account
@@ -143,72 +159,14 @@ export default async function HubPage() {
           </div>
         </header>
 
-        <div className={styles.dashboardGrid}>
-          <section
-            id="my-medications"
-            className={`${styles.panel} ${styles.primaryPanel}`}
-            aria-labelledby="medications-title"
-          >
-            <HubMedications
-              appointments={appointments}
-              bookingIntents={bookingIntents}
-              serverLoadError={error?.message ?? bookingError?.message ?? null}
-            />
-          </section>
-
-          <section
-            id="new-medication"
-            className={`${styles.panel} ${styles.selectorPanel}`}
-            aria-labelledby="new-medication-title"
-          >
-            <div className={styles.panelHeader}>
-              <p className={styles.kicker}>New request</p>
-              <h2 id="new-medication-title" className={styles.panelTitle}>
-                Select new medication
-              </h2>
-              <p className={styles.panelSubtitle}>
-                Start a new provider-reviewed medication request when you are ready.
-              </p>
-            </div>
-
-            <div className={styles.medicationSelectCard}>
-              <div>
-                <p className={styles.medicationSelectName}>GLP-1 Subscription</p>
-                <p className={styles.medicationSelectText}>
-                  Complete intake, pay securely, and send your request to the provider network
-                  for review.
-                </p>
-              </div>
-              <Link
-                href="/?new_medication=1"
-                aria-label="Start a GLP-1 subscription request"
-                className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}
-              >
-                Start request
-              </Link>
-            </div>
-          </section>
-        </div>
-
-        <section className={styles.panel} aria-labelledby="appointments-title">
-          <div className={styles.panelHeaderRow}>
-            <div>
-              <h2 id="appointments-title" className={styles.panelTitle}>
-                Request history
-              </h2>
-              <p className={styles.panelSubtitle}>
-                Review payment, provider handoff, and next-step status for each medication
-                request.
-              </p>
-            </div>
-          </div>
-
-          <HubAppointments
-            initial={appointments}
-            initialBookingIntents={bookingIntents}
-            serverLoadError={error?.message ?? bookingError?.message ?? null}
-          />
-        </section>
+        <PatientHubWorkspace
+          appointments={appointments}
+          bookingIntents={bookingIntents}
+          initialDraft={(draftRow?.data ?? null) as IntakeDraftData | null}
+          initialProfile={(profile?.demographics ?? null) as IntakeDraftData | null}
+          products={visibleProducts}
+          serverLoadError={error?.message ?? bookingError?.message ?? null}
+        />
       </section>
     </main>
   );

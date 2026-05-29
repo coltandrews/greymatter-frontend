@@ -40,6 +40,19 @@ export async function createBookingIntentCheckout(
   );
 }
 
+export async function deleteBookingIntent(
+  supabaseAccessToken: string,
+  bookingIntentId: string,
+) {
+  return fetch(`${apiBase()}/api/booking-intents/${encodeURIComponent(bookingIntentId)}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${supabaseAccessToken}`,
+      Accept: "application/json",
+    },
+  });
+}
+
 export async function retryBookingIntentOla(
   supabaseAccessToken: string,
   bookingIntentId: string,

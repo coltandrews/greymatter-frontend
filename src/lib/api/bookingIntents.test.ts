@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   createBookingIntent,
   createBookingIntentCheckout,
+  deleteBookingIntent,
   reconcileBookingIntentStripe,
   reconcileCheckoutSession,
   retryBookingIntentOla,
@@ -11,6 +12,25 @@ describe("booking intent API helpers", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.unstubAllGlobals();
+  });
+
+  it("deletes an unpaid booking intent through the backend", async () => {
+    vi.stubEnv("NEXT_PUBLIC_API_BASE_URL", "https://api.example.com");
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await deleteBookingIntent("access-token", "booking-id");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/booking-intents/booking-id",
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer access-token",
+          Accept: "application/json",
+        },
+      },
+    );
   });
 
   it("creates a booking intent through the backend", async () => {

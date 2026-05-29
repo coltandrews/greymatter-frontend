@@ -9,6 +9,7 @@ export const GREYMATTER_SERVICE_KEY =
   "MetaHealthRX - Oral Semaglutide Dissolvable Tablets";
 
 export type BookingIntentPayload = {
+  productKey?: string;
   serviceState: string;
   serviceKey: string;
   serviceType: "initial";
@@ -31,6 +32,7 @@ export function buildTreatmentBookingIntentPayload(
     patient.treatment_answers,
   );
   return {
+    productKey: treatment?.key,
     serviceState: (patient.service_state ?? patient.address_state ?? "").trim(),
     serviceKey: treatment?.serviceKey ?? GREYMATTER_SERVICE_KEY,
     serviceType: "initial",
