@@ -257,9 +257,14 @@ export function HubMedications({
   return (
     <>
       <div className={styles.panelHeaderRow}>
-        <h2 id="medications-title" className={styles.panelTitle}>
-          Medications
-        </h2>
+        <div>
+          <h2 id="medications-title" className={styles.panelTitle}>
+            My medications
+          </h2>
+          <p className={styles.panelSubtitle}>
+            Current prescriptions and active provider-reviewed requests.
+          </p>
+        </div>
       </div>
 
       {loading ? (
