@@ -156,8 +156,8 @@ export function StaffRecoveryPanel({
                     style={{
                       padding: "9px 13px",
                       borderRadius: 8,
-                      border: "1px solid #3487ed",
-                      background: retryingId === row.id ? "var(--gm-disabled-bg)" : "#3487ed",
+                      border: "1px solid #171717",
+                      background: retryingId === row.id ? "var(--gm-disabled-bg)" : "#171717",
                       color: "#ffffff",
                       fontSize: 13,
                       fontWeight: 700,
@@ -188,7 +188,7 @@ export function StaffRecoveryPanel({
                     <p style={{ margin: "0 0 6px", fontSize: 12, color: "var(--gm-subtle)", fontWeight: 800 }}>
                       Failure
                     </p>
-                    <p style={{ margin: 0, fontSize: 13, color: "#92400e", lineHeight: 1.45 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: "#242424", lineHeight: 1.45 }}>
                       {details[0]?.value ?? "Provider handoff did not complete."}
                     </p>
                   </div>
@@ -239,7 +239,7 @@ export function StaffRecoveryPanel({
                           key={`${attempt.at}-${attempt.message}`}
                           style={{
                             fontSize: 12,
-                            color: attempt.status === "success" ? "#166534" : "var(--gm-error)",
+                            color: attempt.status === "success" ? "#171717" : "var(--gm-error)",
                             lineHeight: 1.4,
                           }}
                         >

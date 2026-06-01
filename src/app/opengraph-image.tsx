@@ -17,7 +17,7 @@ export default function Image() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(180deg, #b4b4b4 0%, #d2d2d2 36%, #eeeeee 72%, #fdfdfd 100%)",
+          background: "#ffffff",
           fontFamily: "Geist, Arial, sans-serif",
         }}
       >
@@ -29,9 +29,8 @@ export default function Image() {
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 42,
-            background: "rgba(255, 255, 255, 0.72)",
-            border: "1px solid #d8d8d8",
-            boxShadow: "0 30px 90px rgba(23, 23, 23, 0.18)",
+            background: "#ffffff",
+            border: "1px solid rgba(23, 23, 23, 0.14)",
           }}
         >
           <div
@@ -50,10 +49,10 @@ export default function Image() {
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-              <span style={{ color: "#aeb4bb", fontSize: 86, fontWeight: 900 }}>
+              <span style={{ color: "#777777", fontSize: 86, fontWeight: 900 }}>
                 +
               </span>
-              <span style={{ color: "#4d83cf", fontSize: 112, fontWeight: 900 }}>
+              <span style={{ color: "#171717", fontSize: 112, fontWeight: 900 }}>
                 MD
               </span>
             </div>

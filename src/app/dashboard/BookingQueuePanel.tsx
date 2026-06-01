@@ -201,7 +201,7 @@ export function BookingQueuePanel() {
                     <td
                       style={{
                         padding: "12px",
-                        color: row.hasNextSteps ? "#92400e" : "var(--gm-subtle)",
+                        color: row.hasNextSteps ? "#242424" : "var(--gm-subtle)",
                         fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
                         fontSize: 11,
                         maxWidth: 180,

@@ -43,24 +43,24 @@
 }
 
 .success {
-  background: rgba(22, 163, 74, 0.16);
-  color: #166534;
+  background: rgba(23, 23, 23, 0.16);
+  color: #171717;
 }
 
 .pending {
-  background: rgba(115, 210, 255, 0.14);
-  color: #2563eb;
+  background: rgba(23, 23, 23, 0.14);
+  color: #171717;
   font-size: 20px;
 }
 
 .review {
-  background: rgba(251, 146, 60, 0.14);
-  color: #92400e;
+  background: rgba(23, 23, 23, 0.14);
+  color: #242424;
 }
 
 .action {
-  background: rgba(251, 191, 36, 0.14);
-  color: #92400e;
+  background: rgba(23, 23, 23, 0.14);
+  color: #242424;
 }
 
 .title {
@@ -128,7 +128,7 @@
   inset: 0 auto 0 0;
   width: 45%;
   border-radius: inherit;
-  background: #3487ed;
+  background: #171717;
   animation: processingSlide 1.05s ease-in-out infinite;
 }
 
@@ -171,7 +171,7 @@
   min-height: 52px;
   padding: 0 22px;
   border-radius: 7px;
-  background: #3487ed;
+  background: #171717;
   color: #ffffff;
   font-size: 15px;
   font-weight: 600;
@@ -179,7 +179,7 @@
 }
 
 .btn:hover {
-  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 4px 14px rgba(23, 23, 23, 0.15);
 }
 
 .secondaryBtn {
@@ -189,5 +189,5 @@
 }
 
 .secondaryBtn:hover {
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 14px rgba(23, 23, 23, 0.08);
 }

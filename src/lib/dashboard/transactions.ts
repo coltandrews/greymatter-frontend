@@ -51,11 +51,11 @@ export function transactionReceiptFileName(row: TransactionRow): string {
 export function transactionStatusView(status: string | null): TransactionStatusView {
   switch (status) {
     case "paid":
-      return { label: "Paid", color: "#166534", background: "rgba(22, 163, 74, 0.16)" };
+      return { label: "Paid", color: "#171717", background: "rgba(23, 23, 23, 0.16)" };
     case "pending":
-      return { label: "Pending", color: "#92400e", background: "rgba(180, 83, 9, 0.16)" };
+      return { label: "Pending", color: "#242424", background: "rgba(23, 23, 23, 0.16)" };
     case "failed":
-      return { label: "Failed", color: "var(--gm-error)", background: "rgba(127, 29, 29, 0.24)" };
+      return { label: "Failed", color: "var(--gm-error)", background: "rgba(23, 23, 23, 0.24)" };
     case "refunded":
       return { label: "Refunded", color: "var(--gm-muted)", background: "var(--gm-border)" };
     default:
@@ -65,11 +65,11 @@ export function transactionStatusView(status: string | null): TransactionStatusV
 
 export function transactionWebhookStatusView(row: TransactionRow): TransactionStatusView {
   if (row.paymentStatus === "paid" && row.paidAt) {
-    return { label: "Received", color: "#166534", background: "rgba(22, 163, 74, 0.16)" };
+    return { label: "Received", color: "#171717", background: "rgba(23, 23, 23, 0.16)" };
   }
 
   if (row.paymentStatus === "pending" && row.stripeCheckoutSessionId?.trim()) {
-    return { label: "Not Received", color: "#92400e", background: "rgba(180, 83, 9, 0.16)" };
+    return { label: "Not Received", color: "#242424", background: "rgba(23, 23, 23, 0.16)" };
   }
 
   return { label: "Not Expected", color: "var(--gm-muted)", background: "var(--gm-border)" };

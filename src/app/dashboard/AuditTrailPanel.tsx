@@ -163,8 +163,8 @@ export function AuditTrailPanel({
           style={{
             padding: "9px 11px",
             borderRadius: 8,
-            border: "1px solid #3487ed",
-            background: saving || !note.trim() ? "var(--gm-disabled-bg)" : "#3487ed",
+            border: "1px solid #171717",
+            background: saving || !note.trim() ? "var(--gm-disabled-bg)" : "#171717",
             color: "#ffffff",
             fontSize: 12,
             fontWeight: 800,

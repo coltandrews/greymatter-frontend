@@ -65,9 +65,9 @@
 
 .navLinkActive,
 .navLinkActive:hover {
-  background: #3487ed;
+  background: #171717;
   color: #ffffff;
-  border-color: #3487ed;
+  border-color: #171717;
   box-shadow: 0 8px 18px rgba(23, 32, 51, 0.16);
 }
 
@@ -279,8 +279,8 @@
   min-height: 34px;
   padding: 0 14px;
   border-radius: 7px;
-  border: 1px solid #3487ed;
-  background: #3487ed;
+  border: 1px solid #171717;
+  background: #171717;
   color: #ffffff;
   font-size: 12px;
   font-weight: 800;
@@ -335,7 +335,7 @@
   margin: 0 0 16px;
   padding: 12px 14px;
   border-radius: 7px;
-  background: rgba(127, 29, 29, 0.24);
+  background: rgba(23, 23, 23, 0.24);
   color: var(--gm-error);
   font-size: 14px;
 }
@@ -393,7 +393,7 @@
 }
 
 .healthStatusOk {
-  color: #166534;
+  color: #171717;
 }
 
 .healthStatusError {
@@ -478,8 +478,8 @@
 .requestSearch:focus,
 .requestSelect:focus {
   outline: none;
-  border-color: #3487ed;
-  box-shadow: 0 0 0 3px rgba(52, 135, 237, 0.18);
+  border-color: #171717;
+  box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.18);
 }
 
 .requestToggle {
@@ -501,7 +501,7 @@
 .requestToggle input {
   width: 16px;
   height: 16px;
-  accent-color: #3487ed;
+  accent-color: #171717;
 }
 
 .requestsTable {
@@ -612,7 +612,7 @@
 .contextMenuButton:hover,
 .contextMenuButton[aria-expanded="true"] {
   background: rgba(255, 255, 255, 0.72);
-  border-color: #3487ed;
+  border-color: #171717;
 }
 
 .contextMenuPanel {
@@ -694,7 +694,7 @@
 }
 
 .patientLink:hover {
-  color: #2563eb;
+  color: #171717;
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -703,7 +703,7 @@
   margin: 0 0 14px;
   padding: 12px 14px;
   border-radius: 7px;
-  background: rgba(127, 29, 29, 0.24);
+  background: rgba(23, 23, 23, 0.24);
   color: var(--gm-error);
   font-size: 14px;
 }
@@ -760,7 +760,7 @@
 }
 
 .actionMessage {
-  color: #166534;
+  color: #171717;
 }
 
 .actionError {
@@ -798,11 +798,11 @@
 .detailBackLink::before {
   content: "<";
   margin-right: 8px;
-  color: #2563eb;
+  color: #171717;
 }
 
 .detailBackLink:hover {
-  color: #2563eb;
+  color: #171717;
 }
 
 .requestDetailHero {
@@ -815,7 +815,7 @@
   border: 1px solid var(--gm-border);
   border-radius: 7px;
   background:
-    linear-gradient(135deg, rgba(52, 135, 237, 0.2), rgba(115, 210, 255, 0.06)),
+    linear-gradient(135deg, rgba(23, 23, 23, 0.2), rgba(23, 23, 23, 0.06)),
     var(--gm-surface);
 }
 
@@ -911,18 +911,18 @@
 }
 
 .requestStatusCalloutblocked {
-  border-color: rgba(252, 165, 165, 0.4);
-  background: rgba(127, 29, 29, 0.18);
+  border-color: rgba(23, 23, 23, 0.4);
+  background: rgba(23, 23, 23, 0.18);
 }
 
 .requestStatusCalloutcurrent {
-  border-color: rgba(253, 186, 116, 0.34);
-  background: rgba(180, 83, 9, 0.14);
+  border-color: rgba(23, 23, 23, 0.34);
+  background: rgba(23, 23, 23, 0.14);
 }
 
 .requestStatusCalloutcomplete {
-  border-color: rgba(134, 239, 172, 0.34);
-  background: rgba(22, 163, 74, 0.14);
+  border-color: rgba(23, 23, 23, 0.34);
+  background: rgba(23, 23, 23, 0.14);
 }
 
 .requestStatusCalloutpending {
@@ -985,18 +985,18 @@
 }
 
 .timelineStepcomplete .timelineDot {
-  border-color: #166534;
-  background: #16a34a;
+  border-color: #171717;
+  background: #171717;
 }
 
 .timelineStepcurrent .timelineDot {
-  border-color: #92400e;
-  background: #b45309;
+  border-color: #242424;
+  background: #242424;
 }
 
 .timelineStepblocked .timelineDot {
   border-color: var(--gm-error);
-  background: #7f1d1d;
+  background: #171717;
 }
 
 .timelineStepHeader {
@@ -1087,9 +1087,9 @@
 .detailActionButton {
   min-height: 42px;
   padding: 0 12px;
-  border: 1px solid #3487ed;
+  border: 1px solid #171717;
   border-radius: 7px;
-  background: #3487ed;
+  background: #171717;
   color: #ffffff;
   font: inherit;
   font-size: 13px;
@@ -1098,7 +1098,7 @@
 }
 
 .detailActionButton:hover:not(:disabled) {
-  background: #2274d6;
+  background: #000000;
 }
 
 .detailActionButton:disabled {
@@ -1171,7 +1171,7 @@
   border: 1px solid var(--gm-border);
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.78);
-  color: #2563eb;
+  color: #171717;
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
@@ -1253,7 +1253,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  background: #3487ed;
+  background: #171717;
   color: #ffffff;
   font-size: 13px;
   font-weight: 800;
@@ -1373,18 +1373,18 @@
 }
 
 .overviewBadgeOk {
-  background: rgba(22, 163, 74, 0.16);
-  color: #166534;
+  background: rgba(23, 23, 23, 0.16);
+  color: #171717;
 }
 
 .overviewBadgePending {
-  background: rgba(52, 135, 237, 0.16);
-  color: #2563eb;
+  background: rgba(23, 23, 23, 0.16);
+  color: #171717;
 }
 
 .overviewBadgeWarning {
-  background: rgba(180, 83, 9, 0.16);
-  color: #92400e;
+  background: rgba(23, 23, 23, 0.16);
+  color: #242424;
 }
 
 .overviewBadgeNeutral {
@@ -1403,9 +1403,9 @@
 .overviewWarningList li {
   padding: 10px 12px;
   border-radius: 7px;
-  background: rgba(180, 83, 9, 0.14);
-  border: 1px solid rgba(180, 83, 9, 0.35);
-  color: #92400e;
+  background: rgba(23, 23, 23, 0.14);
+  border: 1px solid rgba(23, 23, 23, 0.35);
+  color: #242424;
   font-size: 13px;
   font-weight: 700;
 }
@@ -1542,8 +1542,8 @@
   margin: 0 0 14px;
   padding: 12px 14px;
   border-radius: 7px;
-  background: rgba(22, 163, 74, 0.14);
-  color: #166534;
+  background: rgba(23, 23, 23, 0.14);
+  color: #171717;
   font-size: 14px;
 }
 

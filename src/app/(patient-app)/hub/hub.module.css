@@ -112,7 +112,7 @@
 }
 
 .sidebarNavLink:focus-visible {
-  outline: 2px solid #3487ed;
+  outline: 2px solid #171717;
   outline-offset: 2px;
 }
 
@@ -281,10 +281,10 @@
   gap: 8px;
   min-height: 40px;
   padding: 0 16px;
-  border: 1px solid rgba(185, 28, 28, 0.32);
+  border: 1px solid rgba(23, 23, 23, 0.32);
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.72);
-  color: #9f1239;
+  color: #171717;
   font: inherit;
   font-size: 14px;
   font-weight: 700;
@@ -570,7 +570,7 @@
 
 .fieldError {
   margin: 0;
-  color: #9f1239;
+  color: #171717;
   font-size: 13px;
   font-weight: 700;
 }
@@ -608,7 +608,7 @@
   margin: 2px 0 0;
   padding: 14px 16px;
   border-radius: 7px;
-  background: rgba(52, 135, 237, 0.12);
+  background: rgba(23, 23, 23, 0.12);
   color: var(--gm-muted);
   font-size: 13px;
   line-height: 1.45;
@@ -767,8 +767,8 @@
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0;
-  color: #3487ed;
-  background: rgba(52, 135, 237, 0.14);
+  color: #171717;
+  background: rgba(23, 23, 23, 0.14);
   padding: 5px 10px;
   border-radius: 999px;
 }
@@ -830,7 +830,7 @@
 }
 
 .visitItemButton:focus-visible {
-  outline: 2px solid #3487ed;
+  outline: 2px solid #171717;
   outline-offset: 2px;
 }
 
@@ -844,7 +844,7 @@
   padding: 0 12px;
   border: none;
   border-radius: 7px;
-  background: #3487ed;
+  background: #171717;
   color: #ffffff;
   text-decoration: none;
   transition: background 0.15s ease, border-color 0.15s ease, transform 0.12s ease;
@@ -867,12 +867,12 @@
 }
 
 .nextStepsLink:hover {
-  background: #2878df;
+  background: #000000;
   transform: translateY(-1px);
 }
 
 .nextStepsLink:focus-visible {
-  outline: 2px solid #3487ed;
+  outline: 2px solid #171717;
   outline-offset: 2px;
 }
 
@@ -881,7 +881,7 @@
 }
 
 .visitItem:hover {
-  border-color: rgba(148, 163, 184, 0.22);
+  border-color: rgba(23, 23, 23, 0.22);
 }
 
 .visitTop {
@@ -972,41 +972,41 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: capitalize;
-  color: #166534;
-  background: rgba(22, 163, 74, 0.14);
+  color: #171717;
+  background: rgba(23, 23, 23, 0.14);
   padding: 4px 10px;
   border-radius: 8px;
-  border: 1px solid rgba(134, 239, 172, 0.24);
+  border: 1px solid rgba(23, 23, 23, 0.24);
 }
 
 .statusPillconfirmed {
-  color: #166534;
-  background: rgba(22, 163, 74, 0.14);
-  border-color: rgba(134, 239, 172, 0.24);
+  color: #171717;
+  background: rgba(23, 23, 23, 0.14);
+  border-color: rgba(23, 23, 23, 0.24);
 }
 
 .statusPillpending {
-  color: #2563eb;
-  background: rgba(115, 210, 255, 0.12);
-  border-color: rgba(115, 210, 255, 0.28);
+  color: #171717;
+  background: rgba(23, 23, 23, 0.12);
+  border-color: rgba(23, 23, 23, 0.28);
 }
 
 .statusPillreview {
-  color: #92400e;
-  background: rgba(251, 146, 60, 0.14);
-  border-color: rgba(253, 186, 116, 0.28);
+  color: #242424;
+  background: rgba(23, 23, 23, 0.14);
+  border-color: rgba(23, 23, 23, 0.28);
 }
 
 .statusPillaction {
-  color: #92400e;
-  background: rgba(251, 191, 36, 0.14);
-  border-color: rgba(253, 230, 138, 0.3);
+  color: #242424;
+  background: rgba(23, 23, 23, 0.14);
+  border-color: rgba(23, 23, 23, 0.3);
 }
 
 .statusPillcancelled {
   color: #9aa6b2;
-  background: rgba(148, 163, 184, 0.12);
-  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(23, 23, 23, 0.12);
+  border-color: rgba(23, 23, 23, 0.22);
 }
 
 .visitDate {
@@ -1026,7 +1026,7 @@
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(23, 23, 23, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1051,8 +1051,8 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 24px 22px 22px;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 20px 50px rgba(23, 23, 23, 0.2);
+  border: 1px solid rgba(23, 23, 23, 0.18);
 }
 
 .modalTitle {
@@ -1111,21 +1111,21 @@
   justify-content: center;
   padding: 9px 12px;
   border-radius: 10px;
-  background: rgba(22, 163, 74, 0.14);
-  color: #166534;
+  background: rgba(23, 23, 23, 0.14);
+  color: #171717;
   font-size: 13px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .detailLink:hover {
-  background: rgba(134, 239, 172, 0.24);
+  background: rgba(23, 23, 23, 0.24);
 }
 
 .detailSection {
   margin-top: 22px;
   padding-top: 20px;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 1px solid rgba(23, 23, 23, 0.18);
 }
 
 .detailSectionTitle {
@@ -1142,7 +1142,7 @@
   display: grid;
   gap: 12px;
   background: var(--gm-surface-muted);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(23, 23, 23, 0.18);
   border-radius: 12px;
 }
 
@@ -1159,24 +1159,24 @@
   height: 10px;
   margin-top: 5px;
   border-radius: 50%;
-  background: #334155;
+  background: #242424;
   border: 2px solid #ffffff;
-  box-shadow: 0 0 0 1px #334155;
+  box-shadow: 0 0 0 1px #242424;
 }
 
 .timelinecomplete .timelineMarker {
-  background: #7dd3b0;
-  box-shadow: 0 0 0 1px #7dd3b0;
+  background: #d7d7d7;
+  box-shadow: 0 0 0 1px #d7d7d7;
 }
 
 .timelinecurrent .timelineMarker {
-  background: #73d2ff;
-  box-shadow: 0 0 0 1px #73d2ff;
+  background: #d7d7d7;
+  box-shadow: 0 0 0 1px #d7d7d7;
 }
 
 .timelineattention .timelineMarker {
-  background: #fdba74;
-  box-shadow: 0 0 0 1px #fdba74;
+  background: #d7d7d7;
+  box-shadow: 0 0 0 1px #d7d7d7;
 }
 
 .timelineText {
@@ -1216,7 +1216,7 @@
 .inlineCode {
   font-size: 11px;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  background: rgba(148, 163, 184, 0.22);
+  background: rgba(23, 23, 23, 0.22);
   padding: 1px 6px;
   border-radius: 4px;
 }
@@ -1232,7 +1232,7 @@
 .btnSecondary {
   padding: 10px 16px;
   border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid rgba(23, 23, 23, 0.22);
   background: #ffffff;
   color: var(--gm-text);
   font-size: 14px;
@@ -1268,18 +1268,18 @@
   padding: 14px 16px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(23, 23, 23, 0.18);
   color: inherit;
   text-decoration: none;
 }
 
 .medItem:hover {
-  border-color: rgba(115, 210, 255, 0.32);
+  border-color: rgba(23, 23, 23, 0.32);
   background: #ffffff;
 }
 
 .medItem:focus-visible {
-  outline: 2px solid #3487ed;
+  outline: 2px solid #171717;
   outline-offset: 2px;
 }
 
@@ -1333,14 +1333,14 @@
   line-height: 1.55;
   background: rgba(255, 255, 255, 0.58);
   border-radius: 12px;
-  border: 1px dashed rgba(148, 163, 184, 0.22);
+  border: 1px dashed rgba(23, 23, 23, 0.22);
 }
 
 .error {
   margin: 0 0 14px;
   padding: 12px 14px;
   border-radius: 10px;
-  background: rgba(127, 29, 29, 0.24);
+  background: rgba(23, 23, 23, 0.24);
   color: var(--gm-error);
   font-size: 14px;
 }
@@ -1395,8 +1395,8 @@
   justify-self: start;
   padding: 6px 10px;
   border-radius: 999px;
-  background: rgba(52, 135, 237, 0.14);
-  color: #2563eb;
+  background: rgba(23, 23, 23, 0.14);
+  color: #171717;
   font-size: 13px;
   font-weight: 600;
   text-transform: capitalize;
@@ -1464,7 +1464,7 @@
   min-height: 44px;
   padding: 0 16px;
   border-radius: 7px;
-  background: #3487ed;
+  background: #171717;
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
@@ -1584,7 +1584,7 @@
   .visitItem {
     padding: 16px;
     background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(148, 163, 184, 0.14);
+    border: 1px solid rgba(23, 23, 23, 0.14);
   }
 
   .visitTop {
@@ -1621,7 +1621,7 @@
   .visitTimeBlock {
     min-width: 0;
     padding-top: 12px;
-    border-top: 1px solid rgba(148, 163, 184, 0.16);
+    border-top: 1px solid rgba(23, 23, 23, 0.16);
     flex-direction: row;
     align-items: flex-start;
     justify-content: space-between;
@@ -1662,7 +1662,7 @@
 
   .medMeta {
     padding-top: 12px;
-    border-top: 1px solid rgba(148, 163, 184, 0.16);
+    border-top: 1px solid rgba(23, 23, 23, 0.16);
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -1698,8 +1698,8 @@
     min-height: 42px;
     padding: 0 13px;
     border-radius: 7px;
-    background: rgba(52, 135, 237, 0.13);
-    color: #8dbfff;
+    background: rgba(23, 23, 23, 0.13);
+    color: #555555;
     font-size: 13px;
     font-weight: 700;
   }

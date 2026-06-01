@@ -81,12 +81,12 @@ export const medicationRequestToneStyles: Record<
   MedicationRequestTone,
   { color: string; background: string }
 > = {
-  confirmed: { color: "#166534", background: "rgba(22, 163, 74, 0.16)" },
-  pending: { color: "#2563eb", background: "rgba(52, 135, 237, 0.16)" },
-  action: { color: "#92400e", background: "rgba(180, 83, 9, 0.16)" },
-  review: { color: "#92400e", background: "rgba(180, 83, 9, 0.16)" },
+  confirmed: { color: "#171717", background: "rgba(23, 23, 23, 0.16)" },
+  pending: { color: "#171717", background: "rgba(23, 23, 23, 0.16)" },
+  action: { color: "#242424", background: "rgba(23, 23, 23, 0.16)" },
+  review: { color: "#242424", background: "rgba(23, 23, 23, 0.16)" },
   cancelled: { color: "var(--gm-muted)", background: "var(--gm-border)" },
-  failed: { color: "var(--gm-error)", background: "rgba(127, 29, 29, 0.24)" },
+  failed: { color: "var(--gm-error)", background: "rgba(23, 23, 23, 0.24)" },
   neutral: { color: "var(--gm-muted)", background: "var(--gm-border)" },
 };
 

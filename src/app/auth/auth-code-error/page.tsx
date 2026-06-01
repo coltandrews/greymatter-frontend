@@ -16,15 +16,15 @@ export default function AuthCodeErrorPage() {
           padding: 32,
           background: "#fff",
           borderRadius: 16,
-          border: "1px solid #e5ebf5",
+          border: "1px solid rgba(23, 23, 23, 0.14)",
         }}
       >
         <h1 style={{ marginTop: 0 }}>Link invalid or expired</h1>
-        <p style={{ margin: "12px 0 0", color: "#64748b", fontSize: 14 }}>
+        <p style={{ margin: "12px 0 0", color: "#555555", fontSize: 14 }}>
           Try again from the app.
         </p>
         <p style={{ marginTop: 20 }}>
-          <Link href="/" style={{ color: "#2563eb", fontWeight: 600 }}>
+          <Link href="/" style={{ color: "#171717", fontWeight: 600 }}>
             Back
           </Link>
         </p>

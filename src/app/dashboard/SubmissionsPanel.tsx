@@ -97,8 +97,8 @@ function intakeRow(row: SubmissionRecord): UnifiedSubmissionRow {
     patient: row.user_id,
     status: row.status.replace("_", " "),
     statusTone: {
-      background: "rgba(52, 135, 237, 0.16)",
-      color: "#2563eb",
+      background: "rgba(23, 23, 23, 0.16)",
+      color: "#171717",
     },
     detail: "Intake record",
     treatment: "Not selected",

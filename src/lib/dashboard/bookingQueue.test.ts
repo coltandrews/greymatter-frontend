@@ -53,7 +53,7 @@ describe("booking queue helpers", () => {
   it("uses status copy from booking intent status rules", () => {
     expect(bookingQueueStatusView(row)).toMatchObject({
       label: "Next steps",
-      color: "#92400e",
+      color: "#242424",
     });
   });
 
