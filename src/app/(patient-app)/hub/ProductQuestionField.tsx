@@ -9,6 +9,17 @@ function arrayAnswer(answer: IntakeQuestionAnswer | undefined): string[] {
   return Array.isArray(answer) ? answer : [];
 }
 
+function numberAnswer(answer: IntakeQuestionAnswer | undefined): string {
+  const value = stringAnswer(answer).trim();
+  return value || "0";
+}
+
+function stepNumber(value: string, delta: number): string {
+  const current = Number(value);
+  const next = Number.isFinite(current) ? current + delta : delta;
+  return String(Math.max(0, next));
+}
+
 export function ProductQuestionField({
   answer,
   onChange,
@@ -115,17 +126,47 @@ export function ProductQuestionField({
     );
   }
 
+  if (question.question_type === "number") {
+    const value = numberAnswer(answer);
+    return (
+      <div className={styles.hubField}>
+        <span>{question.prompt}</span>
+        <div className={styles.hubNumberControl}>
+          <button
+            type="button"
+            className={styles.hubNumberButton}
+            aria-label="Decrease value"
+            onClick={() => onChange(stepNumber(value, -1))}
+          >
+            -
+          </button>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            inputMode="numeric"
+            value={value}
+            onChange={(event) => onChange(event.target.value || "0")}
+            className={styles.hubNumberInput}
+          />
+          <button
+            type="button"
+            className={styles.hubNumberButton}
+            aria-label="Increase value"
+            onClick={() => onChange(stepNumber(value, 1))}
+          >
+            +
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <label className={styles.hubField}>
       {question.prompt}
       <input
-        type={
-          question.question_type === "date"
-            ? "date"
-            : question.question_type === "number"
-              ? "number"
-              : "text"
-        }
+        type={question.question_type === "date" ? "date" : "text"}
         value={stringAnswer(answer)}
         onChange={(event) => onChange(event.target.value)}
         className={styles.hubInput}

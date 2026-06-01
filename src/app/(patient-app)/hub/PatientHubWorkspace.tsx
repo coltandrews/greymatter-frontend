@@ -178,6 +178,7 @@ export function PatientHubWorkspace({
   const [selectedProductKey, setSelectedProductKey] = useState<string | null>(null);
   const [newTreatmentStep, setNewTreatmentStep] = useState<NewTreatmentStep>("select");
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
+  const [questionStepIndex, setQuestionStepIndex] = useState(0);
   const mergedIntake = useMemo(
     () => mergeIntakeAndProfileDemographics(initialDraft, initialProfile),
     [initialDraft, initialProfile],
@@ -214,6 +215,13 @@ export function PatientHubWorkspace({
   const allQuestionsComplete = selectedQuestions.every((question) =>
     intakeAnswerComplete(question, answers[question.question_key]),
   );
+  const questionStepCount = selectedQuestions.length;
+  const currentQuestionIndex =
+    questionStepCount > 0 ? Math.min(questionStepIndex, questionStepCount - 1) : 0;
+  const currentQuestion = selectedQuestions[currentQuestionIndex] ?? null;
+  const currentQuestionComplete = currentQuestion
+    ? intakeAnswerComplete(currentQuestion, answers[currentQuestion.question_key])
+    : true;
   const idFileError = validateIdFile(idUploads.front) ?? validateIdFile(idUploads.back);
   const idFrontReady =
     Boolean(idUploads.front) || (useSavedIdDocuments && Boolean(savedIdDocuments.front));
@@ -245,6 +253,7 @@ export function PatientHubWorkspace({
   function selectProduct(product: TreatmentProduct) {
     setSelectedProductKey(product.product_key);
     setAnswers({});
+    setQuestionStepIndex(0);
     setNewCheckout(null);
     setError(null);
   }
@@ -253,6 +262,7 @@ export function PatientHubWorkspace({
     setSelectedProductKey(null);
     setNewTreatmentStep("select");
     setAnswers({});
+    setQuestionStepIndex(0);
     setShipping(shippingFromIntake(mergedIntake));
     setIdUploads(EMPTY_ID_UPLOADS);
     setUseSavedIdDocuments(savedIdAvailable);
@@ -263,6 +273,29 @@ export function PatientHubWorkspace({
     setNewTreatmentStep(step);
     setError(null);
     setNewCheckout(null);
+  }
+
+  function goBackFromQuestionStep() {
+    if (currentQuestionIndex > 0) {
+      setQuestionStepIndex((current) => Math.max(0, current - 1));
+      setError(null);
+      setNewCheckout(null);
+      return;
+    }
+    goToNewTreatmentStep("select");
+  }
+
+  function goForwardFromQuestionStep() {
+    if (!currentQuestionComplete) {
+      return;
+    }
+    if (currentQuestionIndex < questionStepCount - 1) {
+      setQuestionStepIndex((current) => current + 1);
+      setError(null);
+      setNewCheckout(null);
+      return;
+    }
+    goToNewTreatmentStep("shipping");
   }
 
   async function currentSession() {
@@ -281,6 +314,32 @@ export function PatientHubWorkspace({
     }
     return { supabase, session, user };
   }
+
+  useEffect(() => {
+    setQuestionStepIndex((current) =>
+      Math.min(Math.max(0, current), Math.max(0, selectedQuestions.length - 1)),
+    );
+  }, [selectedQuestions.length]);
+
+  useEffect(() => {
+    setAnswers((current) => {
+      let next = current;
+      for (const question of selectedQuestions) {
+        if (question.question_type !== "number") {
+          continue;
+        }
+        const answer = current[question.question_key];
+        if (typeof answer === "string" && answer.trim()) {
+          continue;
+        }
+        if (next === current) {
+          next = { ...current };
+        }
+        next[question.question_key] = "0";
+      }
+      return next;
+    });
+  }, [selectedQuestions]);
 
   useEffect(() => {
     if (!selectedBooking) {
@@ -872,39 +931,57 @@ export function PatientHubWorkspace({
 
               {newTreatmentStep === "questions" ? (
               <div className={styles.flowSection}>
-                <h3>Treatment questions</h3>
-                <div className={styles.hubFormStack}>
-                  {selectedQuestions.map((question) => (
+                <div className={styles.questionStepHeader}>
+                  <div>
+                    <p className={styles.questionStepMeta}>Treatment questions</p>
+                    <h3>
+                      {questionStepCount > 0
+                        ? "Answer one question at a time"
+                        : "No treatment questions required"}
+                    </h3>
+                  </div>
+                  {questionStepCount > 0 ? (
+                    <span className={styles.questionStepCount}>
+                      Question {currentQuestionIndex + 1} of {questionStepCount}
+                    </span>
+                  ) : null}
+                </div>
+                <div className={styles.hubQuestionCard}>
+                  {currentQuestion ? (
                     <ProductQuestionField
-                      key={question.id}
-                      question={question}
-                      answer={answers[question.question_key]}
+                      key={currentQuestion.id}
+                      question={currentQuestion}
+                      answer={answers[currentQuestion.question_key]}
                       onChange={(value) => {
                         setAnswers((current) => ({
                           ...current,
-                          [question.question_key]: value,
+                          [currentQuestion.question_key]: value,
                         }));
                         setNewCheckout(null);
                         setError(null);
                       }}
                     />
-                  ))}
+                  ) : (
+                    <p className={styles.emptyState}>
+                      This treatment does not require additional questions before shipping.
+                    </p>
+                  )}
                 </div>
                 <div className={styles.flowActions}>
                   <button
                     type="button"
                     className={styles.secondaryButton}
-                    onClick={() => goToNewTreatmentStep("select")}
+                    onClick={goBackFromQuestionStep}
                   >
                     Back
                   </button>
                   <button
                     type="button"
                     className={styles.scheduleNewBtn}
-                    disabled={!allQuestionsComplete}
-                    onClick={() => goToNewTreatmentStep("shipping")}
+                    disabled={!currentQuestionComplete}
+                    onClick={goForwardFromQuestionStep}
                   >
-                    Next
+                    {currentQuestionIndex < questionStepCount - 1 ? "Next question" : "Next"}
                   </button>
                 </div>
               </div>
