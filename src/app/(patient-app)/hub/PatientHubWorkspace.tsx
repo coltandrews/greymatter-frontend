@@ -36,7 +36,7 @@ import { treatmentByKey, visibleTreatmentQuestions } from "@/lib/treatments";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./hub.module.css";
-import type { HubAppointmentRow, HubBookingIntentRow } from "./HubAppointments";
+import type { HubAppointmentRow, HubBookingIntentRow } from "./types";
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
