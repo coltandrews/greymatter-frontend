@@ -405,18 +405,6 @@ function DocumentPreview({ document }: { document: BookingRequestDocument }) {
   const isImage = document.mimeType?.startsWith("image/");
   return (
     <article className={styles.documentPreview}>
-      <div className={styles.documentPreviewHeader}>
-        <div>
-          <h4>{documentSideLabel(document.kind)}</h4>
-          <p>
-            {fileSizeLabel(document.sizeBytes)}
-            {document.sentToOlaAt ? ` · Sent ${formatDateTime(document.sentToOlaAt)}` : ""}
-          </p>
-        </div>
-        <span className={styles.statusBadge}>
-          {document.sentToOlaAt ? "Sent" : "Uploaded"}
-        </span>
-      </div>
       {document.signedUrl && isImage ? (
         <img
           src={document.signedUrl}
@@ -435,6 +423,18 @@ function DocumentPreview({ document }: { document: BookingRequestDocument }) {
       ) : (
         <p className={styles.documentMissing}>Preview unavailable.</p>
       )}
+      <div className={styles.documentPreviewHeader}>
+        <div>
+          <h4>{documentSideLabel(document.kind)}</h4>
+          <p>
+            {fileSizeLabel(document.sizeBytes)}
+            {document.sentToOlaAt ? ` · Sent ${formatDateTime(document.sentToOlaAt)}` : ""}
+          </p>
+        </div>
+        <span className={styles.statusBadge}>
+          {document.sentToOlaAt ? "Sent" : "Uploaded"}
+        </span>
+      </div>
     </article>
   );
 }

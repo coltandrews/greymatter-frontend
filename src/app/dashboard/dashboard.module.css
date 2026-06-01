@@ -1163,13 +1163,15 @@
 
 .documentGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 14px;
 }
 
 .documentPreview {
   min-width: 0;
   display: grid;
+  grid-template-columns: minmax(260px, 1.15fr) minmax(180px, 0.85fr);
+  align-items: center;
   gap: 12px;
   padding: 14px;
   border: 1px solid var(--gm-border);
@@ -1186,11 +1188,12 @@
 
 .documentImage {
   width: 100%;
-  aspect-ratio: 1.55;
-  object-fit: cover;
+  max-height: 310px;
+  aspect-ratio: 1.62;
+  object-fit: contain;
   border-radius: 7px;
   border: 1px solid var(--gm-border);
-  background: var(--gm-page-bg);
+  background: #ffffff;
 }
 
 .documentFileLink {
@@ -1862,6 +1865,7 @@
 
   .requestDetailGrid,
   .documentGrid,
+  .documentPreview,
   .detailActionGrid {
     grid-template-columns: 1fr;
   }
