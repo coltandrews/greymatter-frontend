@@ -1,21 +1,12 @@
 "use client";
 
+import { isExistingUserSignupError, normalizeAuthEmail } from "@/lib/auth/signupErrors";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import styles from "./authEntry.module.css";
 
 type Mode = "signup" | "signin";
-
-function isExistingUserSignupError(message: string) {
-  const m = message.toLowerCase();
-  return (
-    m.includes("already registered") ||
-    m.includes("already been registered") ||
-    m.includes("user already exists") ||
-    (m.includes("email") && m.includes("already"))
-  );
-}
 
 export function AuthEntry({
   initialMode = "signup",
@@ -68,15 +59,17 @@ export function AuthEntry({
     try {
       const supabase = createClient();
       const origin = window.location.origin;
+      const normalizedEmail = normalizeAuthEmail(email);
       const { data, error: err } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: { emailRedirectTo: `${origin}/auth/callback?next=/post-login` },
       });
       if (err) {
-        if (isExistingUserSignupError(err.message)) {
+        if (isExistingUserSignupError(err)) {
           setPassword("");
           setPasswordConfirm("");
+          setError(null);
           setExistingEmailError(true);
           return;
         }
@@ -120,7 +113,7 @@ export function AuthEntry({
     try {
       const supabase = createClient();
       const { error: err } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizeAuthEmail(email),
         password,
       });
       if (err) {

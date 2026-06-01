@@ -439,6 +439,21 @@ export function PatientHubWorkspace({
   const newTreatmentStepNumber =
     newTreatmentStep === "questions" ? 2 : newTreatmentStep === "shipping" ? 3 : 4;
   const shippingStepComplete = shippingComplete(shipping) && !idError;
+  const headerContent =
+    activeTab === "new"
+      ? {
+          title: "New Treatment",
+          description: "Choose a treatment, answer the required questions, and complete checkout.",
+        }
+      : activeTab === "account"
+        ? {
+            title: "Account",
+            description: "Review and update the profile details used for treatment requests.",
+          }
+        : {
+            title: "My Treatments",
+            description: "View active requests, payment status, and provider review updates.",
+          };
 
   function selectProduct(product: TreatmentProduct) {
     setSelectedProductKey(product.product_key);
@@ -906,9 +921,8 @@ export function PatientHubWorkspace({
       <section className={styles.content}>
         <header className={styles.pageHeader}>
           <div>
-            <p className={styles.kicker}>Patient portal</p>
-            <h1>Patient Hub</h1>
-            <p>Track provider review, payment, and medication request status.</p>
+            <h1>{headerContent.title}</h1>
+            <p>{headerContent.description}</p>
           </div>
         </header>
 
@@ -920,10 +934,10 @@ export function PatientHubWorkspace({
               <div className={styles.panelHeaderRow}>
                 <div>
                   <h2 id="my-treatments-title" className={styles.panelTitle}>
-                    My Treatments
+                    Current treatments
                   </h2>
                   <p className={styles.panelSubtitle}>
-                    Active medication requests and prescribed treatments.
+                    Select a treatment to review its details.
                   </p>
                 </div>
               </div>
@@ -1011,7 +1025,7 @@ export function PatientHubWorkspace({
               <div className={styles.panelHeaderRow}>
                 <div>
                   <h2 id="new-treatment-title" className={styles.panelTitle}>
-                    New Treatment
+                    Choose a treatment
                   </h2>
                   <p className={styles.panelSubtitle}>
                     Select one active treatment to begin a new request.
