@@ -13,6 +13,7 @@ import {
   createBookingIntentCheckout,
   deleteBookingIntent,
 } from "@/lib/api/bookingIntents";
+import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
 import type {
   IntakeQuestion,
@@ -24,11 +25,16 @@ import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographic
 import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
 import { buildTreatmentBookingIntentPayload } from "@/lib/scheduling/bookingIntentPayload";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
+import {
+  olaOrderDetailRows,
+  olaResponseMessage,
+  type OlaOrderDetailRow,
+} from "@/lib/scheduling/olaOrderDetails";
 import { createClient } from "@/lib/supabase/client";
 import type { TreatmentProduct } from "@/lib/treatmentProducts";
 import { treatmentByKey, visibleTreatmentQuestions } from "@/lib/treatments";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./hub.module.css";
 import type { HubAppointmentRow, HubBookingIntentRow } from "./HubAppointments";
 
@@ -44,6 +50,11 @@ type CheckoutState = {
   bookingIntentId: string;
   checkoutSessionId: string | null;
   clientSecret: string;
+};
+type OrderDetailState = {
+  loading: boolean;
+  error: string | null;
+  payload: unknown | null;
 };
 type ShippingForm = {
   street_address: string;
@@ -70,6 +81,14 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
+}
+
+function detailValueClass(row: OlaOrderDetailRow): string | undefined {
+  const classes = [
+    row.cap ? styles.detailCap : "",
+    row.mono ? styles.detailMono : "",
+  ].filter(Boolean);
+  return classes.length > 0 ? classes.join(" ") : undefined;
 }
 
 function currencyFromCents(cents: number, currency = "usd"): string {
@@ -367,9 +386,8 @@ export function PatientHubWorkspace({
 }) {
   const [activeTab, setActiveTab] = useState<HubTab>("treatments");
   const [bookingIntents, setBookingIntents] = useState(initialBookingIntents);
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(
-    initialBookingIntents[0]?.id ?? null,
-  );
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const [orderDetailsByGuid, setOrderDetailsByGuid] = useState<Record<string, OrderDetailState>>({});
   const [selectedProductKey, setSelectedProductKey] = useState<string | null>(null);
   const [newTreatmentStep, setNewTreatmentStep] = useState<NewTreatmentStep>("select");
   const [answers, setAnswers] = useState<IntakeQuestionAnswers>({});
@@ -387,10 +405,16 @@ export function PatientHubWorkspace({
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(serverLoadError);
 
-  const selectedBooking =
-    bookingIntents.find((row) => row.id === selectedBookingId) ?? bookingIntents[0] ?? null;
+  const selectedBooking = bookingIntents.find((row) => row.id === selectedBookingId) ?? null;
   const selectedBookingCanceling =
     selectedBooking != null && cancelingBookingId === selectedBooking.id;
+  const selectedOrderGuid = selectedBooking?.ola_order_guid ?? null;
+  const selectedOrderState = selectedOrderGuid
+    ? orderDetailsByGuid[selectedOrderGuid]
+    : null;
+  const selectedOrderRows = selectedOrderState?.payload
+    ? olaOrderDetailRows(selectedOrderState.payload)
+    : [];
   const selectedProduct =
     products.find((product) => product.product_key === selectedProductKey) ?? null;
   const selectedQuestions = useMemo(
@@ -455,6 +479,100 @@ export function PatientHubWorkspace({
     }
     return { supabase, session, user };
   }
+
+  useEffect(() => {
+    if (!selectedBooking) {
+      return;
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSelectedBookingId(null);
+        setDetailCheckout(null);
+      }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [selectedBooking]);
+
+  useEffect(() => {
+    if (
+      !selectedOrderGuid ||
+      selectedOrderState?.loading ||
+      selectedOrderState?.payload ||
+      selectedOrderState?.error
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    setOrderDetailsByGuid((current) => ({
+      ...current,
+      [selectedOrderGuid]: {
+        loading: true,
+        error: null,
+        payload: null,
+      },
+    }));
+
+    (async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error("Sign in again to load provider details.");
+        }
+
+        const response = await fetchVendorOlaOrderDetails(
+          session.access_token,
+          selectedOrderGuid,
+        );
+        const payload = (await response.json().catch(() => null)) as unknown;
+        if (!response.ok) {
+          throw new Error(
+            olaResponseMessage(payload) ??
+              `Provider details could not load (${response.status}).`,
+          );
+        }
+        if (cancelled) {
+          return;
+        }
+        setOrderDetailsByGuid((current) => ({
+          ...current,
+          [selectedOrderGuid]: {
+            loading: false,
+            error: null,
+            payload,
+          },
+        }));
+      } catch (err) {
+        if (cancelled) {
+          return;
+        }
+        setOrderDetailsByGuid((current) => ({
+          ...current,
+          [selectedOrderGuid]: {
+            loading: false,
+            error:
+              err instanceof Error
+                ? err.message
+                : "Provider details could not load.",
+            payload: null,
+          },
+        }));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    selectedOrderGuid,
+    selectedOrderState?.error,
+    selectedOrderState?.loading,
+    selectedOrderState?.payload,
+  ]);
 
   async function saveGovernmentIdDocument({
     bookingIntentId,
@@ -721,6 +839,10 @@ export function PatientHubWorkspace({
     if (tab === "new") {
       resetNewTreatmentFlow();
     }
+    if (tab !== "treatments") {
+      setSelectedBookingId(null);
+      setDetailCheckout(null);
+    }
     setError(null);
   }
 
@@ -793,129 +915,92 @@ export function PatientHubWorkspace({
         {error ? <p className={styles.error}>{error}</p> : null}
 
         {activeTab === "treatments" ? (
-          <section className={styles.hubSplit} aria-labelledby="my-treatments-title">
-          <div className={styles.panel}>
-            <div className={styles.panelHeaderRow}>
-              <div>
-                <h2 id="my-treatments-title" className={styles.panelTitle}>
-                  My Treatments
-                </h2>
-                <p className={styles.panelSubtitle}>
-                  Active medication requests and prescribed treatments.
-                </p>
-              </div>
-            </div>
-
-            {bookingIntents.length === 0 && appointments.length === 0 ? (
-              <p className={styles.emptyState}>No treatments yet. Start a new treatment request when ready.</p>
-            ) : (
-              <ul className={styles.treatmentCards}>
-                {bookingIntents.map((row) => {
-                  const view = hubBookingIntentStatusView(row);
-                  const selected = selectedBooking?.id === row.id;
-                  return (
-                    <li key={row.id}>
-                      <button
-                        type="button"
-                        className={`${styles.treatmentCard} ${selected ? styles.treatmentCardSelected : ""}`}
-                        onClick={() => {
-                          setSelectedBookingId(row.id);
-                          setDetailCheckout(null);
-                        }}
-                      >
-                        <span className={styles.treatmentCardTop}>
-                          <strong>{treatmentName(row)}</strong>
-                          <span className={`${styles.statusPill} ${styles[`statusPill${view.tone}`]}`}>
-                            {view.label}
-                          </span>
-                        </span>
-                        <span>{view.subtitle}</span>
-                        <small>{requestDate(row.created_at)}</small>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </div>
-
-          <div className={styles.panel}>
-            {selectedBooking ? (
-              <>
-                <div className={styles.detailHeroCompact}>
-                  <p className={styles.kicker}>Treatment details</p>
-                  <h2>{treatmentName(selectedBooking)}</h2>
-                  <p>{hubBookingIntentStatusView(selectedBooking).subtitle}</p>
+          <section className={styles.treatmentsPanel} aria-labelledby="my-treatments-title">
+            <div className={styles.panel}>
+              <div className={styles.panelHeaderRow}>
+                <div>
+                  <h2 id="my-treatments-title" className={styles.panelTitle}>
+                    My Treatments
+                  </h2>
+                  <p className={styles.panelSubtitle}>
+                    Active medication requests and prescribed treatments.
+                  </p>
                 </div>
-                <dl className={styles.detailFacts}>
-                  <div>
-                    <dt>Status</dt>
-                    <dd>{hubBookingIntentStatusView(selectedBooking).label}</dd>
-                  </div>
-                  <div>
-                    <dt>Payment</dt>
-                    <dd>{selectedBooking.payment_status}</dd>
-                  </div>
-                  <div>
-                    <dt>Submitted</dt>
-                    <dd>{requestDate(selectedBooking.created_at)}</dd>
-                  </div>
-                  {selectedBooking.ola_order_guid ? (
-                    <div>
-                      <dt>Provider order</dt>
-                      <dd>{selectedBooking.ola_order_guid}</dd>
+              </div>
+
+              {bookingIntents.length === 0 && appointments.length === 0 ? (
+                <p className={styles.emptyState}>
+                  No treatments yet. Start a new treatment request when ready.
+                </p>
+              ) : (
+                <div className={styles.treatmentListStack}>
+                  {bookingIntents.length > 0 ? (
+                    <ul className={styles.treatmentCards}>
+                      {bookingIntents.map((row) => {
+                        const view = hubBookingIntentStatusView(row);
+                        const selected = selectedBooking?.id === row.id;
+                        return (
+                          <li key={row.id}>
+                            <button
+                              type="button"
+                              className={`${styles.treatmentCard} ${
+                                selected ? styles.treatmentCardSelected : ""
+                              }`}
+                              onClick={() => {
+                                setSelectedBookingId(row.id);
+                                setDetailCheckout(null);
+                                setError(null);
+                              }}
+                            >
+                              <span className={styles.treatmentCardTop}>
+                                <strong>{treatmentName(row)}</strong>
+                                <span
+                                  className={`${styles.statusPill} ${
+                                    styles[`statusPill${view.tone}`]
+                                  }`}
+                                >
+                                  {view.label}
+                                </span>
+                              </span>
+                              <span>{view.subtitle}</span>
+                              <small>Submitted {requestDate(row.created_at)}</small>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+
+                  {appointments.length > 0 ? (
+                    <div className={styles.legacyAppointments}>
+                      <p className={styles.kicker}>Legacy appointments</p>
+                      <ul className={styles.treatmentCards}>
+                        {appointments.map((appointment) => (
+                          <li key={appointment.id}>
+                            <div className={`${styles.treatmentCard} ${styles.treatmentCardStatic}`}>
+                              <span className={styles.treatmentCardTop}>
+                                <strong>
+                                  {appointment.provider_name?.trim() || "Provider appointment"}
+                                </strong>
+                                <span className={styles.statusPill}>
+                                  {appointment.status === "booked"
+                                    ? "Confirmed"
+                                    : appointment.status}
+                                </span>
+                              </span>
+                              <span>
+                                Provider appointment created before the simplified request flow.
+                              </span>
+                              <small>{requestDate(appointment.starts_at)}</small>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   ) : null}
-                </dl>
-                {selectedBooking.payment_status !== "paid" ? (
-                  <div className={styles.inlineActions}>
-                    <button
-                      type="button"
-                      className={styles.scheduleNewBtn}
-                      disabled={busy || selectedBookingCanceling}
-                      onClick={() => openCheckoutForBooking(selectedBooking)}
-                    >
-                      Pay now
-                    </button>
-                    <button
-                      type="button"
-                      className={styles.cancelButton}
-                      disabled={busy || selectedBookingCanceling}
-                      aria-busy={selectedBookingCanceling}
-                      onClick={() => cancelUnpaidBooking(selectedBooking)}
-                    >
-                      {selectedBookingCanceling ? (
-                        <span className={styles.buttonSpinner} aria-hidden="true" />
-                      ) : null}
-                      {selectedBookingCanceling ? "Canceling" : "Cancel"}
-                    </button>
-                  </div>
-                ) : selectedBooking.ola_redirect_url ? (
-                  <Link
-                    href={`/ola-handoff/booking/${encodeURIComponent(selectedBooking.id)}`}
-                    className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}
-                  >
-                    Continue next steps
-                  </Link>
-                ) : null}
-                {detailCheckout ? (
-                  <div className={styles.embeddedCheckoutFrame}>
-                    <EmbeddedCheckoutProvider
-                      stripe={stripePromise}
-                      options={{
-                        clientSecret: detailCheckout.clientSecret,
-                        onComplete: () => onCheckoutComplete(detailCheckout),
-                      }}
-                    >
-                      <EmbeddedCheckout />
-                    </EmbeddedCheckoutProvider>
-                  </div>
-                ) : null}
-              </>
-            ) : (
-              <p className={styles.emptyState}>Select a treatment to view details.</p>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
           </section>
         ) : null}
 
@@ -1236,6 +1321,166 @@ export function PatientHubWorkspace({
             initialData={mergedIntake ?? {}}
           />
           </section>
+        ) : null}
+
+        {selectedBooking ? (
+          <div
+            className={styles.drawerBackdrop}
+            role="presentation"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) {
+                setSelectedBookingId(null);
+                setDetailCheckout(null);
+              }
+            }}
+          >
+            <aside
+              className={styles.drawerPanel}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="treatment-drawer-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <header className={styles.drawerHeader}>
+                <div>
+                  <p className={styles.kicker}>Treatment details</p>
+                  <h2 id="treatment-drawer-title">{treatmentName(selectedBooking)}</h2>
+                  <p>{hubBookingIntentStatusView(selectedBooking).subtitle}</p>
+                </div>
+                <button
+                  type="button"
+                  className={styles.drawerClose}
+                  aria-label="Close treatment details"
+                  onClick={() => {
+                    setSelectedBookingId(null);
+                    setDetailCheckout(null);
+                  }}
+                >
+                  x
+                </button>
+              </header>
+
+              <div className={styles.drawerBody}>
+                <section className={styles.drawerSection} aria-label="Treatment status">
+                  <dl className={styles.detailFacts}>
+                    <div>
+                      <dt>Status</dt>
+                      <dd>{hubBookingIntentStatusView(selectedBooking).label}</dd>
+                    </div>
+                    <div>
+                      <dt>Payment</dt>
+                      <dd className={styles.detailCap}>{selectedBooking.payment_status}</dd>
+                    </div>
+                    <div>
+                      <dt>Submitted</dt>
+                      <dd>{requestDate(selectedBooking.created_at)}</dd>
+                    </div>
+                    <div>
+                      <dt>Last updated</dt>
+                      <dd>{requestDate(selectedBooking.updated_at)}</dd>
+                    </div>
+                    {selectedBooking.ola_order_guid ? (
+                      <div>
+                        <dt>Provider order</dt>
+                        <dd className={styles.detailMono}>{selectedBooking.ola_order_guid}</dd>
+                      </div>
+                    ) : null}
+                  </dl>
+                </section>
+
+                {selectedBooking.ola_popup_message ? (
+                  <section className={styles.drawerSection}>
+                    <h3>Provider message</h3>
+                    <p className={styles.detailMuted}>{selectedBooking.ola_popup_message}</p>
+                  </section>
+                ) : null}
+
+                <section className={styles.drawerSection}>
+                  <h3>Provider details</h3>
+                  {!selectedOrderGuid ? (
+                    <p className={styles.detailMuted}>
+                      Provider details will appear after this request reaches the provider
+                      network.
+                    </p>
+                  ) : null}
+                  {selectedOrderState?.loading ? (
+                    <p className={styles.detailMuted}>Loading provider details...</p>
+                  ) : null}
+                  {selectedOrderState?.error ? (
+                    <p className={styles.detailError}>{selectedOrderState.error}</p>
+                  ) : null}
+                  {selectedOrderState?.payload && selectedOrderRows.length === 0 ? (
+                    <p className={styles.detailMuted}>
+                      No additional provider details are available yet.
+                    </p>
+                  ) : null}
+                  {selectedOrderRows.length > 0 ? (
+                    <dl className={`${styles.detailList} ${styles.detailListCompact}`}>
+                      {selectedOrderRows.map((row) => (
+                        <div key={`${row.label}-${row.value}`} className={styles.detailRow}>
+                          <dt>{row.label}</dt>
+                          <dd className={detailValueClass(row)}>{row.value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                </section>
+
+                <section className={styles.drawerSection}>
+                  <h3>Actions</h3>
+                  {selectedBooking.payment_status !== "paid" ? (
+                    <div className={styles.inlineActions}>
+                      <button
+                        type="button"
+                        className={styles.scheduleNewBtn}
+                        disabled={busy || selectedBookingCanceling}
+                        onClick={() => openCheckoutForBooking(selectedBooking)}
+                      >
+                        Pay now
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.cancelButton}
+                        disabled={busy || selectedBookingCanceling}
+                        aria-busy={selectedBookingCanceling}
+                        onClick={() => cancelUnpaidBooking(selectedBooking)}
+                      >
+                        {selectedBookingCanceling ? (
+                          <span className={styles.buttonSpinner} aria-hidden="true" />
+                        ) : null}
+                        {selectedBookingCanceling ? "Canceling" : "Cancel"}
+                      </button>
+                    </div>
+                  ) : selectedBooking.ola_redirect_url ? (
+                    <Link
+                      href={`/ola-handoff/booking/${encodeURIComponent(selectedBooking.id)}`}
+                      className={`${styles.scheduleNewBtn} ${styles.scheduleNewLink}`}
+                    >
+                      Continue next steps
+                    </Link>
+                  ) : (
+                    <p className={styles.detailMuted}>
+                      No patient action is needed right now.
+                    </p>
+                  )}
+
+                  {detailCheckout ? (
+                    <div className={styles.embeddedCheckoutFrame}>
+                      <EmbeddedCheckoutProvider
+                        stripe={stripePromise}
+                        options={{
+                          clientSecret: detailCheckout.clientSecret,
+                          onComplete: () => onCheckoutComplete(detailCheckout),
+                        }}
+                      >
+                        <EmbeddedCheckout />
+                      </EmbeddedCheckoutProvider>
+                    </div>
+                  ) : null}
+                </section>
+              </div>
+            </aside>
+          </div>
         ) : null}
       </section>
     </main>
