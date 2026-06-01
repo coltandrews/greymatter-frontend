@@ -7,11 +7,8 @@ import {
   treatmentProductFromRow,
   type TreatmentProduct,
 } from "@/lib/treatmentProducts";
-import {
-  PatientHubWorkspace,
-  type SavedIdDocument,
-  type SavedIdDocuments,
-} from "./PatientHubWorkspace";
+import { PatientHubWorkspace } from "./PatientHubWorkspace";
+import type { SavedIdDocument, SavedIdDocuments } from "./newTreatmentFlow";
 
 function latestSavedIdDocuments(rows: unknown[] | null | undefined): SavedIdDocuments {
   const documents: SavedIdDocuments = { front: null, back: null };

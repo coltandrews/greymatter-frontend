@@ -15,11 +15,7 @@ import {
 } from "@/lib/api/bookingIntents";
 import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
-import type {
-  IntakeQuestion,
-  IntakeQuestionAnswer,
-  IntakeQuestionAnswers,
-} from "@/lib/intake/intakeQuestions";
+import type { IntakeQuestionAnswers } from "@/lib/intake/intakeQuestions";
 import { intakeAnswerComplete } from "@/lib/intake/intakeQuestions";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
@@ -35,17 +31,32 @@ import type { TreatmentProduct } from "@/lib/treatmentProducts";
 import { treatmentByKey, visibleTreatmentQuestions } from "@/lib/treatments";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { ProductQuestionField } from "./ProductQuestionField";
 import styles from "./hub.module.css";
+import {
+  EMPTY_ID_UPLOADS,
+  EMPTY_SAVED_ID_DOCUMENTS,
+  ID_BUCKET,
+  idExtension,
+  savedIdDocumentsComplete,
+  shippingComplete,
+  shippingFromIntake,
+  shippingPatch,
+  shippingSummary,
+  validateIdFile,
+  type IdSide,
+  type IdUploads,
+  type NewTreatmentStep,
+  type SavedIdDocument,
+  type SavedIdDocuments,
+  type ShippingForm,
+} from "./newTreatmentFlow";
 import type { HubAppointmentRow, HubBookingIntentRow } from "./types";
 
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
-const ID_BUCKET = "patient-documents";
-const ID_MAX_BYTES = 10 * 1024 * 1024;
-const ID_MIME_TYPES = new Set(["image/jpeg", "image/png", "application/pdf"]);
 
 type HubTab = "treatments" | "new" | "account";
-type NewTreatmentStep = "select" | "questions" | "shipping" | "checkout" | "payment";
 type CheckoutState = {
   bookingIntentId: string;
   checkoutSessionId: string | null;
@@ -56,26 +67,6 @@ type OrderDetailState = {
   error: string | null;
   payload: unknown | null;
 };
-type ShippingForm = {
-  street_address: string;
-  address_line2: string;
-  city: string;
-  address_state: string;
-  zip: string;
-};
-type IdSide = "front" | "back";
-type IdUploads = Record<IdSide, File | null>;
-export type SavedIdDocument = {
-  kind: "government_id_front" | "government_id_back";
-  storage_path: string;
-  mime_type: string;
-  size_bytes: number;
-  created_at: string;
-};
-export type SavedIdDocuments = Record<IdSide, SavedIdDocument | null>;
-
-const EMPTY_ID_UPLOADS: IdUploads = { front: null, back: null };
-const EMPTY_SAVED_ID_DOCUMENTS: SavedIdDocuments = { front: null, back: null };
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
@@ -132,87 +123,6 @@ function requestDate(value: string): string {
   });
 }
 
-function stringAnswer(answer: IntakeQuestionAnswer | undefined): string {
-  return typeof answer === "string" ? answer : "";
-}
-
-function arrayAnswer(answer: IntakeQuestionAnswer | undefined): string[] {
-  return Array.isArray(answer) ? answer : [];
-}
-
-function shippingFromIntake(data: IntakeDraftData | null): ShippingForm {
-  return {
-    street_address: data?.street_address?.trim() ?? "",
-    address_line2: data?.address_line2?.trim() ?? "",
-    city: data?.city?.trim() ?? "",
-    address_state: data?.address_state?.trim() || data?.service_state?.trim() || "",
-    zip: data?.zip?.trim() ?? "",
-  };
-}
-
-function shippingPatch(form: ShippingForm): IntakeDraftData {
-  const state = form.address_state.trim();
-  return {
-    street_address: form.street_address.trim(),
-    address_line2: form.address_line2.trim(),
-    city: form.city.trim(),
-    address_state: state,
-    service_state: state,
-    zip: form.zip.trim(),
-    country: "US",
-  };
-}
-
-function shippingComplete(form: ShippingForm): boolean {
-  return Boolean(
-    form.street_address.trim() &&
-      form.city.trim() &&
-      form.address_state.trim() &&
-      form.zip.trim(),
-  );
-}
-
-function shippingSummary(form: ShippingForm): string {
-  return [
-    form.street_address.trim(),
-    form.address_line2.trim(),
-    [form.city.trim(), form.address_state.trim(), form.zip.trim()].filter(Boolean).join(", "),
-  ]
-    .filter(Boolean)
-    .join(" ");
-}
-
-function validateIdFile(file: File | null): string | null {
-  if (!file) {
-    return null;
-  }
-  if (!ID_MIME_TYPES.has(file.type)) {
-    return "Use a JPG, PNG, or PDF for your ID.";
-  }
-  if (file.size <= 0 || file.size > ID_MAX_BYTES) {
-    return "ID files must be 10 MB or less.";
-  }
-  return null;
-}
-
-function idExtension(mimeType: string): string {
-  if (mimeType === "application/pdf") {
-    return "pdf";
-  }
-  if (mimeType === "image/png") {
-    return "png";
-  }
-  return "jpg";
-}
-
-function savedDocumentForSide(document: SavedIdDocument | null): boolean {
-  return Boolean(document?.storage_path && document.mime_type && document.size_bytes > 0);
-}
-
-function savedIdDocumentsComplete(documents: SavedIdDocuments): boolean {
-  return savedDocumentForSide(documents.front) && savedDocumentForSide(documents.back);
-}
-
 async function responseErrorMessage(prefix: string, res: Response): Promise<string> {
   const raw = await res.text();
   if (!raw.trim()) {
@@ -230,131 +140,6 @@ async function responseErrorMessage(prefix: string, res: Response): Promise<stri
   } catch {
     return `${prefix} failed (${res.status}): ${raw}`;
   }
-}
-
-function ProductQuestionField({
-  answer,
-  onChange,
-  question,
-}: {
-  answer: IntakeQuestionAnswer | undefined;
-  onChange: (value: IntakeQuestionAnswer) => void;
-  question: IntakeQuestion;
-}) {
-  if (question.question_type === "textarea") {
-    return (
-      <label className={styles.hubField}>
-        {question.prompt}
-        <textarea
-          value={stringAnswer(answer)}
-          onChange={(event) => onChange(event.target.value)}
-          className={styles.hubTextarea}
-        />
-      </label>
-    );
-  }
-
-  if (question.question_type === "select") {
-    return (
-      <label className={styles.hubField}>
-        {question.prompt}
-        <select
-          value={stringAnswer(answer)}
-          onChange={(event) => onChange(event.target.value)}
-          className={styles.hubInput}
-        >
-          <option value="">Select</option>
-          {question.options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
-    );
-  }
-
-  if (question.question_type === "multi_select") {
-    const selected = arrayAnswer(answer);
-    return (
-      <fieldset className={styles.hubFieldset}>
-        <legend>{question.prompt}</legend>
-        <div className={styles.hubOptionGrid}>
-          {question.options.map((option) => {
-            const checked = selected.includes(option.value);
-            return (
-              <label
-                key={option.value}
-                className={`${styles.hubOption} ${checked ? styles.hubOptionSelected : ""}`}
-              >
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(event) =>
-                    onChange(
-                      event.target.checked
-                        ? [...selected, option.value]
-                        : selected.filter((value) => value !== option.value),
-                    )
-                  }
-                />
-                <span>{option.label}</span>
-              </label>
-            );
-          })}
-        </div>
-      </fieldset>
-    );
-  }
-
-  if (question.question_type === "yes_no") {
-    return (
-      <fieldset className={styles.hubFieldset}>
-        <legend>{question.prompt}</legend>
-        <div className={styles.hubOptionGrid}>
-          {[
-            ["yes", "Yes"],
-            ["no", "No"],
-          ].map(([value, label]) => {
-            const checked = answer === value;
-            return (
-              <label
-                key={value}
-                className={`${styles.hubOption} ${checked ? styles.hubOptionSelected : ""}`}
-              >
-                <input
-                  type="radio"
-                  name={question.question_key}
-                  value={value}
-                  checked={checked}
-                  onChange={() => onChange(value)}
-                />
-                <span>{label}</span>
-              </label>
-            );
-          })}
-        </div>
-      </fieldset>
-    );
-  }
-
-  return (
-    <label className={styles.hubField}>
-      {question.prompt}
-      <input
-        type={
-          question.question_type === "date"
-            ? "date"
-            : question.question_type === "number"
-              ? "number"
-              : "text"
-        }
-        value={stringAnswer(answer)}
-        onChange={(event) => onChange(event.target.value)}
-        className={styles.hubInput}
-      />
-    </label>
-  );
 }
 
 export function PatientHubWorkspace({
