@@ -1,7 +1,6 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import { syncStoredPreAuthIntake } from "@/lib/intake/syncStoredPreAuthIntake";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -130,14 +129,10 @@ function isExistingUserSignupError(message: string) {
 
 export function AuthEntry({
   initialMode = "signup",
-  intakeReady = false,
   onBack,
-  onStartIntake,
 }: {
   initialMode?: Mode;
-  intakeReady?: boolean;
   onBack?: () => void;
-  onStartIntake?: () => void;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -186,7 +181,7 @@ export function AuthEntry({
       const { data, error: err } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: `${origin}/auth/callback?next=/checkout` },
+        options: { emailRedirectTo: `${origin}/auth/callback?next=/post-login` },
       });
       if (err) {
         if (isExistingUserSignupError(err.message)) {
@@ -199,9 +194,8 @@ export function AuthEntry({
         return;
       }
       if (data.session) {
-        await syncStoredPreAuthIntake(supabase, data.session.user.id);
         keepLockedForNavigation = true;
-        router.push(intakeReady ? "/checkout" : "/post-login");
+        router.push("/post-login");
         router.refresh();
         return;
       }
@@ -245,12 +239,6 @@ export function AuthEntry({
         setError(err.message);
         return;
       }
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        await syncStoredPreAuthIntake(supabase, user.id);
-      }
       keepLockedForNavigation = true;
       router.push("/post-login");
       router.refresh();
@@ -269,14 +257,6 @@ export function AuthEntry({
     setPasswordConfirm("");
     setError(null);
     setExistingEmailError(false);
-  }
-
-  function startIntake() {
-    if (onStartIntake) {
-      onStartIntake();
-      return;
-    }
-    router.push("/");
   }
 
   function onTermsScroll(event: React.UIEvent<HTMLDivElement>) {
@@ -565,7 +545,13 @@ export function AuthEntry({
               <button
                 type="button"
                 disabled={loading}
-                onClick={startIntake}
+                onClick={() => {
+                  setMode("signup");
+                  setPassword("");
+                  setError(null);
+                  setExistingEmailError(false);
+                  setAwaitingEmail(false);
+                }}
                 style={{
                   padding: 0,
                   border: "none",

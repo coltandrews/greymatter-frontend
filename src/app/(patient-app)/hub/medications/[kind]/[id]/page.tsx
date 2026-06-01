@@ -102,7 +102,7 @@ export default async function MedicationDetailPage({ params }: Props) {
     payNowHref =
       row.payment_status === "paid"
         ? null
-        : `/checkout?booking_intent_id=${encodeURIComponent(row.id)}`;
+        : "/hub";
   } else if (kind === "appointment") {
     const { data: row } = await supabase
       .from("appointments")

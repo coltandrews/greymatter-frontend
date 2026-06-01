@@ -69,6 +69,15 @@ export function demographicsContactComplete(d: IntakeDraftData | undefined): boo
   return true;
 }
 
+/** Account onboarding profile: identity + phone, before any treatment or shipping flow. */
+export function memberProfileComplete(d: IntakeDraftData | undefined): boolean {
+  if (!demographicsIdentityComplete(d)) {
+    return false;
+  }
+  const digits = String(d?.phone ?? "").replace(/\D/g, "");
+  return digits.length >= 10;
+}
+
 /** Full demographics before eligibility (identity + contact). */
 export function basicInfoComplete(d: IntakeDraftData | undefined): boolean {
   return demographicsIdentityComplete(d) && demographicsContactComplete(d);

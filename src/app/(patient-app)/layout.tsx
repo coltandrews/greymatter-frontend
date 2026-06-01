@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase/server";
-import { PreAuthIntakeSync } from "./PreAuthIntakeSync";
 import { redirect } from "next/navigation";
 
 export default async function PatientAppLayout({
@@ -36,7 +35,6 @@ export default async function PatientAppLayout({
         background: "transparent",
       }}
     >
-      <PreAuthIntakeSync />
       <div style={{ flex: 1, minHeight: 0 }}>{children}</div>
     </div>
   );

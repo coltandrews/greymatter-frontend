@@ -108,12 +108,22 @@ export function AccountProfileForm({
   olaUserGuid,
   initialStep,
   initialData,
+  redirectAfterSave,
+  submitLabel = "Save changes",
+  savingLabel = "Saving...",
+  savedMessage = "Your details were saved.",
+  showReadOnlyFields = true,
 }: {
   email: string;
   patientId: string;
   olaUserGuid: string | null;
   initialStep: string;
   initialData: IntakeDraftData;
+  redirectAfterSave?: string;
+  submitLabel?: string;
+  savingLabel?: string;
+  savedMessage?: string;
+  showReadOnlyFields?: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState<FormState>(() => fromDraft(initialData));
@@ -219,10 +229,15 @@ export function AccountProfileForm({
       }
 
       setSaving(false);
+      if (redirectAfterSave) {
+        router.push(redirectAfterSave);
+        router.refresh();
+        return;
+      }
       setSaved(true);
       router.refresh();
     },
-    [email, form, initialData, initialStep, olaUserGuid, router],
+    [email, form, initialData, initialStep, olaUserGuid, redirectAfterSave, router],
   );
 
   const setField =
@@ -234,39 +249,41 @@ export function AccountProfileForm({
 
   return (
     <form className={styles.profileForm} onSubmit={onSave}>
-      <div className={styles.readOnlyBlock}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="account-email">
-            Email
-          </label>
-          <input
-            id="account-email"
-            className={`${styles.input} ${styles.inputReadonly}`}
-            type="email"
-            value={email}
-            disabled
-            readOnly
-            autoComplete="email"
-          />
-          <p className={styles.hint}>
-            Sign-in email is managed by your account provider. Contact support to change it.
-          </p>
-        </div>
+      {showReadOnlyFields ? (
+        <div className={styles.readOnlyBlock}>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="account-email">
+              Email
+            </label>
+            <input
+              id="account-email"
+              className={`${styles.input} ${styles.inputReadonly}`}
+              type="email"
+              value={email}
+              disabled
+              readOnly
+              autoComplete="email"
+            />
+            <p className={styles.hint}>
+              Sign-in email is managed by your account provider. Contact support to change it.
+            </p>
+          </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="account-user-id">
-            Patient ID
-          </label>
-          <input
-            id="account-user-id"
-            className={`${styles.input} ${styles.inputReadonly}`}
-            value={patientId}
-            disabled
-            readOnly
-            autoComplete="off"
-          />
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="account-user-id">
+              Patient ID
+            </label>
+            <input
+              id="account-user-id"
+              className={`${styles.input} ${styles.inputReadonly}`}
+              value={patientId}
+              disabled
+              readOnly
+              autoComplete="off"
+            />
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <p className={styles.sectionLead}>Patient details</p>
 
@@ -439,7 +456,7 @@ export function AccountProfileForm({
       ) : null}
       {saved ? (
         <p className={styles.formSuccess} role="status">
-          Your details were saved.
+          {savedMessage}
         </p>
       ) : null}
 
@@ -449,7 +466,7 @@ export function AccountProfileForm({
         disabled={saving}
         aria-busy={saving}
       >
-        {saving ? "Saving…" : "Save changes"}
+        {saving ? savingLabel : submitLabel}
       </button>
     </form>
   );
