@@ -1251,6 +1251,204 @@
   font-size: 11px;
 }
 
+.attemptList {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.attemptItem {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px;
+  border: 1px solid var(--gm-border);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.attemptItem > div {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.attemptItem strong {
+  color: var(--gm-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.attemptItem span:not(.attemptStatus),
+.attemptItem time,
+.debugUnavailable {
+  color: var(--gm-subtle);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.attemptStatus {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.attemptStatussuccess {
+  background: var(--gm-success-bg);
+  color: var(--gm-success);
+}
+
+.attemptStatuserror {
+  background: var(--gm-error-bg);
+  color: var(--gm-error);
+}
+
+.attemptStatusneutral {
+  background: rgba(23, 23, 23, 0.12);
+  color: var(--gm-muted);
+}
+
+.debugLinkButton {
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid #171717;
+  border-radius: 7px;
+  background: #171717;
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.debugLinkButton:hover,
+.debugLinkButton:focus-visible {
+  background: #000000;
+}
+
+.debugUnavailable {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.debugModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(23, 23, 23, 0.42);
+}
+
+.debugModal {
+  width: min(980px, 100%);
+  max-height: min(88vh, 920px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--gm-surface);
+  border: 1px solid rgba(23, 23, 23, 0.18);
+  box-shadow: 0 24px 80px rgba(23, 23, 23, 0.28);
+}
+
+.debugModalHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+  padding: 20px;
+  border-bottom: 1px solid var(--gm-border);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.debugModalHeader h3 {
+  margin: 10px 0 6px;
+  color: var(--gm-text);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.debugModalHeader p {
+  margin: 0;
+  color: var(--gm-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.debugModalClose {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--gm-border-strong);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gm-text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.debugModalClose:hover,
+.debugModalClose:focus-visible {
+  background: #171717;
+  color: #ffffff;
+}
+
+.debugModalGrid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 0.85fr 1.3fr 1.3fr;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+}
+
+.debugPane {
+  min-width: 0;
+  min-height: 280px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  border: 1px solid var(--gm-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.debugPane h4 {
+  margin: 0;
+  padding: 12px 12px 10px;
+  color: var(--gm-text);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--gm-border);
+}
+
+.debugPane pre {
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 12px;
+  color: var(--gm-muted);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
 .compactText {
   margin: 5px 0 0;
   font-size: 13px;
@@ -1671,5 +1869,15 @@
   .detailDefinitionItem {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+
+  .attemptItem,
+  .debugModalHeader,
+  .debugModalGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .debugUnavailable {
+    text-align: left;
   }
 }

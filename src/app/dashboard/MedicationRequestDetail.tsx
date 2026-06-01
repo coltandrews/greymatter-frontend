@@ -44,6 +44,22 @@ type TimelineStep = {
   state: "complete" | "current" | "blocked" | "pending";
 };
 
+type DebugEnvelope = {
+  headers: unknown;
+  payload: unknown;
+  response: unknown;
+};
+
+type ProviderAttempt = {
+  id: string;
+  label: string;
+  summary: string;
+  when: string;
+  tone: "success" | "error" | "neutral";
+  status: string;
+  debug: DebugEnvelope | null;
+};
+
 function readBackendMessage(res: Response): Promise<string> {
   return res.json()
     .catch(() => null)
@@ -96,6 +112,10 @@ function jsonSummary(value: unknown) {
     return "No metadata";
   }
   return JSON.stringify(record, null, 2);
+}
+
+function debugJson(value: unknown) {
+  return JSON.stringify(value ?? null, null, 2);
 }
 
 function documentSideLabel(kind: string | null) {
@@ -250,14 +270,122 @@ function statusLabel(value: string | null | undefined): string {
   return value?.replace(/_/g, " ") || "Not started";
 }
 
-function retryHistory(events: AuditEvent[]): AuditEvent[] {
-  return events
-    .filter((event) =>
-      event.action.includes("retry") ||
-      event.action.includes("reconcile") ||
-      event.action.includes("needs_review"),
-    )
-    .slice(0, 5);
+function debugEnvelopeFromMetadata(metadata: unknown): DebugEnvelope | null {
+  const root = asRecord(metadata);
+  const debug = asRecord(root._debug);
+  const ola = asRecord(debug.ola);
+  if (!Object.keys(ola).length) {
+    return null;
+  }
+  return {
+    headers: ola.headers ?? {},
+    payload: ola.payload ?? {},
+    response: ola.response ?? {},
+  };
+}
+
+function debugEnvelopeFromVendorMetadata(metadata: unknown): DebugEnvelope | null {
+  return debugEnvelopeFromMetadata(metadata);
+}
+
+function metadataMessage(metadata: unknown): string | null {
+  const root = asRecord(metadata);
+  const debug = debugEnvelopeFromMetadata(metadata);
+  const response = asRecord(debug?.response);
+  const responseJson = asRecord(response.json);
+  return (
+    stringValue(root, "reason") ??
+    stringValue(responseJson, "error") ??
+    stringValue(responseJson, "message") ??
+    stringValue(root, "error") ??
+    stringValue(root, "message")
+  );
+}
+
+function attemptTone(action: string, metadata: unknown): ProviderAttempt["tone"] {
+  const debug = debugEnvelopeFromMetadata(metadata);
+  const response = asRecord(debug?.response);
+  if (response.ok === true) {
+    return "success";
+  }
+  if (response.ok === false) {
+    return "error";
+  }
+  if (
+    action.includes("failed") ||
+    action.includes("needs_review") ||
+    action.includes("error")
+  ) {
+    return "error";
+  }
+  if (action.includes("succeeded") || action.includes("completed")) {
+    return "success";
+  }
+  return "neutral";
+}
+
+function attemptStatus(action: string, metadata: unknown): string {
+  const debug = debugEnvelopeFromMetadata(metadata);
+  const response = asRecord(debug?.response);
+  if (typeof response.status === "number") {
+    return response.ok === false ? `Error ${response.status}` : `OK ${response.status}`;
+  }
+  const tone = attemptTone(action, metadata);
+  if (tone === "success") {
+    return "Success";
+  }
+  if (tone === "error") {
+    return "Error";
+  }
+  return "Recorded";
+}
+
+function providerAttempts(
+  detail: BookingRequestDetailResponse,
+  events: AuditEvent[],
+): ProviderAttempt[] {
+  const attemptActions = [
+    "stripe_payment_ola_booking",
+    "stripe_patient_reconcile",
+    "stripe_reconcile",
+    "ola_retry",
+  ];
+  const attempts = events
+    .filter((event) => attemptActions.some((action) => event.action.includes(action)))
+    .map((event) => {
+      const debug = debugEnvelopeFromMetadata(event.metadata);
+      const summary =
+        event.note?.trim() ||
+        metadataMessage(event.metadata) ||
+        auditEventSummary(event);
+      return {
+        id: event.id,
+        label: auditEventLabel(event),
+        summary,
+        when: auditEventWhen(event),
+        tone: attemptTone(event.action, event.metadata),
+        status: attemptStatus(event.action, event.metadata),
+        debug,
+      } satisfies ProviderAttempt;
+    });
+
+  const currentDebug = debugEnvelopeFromVendorMetadata(detail.vendorMetadata);
+  if (detail.request.failureReason || currentDebug) {
+    attempts.unshift({
+      id: `current-${detail.request.id}`,
+      label: detail.request.failureReason ? "Latest provider state" : "Latest provider response",
+      summary:
+        detail.request.failureReason ||
+        metadataMessage(detail.vendorMetadata) ||
+        "Latest provider response is saved on this request.",
+      when: medicationRequestAgeLabel(detail.request.updatedAt),
+      tone: detail.request.failureReason ? "error" : "neutral",
+      status: detail.request.failureReason ? "Current error" : "Current",
+      debug: currentDebug,
+    });
+  }
+
+  return attempts;
 }
 
 function DetailGrid({ items }: { items: DetailItem[] }) {
@@ -311,9 +439,67 @@ function DocumentPreview({ document }: { document: BookingRequestDocument }) {
   );
 }
 
+function DebugModal({
+  attempt,
+  onClose,
+}: {
+  attempt: ProviderAttempt;
+  onClose: () => void;
+}) {
+  const response = asRecord(attempt.debug?.response);
+  const responseStatus =
+    typeof response.status === "number"
+      ? `${response.status}${typeof response.statusText === "string" ? ` ${response.statusText}` : ""}`
+      : attempt.status;
+  return (
+    <div className={styles.debugModalBackdrop} role="presentation" onClick={onClose}>
+      <section
+        className={styles.debugModal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="debug-modal-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className={styles.debugModalHeader}>
+          <div>
+            <span className={`${styles.attemptStatus} ${styles[`attemptStatus${attempt.tone}`]}`}>
+              {responseStatus}
+            </span>
+            <h3 id="debug-modal-title">{attempt.label}</h3>
+            <p>{attempt.summary}</p>
+          </div>
+          <button
+            type="button"
+            className={styles.debugModalClose}
+            onClick={onClose}
+            aria-label="Close debug details"
+          >
+            x
+          </button>
+        </header>
+        <div className={styles.debugModalGrid}>
+          <article className={styles.debugPane}>
+            <h4>Headers</h4>
+            <pre>{debugJson(attempt.debug?.headers)}</pre>
+          </article>
+          <article className={styles.debugPane}>
+            <h4>Payload</h4>
+            <pre>{debugJson(attempt.debug?.payload)}</pre>
+          </article>
+          <article className={styles.debugPane}>
+            <h4>Response</h4>
+            <pre>{debugJson(attempt.debug?.response)}</pre>
+          </article>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function MedicationRequestDetail({ bookingIntentId }: Props) {
   const [detail, setDetail] = useState<BookingRequestDetailResponse | null>(null);
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [debugAttempt, setDebugAttempt] = useState<ProviderAttempt | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<"retry-ola" | "reconcile-stripe" | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -356,6 +542,19 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
   useEffect(() => {
     void loadDetail();
   }, [bookingIntentId]);
+
+  useEffect(() => {
+    if (!debugAttempt) {
+      return;
+    }
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setDebugAttempt(null);
+      }
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [debugAttempt]);
 
   async function sessionToken(): Promise<string> {
     const supabase = createClient();
@@ -444,7 +643,7 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
     request.paymentStatus === "pending" && Boolean(detail.stripeCheckoutSessionId?.trim());
   const summary = requestStatusSummary(detail);
   const timeline = requestTimeline(detail);
-  const recoveryEvents = retryHistory(auditEvents);
+  const attempts = providerAttempts(detail, auditEvents);
 
   const patientItems: DetailItem[] = [
     { label: "Name", value: request.patientName },
@@ -648,22 +847,38 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
       <section className={styles.requestDetailPanel}>
         <div className={styles.documentSectionHeader}>
           <div>
-            <h3>Recovery History</h3>
-            <p>Recent retry, reconcile, and review events for this request.</p>
+            <h3>Provider Handoff Audit</h3>
+            <p>Every payment-to-provider attempt we have on this request.</p>
           </div>
         </div>
-        {recoveryEvents.length > 0 ? (
-          <ul className={styles.recoveryList}>
-            {recoveryEvents.map((event) => (
-              <li key={event.id}>
-                <strong>{auditEventLabel(event)}</strong>
-                <span>{auditEventSummary(event)}</span>
-                <time>{auditEventWhen(event)}</time>
+        {attempts.length > 0 ? (
+          <ul className={styles.attemptList}>
+            {attempts.map((attempt) => (
+              <li key={attempt.id} className={styles.attemptItem}>
+                <div>
+                  <span className={`${styles.attemptStatus} ${styles[`attemptStatus${attempt.tone}`]}`}>
+                    {attempt.status}
+                  </span>
+                  <strong>{attempt.label}</strong>
+                  <span>{attempt.summary}</span>
+                  <time>{attempt.when}</time>
+                </div>
+                {attempt.debug ? (
+                  <button
+                    type="button"
+                    className={styles.debugLinkButton}
+                    onClick={() => setDebugAttempt(attempt)}
+                  >
+                    View debug
+                  </button>
+                ) : (
+                  <span className={styles.debugUnavailable}>No debug payload</span>
+                )}
               </li>
             ))}
           </ul>
         ) : (
-          <p className={styles.emptyText}>No recovery actions have been recorded.</p>
+          <p className={styles.emptyText}>No provider handoff attempts have been recorded.</p>
         )}
       </section>
 
@@ -674,6 +889,10 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
           bookingIntentId: request.id,
         }}
       />
+
+      {debugAttempt ? (
+        <DebugModal attempt={debugAttempt} onClose={() => setDebugAttempt(null)} />
+      ) : null}
     </div>
   );
 }
