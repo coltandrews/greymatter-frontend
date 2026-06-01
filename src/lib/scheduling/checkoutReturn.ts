@@ -23,6 +23,41 @@ export type CheckoutReturnAction = {
   label: string;
 } | null;
 
+export function patientProviderIssueMessage(reason: string | null | undefined): string {
+  const normalized = reason?.trim().replace(/\s+/g, " ") ?? "";
+  const lower = normalized.toLowerCase();
+
+  if (!normalized) {
+    return "The provider request could not be sent. Your payment is recorded, and support can review this request.";
+  }
+  if (lower.includes("no provider found")) {
+    return "No provider is currently available for this treatment in the selected state.";
+  }
+  if (lower.includes("service not found")) {
+    return "This treatment is not ready for provider review yet.";
+  }
+  if (lower.includes("invalid tennant") || lower.includes("invalid tenant")) {
+    return "This request needs support review before it can be sent to the provider.";
+  }
+  if (lower.includes("invalid secret") || lower.includes("token")) {
+    return "This request needs support review before it can be sent to the provider.";
+  }
+  if (lower.includes("government id") || lower.includes("id upload")) {
+    return "Government ID upload is missing or could not be sent.";
+  }
+  if (lower.includes("missing a selected treatment")) {
+    return "This request is missing the selected treatment. Please start the treatment request again.";
+  }
+  if (lower.includes("selected treatment is not active")) {
+    return "This treatment is not available for checkout yet.";
+  }
+  if (lower.includes("stripe") || lower.includes("checkout")) {
+    return "Checkout could not be opened. Please try again.";
+  }
+
+  return normalized;
+}
+
 export function checkoutReturnView(
   bookingIntent: BookingIntentReturnRow | null,
 ): CheckoutReturnView {
@@ -41,15 +76,14 @@ export function checkoutReturnView(
   const failureReason = bookingIntent.failure_reason?.trim();
 
   if (bookingIntent.ola_status === "failed") {
+    const issue = patientProviderIssueMessage(failureReason);
     return {
       tone: "failed",
       icon: "!",
-      title: "Provider handoff failed",
-      lead: failureReason
-        ? `Payment is confirmed, but the provider request was not accepted: ${failureReason}.`
-        : "Payment is confirmed, but the provider request was not accepted.",
+      title: "Request needs attention",
+      lead: `Payment is confirmed, but we could not send your request for provider review. ${issue}`,
       summary,
-      hint: "This must be corrected before provider review can begin.",
+      hint: "Support can correct this before provider review begins.",
     };
   }
 

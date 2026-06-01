@@ -52,9 +52,9 @@ describe("hubBookingIntentStatusView", () => {
         failure_reason: "No provider found for given service and state",
       }),
     ).toMatchObject({
-      label: "Provider handoff failed",
+      label: "Needs attention",
       subtitle:
-        "Payment received, but provider handoff failed: No provider found for given service and state.",
+        "Payment received, but we could not send this request for provider review. No provider is currently available for this treatment in the selected state.",
       tone: "failed",
     });
   });

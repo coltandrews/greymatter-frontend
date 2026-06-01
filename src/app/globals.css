@@ -18,8 +18,12 @@
   --gm-accent-hover: #000000;
   --gm-disabled-bg: #efefef;
   --gm-disabled-text: #6f6f6f;
-  --gm-error: #171717;
-  --gm-success: #171717;
+  --gm-error: #b42318;
+  --gm-error-bg: #fef3f2;
+  --gm-error-border: rgba(180, 35, 24, 0.28);
+  --gm-success: #147a3f;
+  --gm-success-bg: #ecfdf3;
+  --gm-success-border: rgba(20, 122, 63, 0.26);
   --gm-focus-ring: rgba(23, 23, 23, 0.14);
   font-family: var(--font-geist-sans), Arial, sans-serif;
   background: var(--gm-page-bg);

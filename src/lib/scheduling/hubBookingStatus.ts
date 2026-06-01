@@ -1,3 +1,5 @@
+import { patientProviderIssueMessage } from "./checkoutReturn";
+
 export type HubBookingIntentStatusInput = {
   booking_status: string | null;
   payment_status: string | null;
@@ -17,11 +19,10 @@ export function hubBookingIntentStatusView(
   const failureReason = input.failure_reason?.trim();
 
   if (input.ola_status === "failed") {
+    const issue = patientProviderIssueMessage(failureReason);
     return {
-      label: "Provider handoff failed",
-      subtitle: failureReason
-        ? `Payment received, but provider handoff failed: ${failureReason}.`
-        : "Payment received, but provider handoff failed.",
+      label: "Needs attention",
+      subtitle: `Payment received, but we could not send this request for provider review. ${issue}`,
       tone: "failed",
     };
   }

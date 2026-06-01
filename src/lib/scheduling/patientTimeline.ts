@@ -17,10 +17,27 @@ export function patientBookingTimeline(
 ): PatientTimelineStep[] {
   const paymentComplete = input.payment_status === "paid";
   const needsReview = input.booking_status === "needs_review";
+  const providerSendFailed = input.ola_status === "failed";
   const providerBooked =
     input.ola_status === "booked" &&
     (input.booking_status === "booked" || input.booking_status === "action_required");
   const hasNextSteps = input.has_next_steps || input.booking_status === "action_required";
+  const providerDescription = providerSendFailed
+    ? "This request needs attention before provider review can begin"
+    : providerBooked
+      ? "Provider review ready"
+      : needsReview
+        ? "Waiting for provider network response"
+        : paymentComplete
+          ? "Provider review in progress"
+          : "Starts after payment is complete";
+  const providerState: PatientTimelineStep["state"] = providerBooked
+    ? "complete"
+    : providerSendFailed
+      ? "attention"
+      : needsReview || paymentComplete
+        ? "current"
+        : "pending";
 
   return [
     {
@@ -34,20 +51,8 @@ export function patientBookingTimeline(
     {
       key: "provider",
       label: "Provider review",
-      description: providerBooked
-        ? "Provider review ready"
-        : needsReview
-          ? "Waiting for provider network response"
-          : paymentComplete
-            ? "Provider review in progress"
-            : "Starts after payment is complete",
-      state: providerBooked
-        ? "complete"
-        : needsReview
-          ? "current"
-          : paymentComplete
-            ? "current"
-            : "pending",
+      description: providerDescription,
+      state: providerState,
     },
     {
       key: "next_steps",

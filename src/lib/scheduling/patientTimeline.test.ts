@@ -29,15 +29,15 @@ describe("patientBookingTimeline", () => {
     ]);
   });
 
-  it("keeps provider review current while the provider network is reviewing", () => {
+  it("marks provider review as needing attention when provider send fails", () => {
     expect(patientBookingTimeline({
       booking_status: "needs_review",
       payment_status: "paid",
       ola_status: "failed",
     })[1]).toMatchObject({
       key: "provider",
-      state: "current",
-      description: "Waiting for provider network response",
+      state: "attention",
+      description: "This request needs attention before provider review can begin",
     });
   });
 

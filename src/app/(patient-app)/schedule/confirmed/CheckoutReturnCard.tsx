@@ -133,6 +133,7 @@ export function CheckoutReturnCard({
       <p className={styles.lead}>{view.lead}</p>
       {reviewNote ? <p className={styles.summary}>{reviewNote}</p> : null}
       {pollError ? <p className={styles.summary}>{pollError}</p> : null}
+      {!pollError ? <p className={styles.hint}>{view.hint}</p> : null}
       {polling && pollCount < MAX_POLLS ? (
         <div className={styles.processingBlock} role="status">
           <span className={styles.processingIndicator} aria-hidden="true" />

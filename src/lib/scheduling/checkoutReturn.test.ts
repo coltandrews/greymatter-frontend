@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   checkoutReturnAction,
   checkoutReturnView,
+  patientProviderIssueMessage,
   shouldPollCheckoutReturn,
 } from "./checkoutReturn";
 
@@ -78,10 +79,10 @@ describe("checkoutReturnView", () => {
       }),
     ).toMatchObject({
       tone: "failed",
-      title: "Provider handoff failed",
+      title: "Request needs attention",
       lead:
-        "Payment is confirmed, but the provider request was not accepted: No provider found for given service and state.",
-      hint: "This must be corrected before provider review can begin.",
+        "Payment is confirmed, but we could not send your request for provider review. No provider is currently available for this treatment in the selected state.",
+      hint: "Support can correct this before provider review begins.",
     });
   });
 
@@ -134,6 +135,14 @@ describe("checkoutReturnView", () => {
         selected_slot: null,
       }),
     ).toBe(false);
+  });
+});
+
+describe("patientProviderIssueMessage", () => {
+  it("translates raw provider errors into patient-safe copy", () => {
+    expect(
+      patientProviderIssueMessage("No provider found for given service and state"),
+    ).toBe("No provider is currently available for this treatment in the selected state.");
   });
 });
 

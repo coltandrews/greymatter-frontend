@@ -44,8 +44,9 @@
 }
 
 .success {
-  background: rgba(23, 23, 23, 0.16);
-  color: #171717;
+  background: var(--gm-success-bg);
+  color: var(--gm-success);
+  border: 1px solid var(--gm-success-border);
 }
 
 .pending {
@@ -60,13 +61,15 @@
 }
 
 .action {
-  background: rgba(23, 23, 23, 0.14);
-  color: #242424;
+  background: var(--gm-success-bg);
+  color: var(--gm-success);
+  border: 1px solid var(--gm-success-border);
 }
 
 .failed {
-  background: rgba(23, 23, 23, 0.16);
-  color: #171717;
+  background: var(--gm-error-bg);
+  color: var(--gm-error);
+  border: 1px solid var(--gm-error-border);
 }
 
 .title {

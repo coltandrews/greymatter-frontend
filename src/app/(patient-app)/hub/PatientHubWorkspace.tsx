@@ -24,6 +24,7 @@ import { buildTreatmentBookingIntentPayload } from "@/lib/scheduling/bookingInte
 import {
   checkoutReturnAction,
   checkoutReturnView,
+  patientProviderIssueMessage,
   type BookingIntentReturnRow,
 } from "@/lib/scheduling/checkoutReturn";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
@@ -287,6 +288,9 @@ function CheckoutCompletionPanel({
         <p className={styles.kicker}>Checkout complete</p>
         <h3>{title}</h3>
         <p>{completion.error ?? lead}</p>
+        {!completion.error && !completion.syncing ? (
+          <p className={styles.checkoutCompleteHint}>{view.hint}</p>
+        ) : null}
       </div>
       <div className={styles.checkoutCompleteActions}>
         <button type="button" className={styles.scheduleNewBtn} onClick={onViewTreatments}>
@@ -302,23 +306,49 @@ function CheckoutCompletionPanel({
   );
 }
 
-async function responseErrorMessage(prefix: string, res: Response): Promise<string> {
-  const raw = await res.text();
-  if (!raw.trim()) {
-    return `${prefix} failed (${res.status}).`;
+function defaultPatientError(action: string): string {
+  switch (action) {
+    case "Checkout":
+      return "Checkout could not be opened. Please try again.";
+    case "Medication request":
+      return "This treatment request could not be prepared. Please review your information and try again.";
+    case "Cancel request":
+      return "This request could not be canceled. Please try again.";
+    case "Payment sync":
+      return "Payment is confirmed, but we could not finish sending your request. Please check My Treatments for the latest status.";
+    default:
+      return "Something went wrong. Please try again.";
+  }
+}
+
+function rawErrorDetail(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.startsWith("<")) {
+    return null;
   }
   try {
-    const parsed = JSON.parse(raw) as Record<string, unknown>;
-    const message =
-      typeof parsed.message === "string"
-        ? parsed.message
-        : typeof parsed.error === "string"
-          ? parsed.error
-          : raw;
-    return `${prefix} failed (${res.status}): ${message}`;
+    const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+    for (const key of ["reason", "message", "error"]) {
+      const value = parsed[key];
+      if (typeof value === "string" && value.trim()) {
+        return value.trim();
+      }
+    }
+    return null;
   } catch {
-    return `${prefix} failed (${res.status}): ${raw}`;
+    return trimmed.length < 220 ? trimmed : null;
   }
+}
+
+async function responseErrorMessage(action: string, res: Response): Promise<string> {
+  const fallback = defaultPatientError(action);
+  const raw = await res.text();
+  const detail = rawErrorDetail(raw);
+  if (!detail) {
+    return fallback;
+  }
+  const patientDetail = patientProviderIssueMessage(detail);
+  return patientDetail === fallback ? fallback : `${fallback} ${patientDetail}`;
 }
 
 export function PatientHubWorkspace({
