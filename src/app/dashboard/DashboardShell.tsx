@@ -1,5 +1,6 @@
 import { SignOutButton } from "@/components/SignOutButton";
 import type { DashboardPageKey } from "@/lib/dashboard/navigation";
+import Link from "next/link";
 import type { DashboardRole } from "./dashboardAccess";
 import { DashboardNav } from "./DashboardNav";
 import styles from "./dashboard.module.css";
@@ -28,6 +29,9 @@ export function DashboardShell({
         </div>
         <DashboardNav role={role} currentPage={currentPage} />
         <div className={styles.sidebarFooter}>
+          <Link href="/hub" className={styles.patientViewLink}>
+            Patient View
+          </Link>
           <SignOutButton noMargin dark />
         </div>
       </aside>

@@ -72,7 +72,37 @@
 }
 
 .sidebarFooter {
-  margin-top: 0;
+  display: grid;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.patientViewLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid #171717;
+  border-radius: 7px;
+  background: transparent;
+  color: #171717;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.patientViewLink:hover,
+.patientViewLink:focus-visible {
+  background: #171717;
+  color: #ffffff;
+}
+
+.patientViewLink:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 2px;
 }
 
 .content {
