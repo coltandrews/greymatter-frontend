@@ -521,28 +521,30 @@
 
 .hubQuestionCard {
   display: grid;
-  gap: 16px;
+  gap: 22px;
   max-width: none;
 }
 
 .hubField,
 .hubFieldset {
   display: grid;
-  gap: 8px;
+  gap: 16px;
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
   color: var(--gm-text);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .hubFieldset legend {
   padding: 0;
   color: var(--gm-text);
-  font-size: 13px;
+  font-size: 16px;
   font-weight: 700;
+  line-height: 1.35;
 }
 
 .hubInput,
@@ -630,7 +632,7 @@
 .hubOptionGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .hubOption {
@@ -644,7 +646,7 @@
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.62);
   color: var(--gm-text);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   line-height: 1.35;
 }
@@ -672,31 +674,122 @@
 
 .idUploadBox {
   display: grid;
-  gap: 8px;
-  min-height: 124px;
-  align-content: center;
-  padding: 18px;
-  border: 1px dashed rgba(23, 23, 23, 0.46);
+  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-areas:
+    "preview info"
+    "preview actions";
+  gap: 12px 14px;
+  min-height: 132px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(23, 23, 23, 0.14);
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.56);
+  background: rgba(255, 255, 255, 0.62);
   color: var(--gm-text);
-  cursor: pointer;
 }
 
-.idUploadBox span {
+.idUploadBoxReady {
+  border-color: rgba(23, 23, 23, 0.28);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.idUploadPreview {
+  grid-area: preview;
+  width: 92px;
+  height: 104px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 1px solid rgba(23, 23, 23, 0.12);
+  background: rgba(23, 23, 23, 0.06);
+}
+
+.idUploadPreview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.idUploadPlaceholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  color: var(--gm-subtle);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.idUploadInfo {
+  grid-area: info;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.idUploadInfo span {
   font-size: 14px;
   font-weight: 800;
 }
 
-.idUploadBox small {
+.idUploadInfo small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--gm-subtle);
   font-size: 12px;
   line-height: 1.35;
 }
 
-.idUploadBox input {
-  margin-top: 6px;
-  max-width: 100%;
+.idUploadActions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.idUploadActions input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.idUploadAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(23, 23, 23, 0.18);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--gm-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.idUploadAction:hover,
+.idUploadAction:focus-visible {
+  border-color: #171717;
+  background: #171717;
+  color: #ffffff;
+  outline: none;
 }
 
 .savedIdOption {

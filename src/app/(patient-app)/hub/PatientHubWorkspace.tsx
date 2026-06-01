@@ -123,6 +123,99 @@ function requestDate(value: string): string {
   });
 }
 
+function IdFilePreview({ file, label }: { file: File; label: string }) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!file.type.startsWith("image/")) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  if (!previewUrl) {
+    return (
+      <div className={styles.idUploadPlaceholder} aria-hidden="true">
+        PDF
+      </div>
+    );
+  }
+
+  return <img src={previewUrl} alt={`${label} preview`} />;
+}
+
+function IdUploadTile({
+  file,
+  inputId,
+  onClear,
+  onFileChange,
+  savedDocument,
+  side,
+  useSavedDocument,
+}: {
+  file: File | null;
+  inputId: string;
+  onClear: () => void;
+  onFileChange: (file: File | null) => void;
+  savedDocument: SavedIdDocument | null;
+  side: IdSide;
+  useSavedDocument: boolean;
+}) {
+  const label = side === "front" ? "Front of ID" : "Back of ID";
+  const hasSavedDocument = useSavedDocument && savedDocument != null;
+  const hasSelection = file != null || hasSavedDocument;
+  const detailText = file
+    ? file.name
+    : hasSavedDocument
+      ? "Saved ID on file"
+      : "JPG, PNG, or PDF up to 10 MB";
+
+  return (
+    <div className={`${styles.idUploadBox} ${hasSelection ? styles.idUploadBoxReady : ""}`}>
+      <div className={styles.idUploadPreview}>
+        {file ? (
+          <IdFilePreview file={file} label={label} />
+        ) : hasSavedDocument ? (
+          <div className={styles.idUploadPlaceholder} aria-hidden="true">
+            Saved
+          </div>
+        ) : (
+          <div className={styles.idUploadPlaceholder} aria-hidden="true">
+            Upload
+          </div>
+        )}
+      </div>
+      <div className={styles.idUploadInfo}>
+        <span>{label}</span>
+        <small>{detailText}</small>
+      </div>
+      <div className={styles.idUploadActions}>
+        <label className={styles.idUploadAction} htmlFor={inputId}>
+          {hasSelection ? "Retake" : "Upload"}
+        </label>
+        <input
+          id={inputId}
+          type="file"
+          accept="image/jpeg,image/png,application/pdf"
+          onChange={(event) => {
+            onFileChange(event.target.files?.[0] ?? null);
+            event.currentTarget.value = "";
+          }}
+        />
+        {file ? (
+          <button type="button" className={styles.idUploadAction} onClick={onClear}>
+            Delete
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 async function responseErrorMessage(prefix: string, res: Response): Promise<string> {
   const raw = await res.text();
   if (!raw.trim()) {
@@ -934,11 +1027,7 @@ export function PatientHubWorkspace({
                 <div className={styles.questionStepHeader}>
                   <div>
                     <p className={styles.questionStepMeta}>Treatment questions</p>
-                    <h3>
-                      {questionStepCount > 0
-                        ? "Answer one question at a time"
-                        : "No treatment questions required"}
-                    </h3>
+                    {questionStepCount === 0 ? <h3>No treatment questions required</h3> : null}
                   </div>
                   {questionStepCount > 0 ? (
                     <span className={styles.questionStepCount}>
@@ -1076,27 +1165,30 @@ export function PatientHubWorkspace({
                 ) : null}
                 <div className={styles.idUploadGrid}>
                   {(["front", "back"] as const).map((side) => (
-                    <label key={side} className={styles.idUploadBox}>
-                      <span>{side === "front" ? "Front of ID" : "Back of ID"}</span>
-                      <small>
-                        {idUploads[side]?.name ??
-                          (useSavedIdDocuments && savedIdDocuments[side]
-                            ? "Saved ID on file"
-                            : "JPG, PNG, or PDF up to 10 MB")}
-                      </small>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,application/pdf"
-                        onChange={(event) => {
-                          setIdUploads((current) => ({
-                            ...current,
-                            [side]: event.target.files?.[0] ?? null,
-                          }));
-                          setNewCheckout(null);
-                          setError(null);
-                        }}
-                      />
-                    </label>
+                    <IdUploadTile
+                      key={side}
+                      file={idUploads[side]}
+                      inputId={`government-id-${side}`}
+                      savedDocument={savedIdDocuments[side]}
+                      side={side}
+                      useSavedDocument={useSavedIdDocuments}
+                      onFileChange={(file) => {
+                        setIdUploads((current) => ({
+                          ...current,
+                          [side]: file,
+                        }));
+                        setNewCheckout(null);
+                        setError(null);
+                      }}
+                      onClear={() => {
+                        setIdUploads((current) => ({
+                          ...current,
+                          [side]: null,
+                        }));
+                        setNewCheckout(null);
+                        setError(null);
+                      }}
+                    />
                   ))}
                 </div>
                 {idError ? <p className={styles.fieldError}>{idError}</p> : null}
