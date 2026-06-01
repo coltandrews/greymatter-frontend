@@ -74,6 +74,7 @@ describe("intake question helpers", () => {
             question_key: "symptoms",
             prompt: "Which symptoms are you looking to address?",
             question_type: "multi_select",
+            required: true,
             options: [
               { value: "low_energy", label: "Low energy" },
               { value: "low_libido", label: "Low libido" },
@@ -83,6 +84,7 @@ describe("intake question helpers", () => {
             question_key: "notes",
             prompt: "Anything else?",
             question_type: "textarea",
+            required: true,
             options: [],
           },
         ],
@@ -96,6 +98,25 @@ describe("intake question helpers", () => {
       "Which symptoms are you looking to address?": "Low energy, Low libido",
       "Anything else?": "Some detail",
       ignored: "x",
+    });
+  });
+
+  it("keeps optional unanswered textarea questions as empty strings for vendor payloads", () => {
+    expect(
+      formatQuestionAnswersForPayload(
+        [
+          {
+            question_key: "notes",
+            prompt: "Anything else?",
+            question_type: "textarea",
+            required: false,
+            options: [],
+          },
+        ],
+        {},
+      ),
+    ).toEqual({
+      "Anything else?": "",
     });
   });
 

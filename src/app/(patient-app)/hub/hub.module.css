@@ -602,7 +602,7 @@
 .hubField,
 .hubFieldset {
   display: grid;
-  gap: 16px;
+  gap: 22px;
   min-width: 0;
   margin: 0;
   padding: 0;

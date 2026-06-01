@@ -56,7 +56,7 @@ function question(
   prompt: string,
   question_type: IntakeQuestion["question_type"],
   options: IntakeQuestion["options"] = [],
-  required = true,
+  required = question_type === "textarea" ? false : true,
   help_text: string | null = null,
 ): IntakeQuestion {
   return {

@@ -199,28 +199,56 @@ export function normalizeIntakeAnswers(
 }
 
 export function formatQuestionAnswersForPayload(
-  questions: Pick<IntakeQuestion, "prompt" | "question_key" | "question_type" | "options">[],
+  questions: Pick<
+    IntakeQuestion,
+    "prompt" | "question_key" | "question_type" | "required" | "options"
+  >[],
   answers: IntakeQuestionAnswers | undefined,
 ): Record<string, string> {
   const questionByKey = new Map(questions.map((question) => [question.question_key, question]));
+  const formattedEntries = questions.flatMap<[string, string]>((question) => {
+    const rawValue = answers?.[question.question_key];
+    const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+    const formatted = values
+      .map((value) => {
+        const stringValue = typeof value === "string" ? value.trim() : "";
+        if (!stringValue) {
+          return "";
+        }
+        return (
+          question.options.find((option) => option.value === stringValue)?.label ??
+          stringValue
+        );
+      })
+      .filter(Boolean)
+      .join(", ");
+
+    if (formatted) {
+      return [[question.prompt, formatted]];
+    }
+    if (question.question_type === "textarea" && !question.required) {
+      return [[question.prompt, ""]];
+    }
+    return [];
+  });
 
   return Object.fromEntries(
-    Object.entries(answers ?? {})
-      .map(([key, rawValue]) => {
-        const question = questionByKey.get(key);
-        const values = Array.isArray(rawValue) ? rawValue : [rawValue];
-        const formatted = values
-          .map((value) => {
-            const stringValue = typeof value === "string" ? value.trim() : "";
-            if (!stringValue) {
-              return "";
-            }
-            return question?.options.find((option) => option.value === stringValue)?.label ?? stringValue;
-          })
-          .filter(Boolean)
-          .join(", ");
-        return [question?.prompt ?? key, formatted];
-      })
-      .filter(([, value]) => value.trim()),
+    [
+      ...formattedEntries,
+      ...Object.entries(answers ?? {})
+        .filter(([key]) => !questionByKey.has(key))
+        .map<[string, string]>(([key, rawValue]) => {
+          const values = Array.isArray(rawValue) ? rawValue : [rawValue];
+          const formatted = values
+            .map((value) => {
+              const stringValue = typeof value === "string" ? value.trim() : "";
+              return stringValue;
+            })
+            .filter(Boolean)
+            .join(", ");
+          return [key, formatted];
+        })
+        .filter(([, value]) => value.trim()),
+    ],
   );
 }

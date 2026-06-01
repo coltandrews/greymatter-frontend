@@ -14,6 +14,17 @@ function numberAnswer(answer: IntakeQuestionAnswer | undefined): string {
   return value || "0";
 }
 
+function normalizeNumberInput(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+  if (/^\d+$/.test(trimmed)) {
+    return String(Number(trimmed));
+  }
+  return trimmed;
+}
+
 function stepNumber(value: string, delta: number): string {
   const current = Number(value);
   const next = Number.isFinite(current) ? current + delta : delta;
@@ -34,6 +45,9 @@ export function ProductQuestionField({
       <label className={styles.hubField}>
         {question.prompt}
         <textarea
+          placeholder={
+            question.required ? undefined : "Leave blank if this does not apply."
+          }
           value={stringAnswer(answer)}
           onChange={(event) => onChange(event.target.value)}
           className={styles.hubTextarea}
@@ -146,7 +160,12 @@ export function ProductQuestionField({
             step="1"
             inputMode="numeric"
             value={value}
-            onChange={(event) => onChange(event.target.value || "0")}
+            onFocus={(event) => {
+              if (event.currentTarget.value === "0") {
+                event.currentTarget.select();
+              }
+            }}
+            onChange={(event) => onChange(normalizeNumberInput(event.target.value))}
             className={styles.hubNumberInput}
           />
           <button
