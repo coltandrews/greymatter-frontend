@@ -145,6 +145,7 @@ async function responseErrorMessage(prefix: string, res: Response): Promise<stri
 export function PatientHubWorkspace({
   appointments,
   bookingIntents: initialBookingIntents,
+  canViewAdminPortal = false,
   email,
   initialDraft,
   initialProfile,
@@ -158,6 +159,7 @@ export function PatientHubWorkspace({
 }: {
   appointments: HubAppointmentRow[];
   bookingIntents: HubBookingIntentRow[];
+  canViewAdminPortal?: boolean;
   email: string;
   initialDraft: IntakeDraftData | null;
   initialProfile: IntakeDraftData | null;
@@ -698,6 +700,11 @@ export function PatientHubWorkspace({
               <span title={email}>{email}</span>
             </div>
           </div>
+          {canViewAdminPortal ? (
+            <Link href="/dashboard" className={styles.adminPortalLink}>
+              View admin portal
+            </Link>
+          ) : null}
           <SignOutButton noMargin />
         </div>
       </aside>

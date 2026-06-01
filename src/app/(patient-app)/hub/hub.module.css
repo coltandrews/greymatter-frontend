@@ -135,6 +135,34 @@
   width: 100%;
 }
 
+.adminPortalLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid #171717;
+  border-radius: 7px;
+  background: #171717;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.adminPortalLink:hover,
+.adminPortalLink:focus-visible {
+  background: transparent;
+  color: #171717;
+}
+
+.adminPortalLink:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 2px;
+}
+
 .content {
   min-width: 0;
   display: grid;
@@ -1073,15 +1101,15 @@
 
   .sidebarFooter {
     width: 100%;
-    max-width: none;
-    grid-template-columns: minmax(0, 420px) auto;
-    align-items: center;
+    max-width: 420px;
+    grid-template-columns: 1fr;
+    align-items: stretch;
     margin-top: 0;
     padding-top: 12px;
   }
 
   .sidebarFooter :global(button) {
-    width: auto;
+    width: 100%;
   }
 
   .content {
@@ -1100,14 +1128,6 @@
 }
 
 @media (max-width: 760px) {
-  .sidebarFooter {
-    grid-template-columns: 1fr;
-  }
-
-  .sidebarFooter :global(button) {
-    width: 100%;
-  }
-
   .panel {
     padding: 18px;
   }

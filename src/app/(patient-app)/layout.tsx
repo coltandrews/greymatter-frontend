@@ -15,17 +15,6 @@ export default async function PatientAppLayout({
     redirect("/");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  const role = profile?.role ?? "patient";
-  if (role === "staff" || role === "admin") {
-    redirect("/dashboard");
-  }
-
   return (
     <div
       style={{

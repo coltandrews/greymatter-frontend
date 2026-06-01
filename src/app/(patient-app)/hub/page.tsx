@@ -78,7 +78,7 @@ export default async function HubPage() {
       .order("created_at", { ascending: false }),
     supabase
       .from("profiles")
-      .select("demographics")
+      .select("role, demographics")
       .eq("id", user.id)
       .maybeSingle(),
     supabase
@@ -150,6 +150,7 @@ export default async function HubPage() {
   );
   const welcomeName = patientDisplayName(user, forWelcome);
   const email = user.email ?? user.id;
+  const canViewAdminPortal = profile?.role === "staff" || profile?.role === "admin";
   const olaUserGuid =
     bookingOlaRows?.[0]?.ola_user_guid ?? appointmentOlaRows?.[0]?.ola_user_guid ?? null;
   const savedIdDocuments = latestSavedIdDocuments(documentRows as unknown[] | null);
@@ -158,6 +159,7 @@ export default async function HubPage() {
     <PatientHubWorkspace
       appointments={appointments}
       bookingIntents={bookingIntents}
+      canViewAdminPortal={canViewAdminPortal}
       email={email}
       initialDraft={(draftRow?.data ?? null) as IntakeDraftData | null}
       initialProfile={(profile?.demographics ?? null) as IntakeDraftData | null}

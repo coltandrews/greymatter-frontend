@@ -32,7 +32,7 @@ export default async function PostLoginPage() {
   const role = profile?.role ?? "patient";
 
   if (role === "staff" || role === "admin") {
-    redirect("/dashboard");
+    redirect("/hub");
   }
 
   const demographics = mergeIntakeAndProfileDemographics(
