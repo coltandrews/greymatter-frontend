@@ -29,9 +29,9 @@ import {
 } from "@/lib/scheduling/checkoutReturn";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
 import {
-  olaOrderDetailRows,
+  olaOrderPatientSummary,
   olaResponseMessage,
-  type OlaOrderDetailRow,
+  type OlaOrderPatientSummary,
 } from "@/lib/scheduling/olaOrderDetails";
 import { createClient } from "@/lib/supabase/client";
 import type { TreatmentProduct } from "@/lib/treatmentProducts";
@@ -84,14 +84,6 @@ function asRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
-}
-
-function detailValueClass(row: OlaOrderDetailRow): string | undefined {
-  const classes = [
-    row.cap ? styles.detailCap : "",
-    row.mono ? styles.detailMono : "",
-  ].filter(Boolean);
-  return classes.length > 0 ? classes.join(" ") : undefined;
 }
 
 function currencyFromCents(cents: number, currency = "usd"): string {
@@ -170,6 +162,90 @@ function requestDate(value: string): string {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function providerErrorMessage(message: string | null): string {
+  if (!message) {
+    return "Provider details are temporarily unavailable. Please check back soon.";
+  }
+  return patientProviderIssueMessage(message);
+}
+
+function paymentLabel(status: string | null): string {
+  switch (status) {
+    case "paid":
+      return "Payment received";
+    case "failed":
+      return "Payment issue";
+    case "pending":
+      return "Payment pending";
+    case "unpaid":
+      return "Payment needed";
+    default:
+      return "Payment status unavailable";
+  }
+}
+
+function providerInitials(summary: OlaOrderPatientSummary | null): string {
+  const name = summary?.clinicianName?.trim();
+  if (!name) {
+    return "GM";
+  }
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function prescriptionLabel(count: number | null): string {
+  if (count == null) {
+    return "Medication details will appear when available.";
+  }
+  if (count === 0) {
+    return "No prescription has been added yet.";
+  }
+  return count === 1 ? "1 prescription on file" : `${count} prescriptions on file`;
+}
+
+function readableProviderStatus(status: string | null): string | null {
+  if (!status) {
+    return null;
+  }
+  return status
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function DetailSkeleton() {
+  return (
+    <div className={styles.treatmentDetailGrid} aria-label="Loading provider details">
+      <div className={styles.treatmentDetailCard}>
+        <div className={styles.providerProfile}>
+          <span className={`${styles.providerAvatar} ${styles.detailSkeletonCircle}`} />
+          <div className={styles.detailSkeletonStack}>
+            <span className={styles.detailSkeletonLineWide} />
+            <span className={styles.detailSkeletonLineShort} />
+          </div>
+        </div>
+      </div>
+      <div className={styles.treatmentDetailCard}>
+        <span className={styles.detailSkeletonLineShort} />
+        <span className={styles.detailSkeletonLineWide} />
+        <span className={styles.detailSkeletonLineMedium} />
+      </div>
+      <div className={styles.treatmentDetailCard}>
+        <span className={styles.detailSkeletonLineShort} />
+        <span className={styles.detailSkeletonLineWide} />
+      </div>
+      <div className={styles.treatmentDetailCard}>
+        <span className={styles.detailSkeletonLineShort} />
+        <span className={styles.detailSkeletonLineMedium} />
+      </div>
+    </div>
+  );
 }
 
 function IdFilePreview({ file, label }: { file: File; label: string }) {
@@ -405,15 +481,21 @@ export function PatientHubWorkspace({
   const [error, setError] = useState<string | null>(serverLoadError);
 
   const selectedBooking = bookingIntents.find((row) => row.id === selectedBookingId) ?? null;
+  const selectedBookingStatus = selectedBooking
+    ? hubBookingIntentStatusView(selectedBooking)
+    : null;
   const selectedBookingCanceling =
     selectedBooking != null && cancelingBookingId === selectedBooking.id;
   const selectedOrderGuid = selectedBooking?.ola_order_guid ?? null;
   const selectedOrderState = selectedOrderGuid
     ? orderDetailsByGuid[selectedOrderGuid]
     : null;
-  const selectedOrderRows = selectedOrderState?.payload
-    ? olaOrderDetailRows(selectedOrderState.payload)
-    : [];
+  const selectedOrderSummary = selectedOrderState?.payload
+    ? olaOrderPatientSummary(selectedOrderState.payload)
+    : null;
+  const selectedOrderLoading = Boolean(
+    selectedOrderGuid && (!selectedOrderState || selectedOrderState.loading),
+  );
   const selectedProduct =
     products.find((product) => product.product_key === selectedProductKey) ?? null;
   const selectedQuestions = useMemo(
@@ -603,10 +685,7 @@ export function PatientHubWorkspace({
         );
         const payload = (await response.json().catch(() => null)) as unknown;
         if (!response.ok) {
-          throw new Error(
-            olaResponseMessage(payload) ??
-              `Provider details could not load (${response.status}).`,
-          );
+          throw new Error(providerErrorMessage(olaResponseMessage(payload)));
         }
         if (cancelled) {
           return;
@@ -630,7 +709,7 @@ export function PatientHubWorkspace({
             error:
               err instanceof Error
                 ? err.message
-                : "Provider details could not load.",
+                : "Provider details are temporarily unavailable. Please check back soon.",
             payload: null,
           },
         }));
@@ -1512,7 +1591,7 @@ export function PatientHubWorkspace({
                 <div>
                   <p className={styles.kicker}>Treatment details</p>
                   <h2 id="treatment-drawer-title">{treatmentName(selectedBooking)}</h2>
-                  <p>{hubBookingIntentStatusView(selectedBooking).subtitle}</p>
+                  <p>{selectedBookingStatus?.subtitle}</p>
                 </div>
                 <button
                   type="button"
@@ -1529,69 +1608,125 @@ export function PatientHubWorkspace({
               </header>
 
               <div className={styles.drawerBody}>
-                <section className={styles.drawerSection} aria-label="Treatment status">
-                  <dl className={styles.detailFacts}>
-                    <div>
-                      <dt>Status</dt>
-                      <dd>{hubBookingIntentStatusView(selectedBooking).label}</dd>
+                <section className={styles.drawerSection} aria-label="Treatment overview">
+                  <div className={styles.treatmentDetailSurface}>
+                    <div className={styles.treatmentDetailTopline}>
+                      <span
+                        className={`${styles.statusPill} ${
+                          styles[`statusPill${selectedBookingStatus?.tone ?? "pending"}`]
+                        }`}
+                      >
+                        {selectedBookingStatus?.label ?? "Processing"}
+                      </span>
+                      <span>{paymentLabel(selectedBooking.payment_status)}</span>
                     </div>
-                    <div>
-                      <dt>Payment</dt>
-                      <dd className={styles.detailCap}>{selectedBooking.payment_status}</dd>
-                    </div>
-                    <div>
-                      <dt>Submitted</dt>
-                      <dd>{requestDate(selectedBooking.created_at)}</dd>
-                    </div>
-                    <div>
-                      <dt>Last updated</dt>
-                      <dd>{requestDate(selectedBooking.updated_at)}</dd>
-                    </div>
-                    {selectedBooking.ola_order_guid ? (
+
+                    <div className={styles.treatmentTimeline}>
                       <div>
-                        <dt>Provider order</dt>
-                        <dd className={styles.detailMono}>{selectedBooking.ola_order_guid}</dd>
+                        <span className={styles.treatmentDetailLabel}>Submitted</span>
+                        <strong>{requestDate(selectedBooking.created_at)}</strong>
+                      </div>
+                      <div>
+                        <span className={styles.treatmentDetailLabel}>Last update</span>
+                        <strong>
+                          {selectedOrderSummary?.updatedAt ?? requestDate(selectedBooking.updated_at)}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {selectedBooking.ola_popup_message ? (
+                      <p className={styles.treatmentProviderNote}>
+                        {selectedBooking.ola_popup_message}
+                      </p>
+                    ) : null}
+
+                    {selectedOrderLoading ? <DetailSkeleton /> : null}
+
+                    {!selectedOrderLoading ? (
+                      <div className={styles.treatmentDetailGrid}>
+                        <article className={styles.treatmentDetailCard}>
+                          <span className={styles.treatmentDetailLabel}>Care team</span>
+                          {selectedOrderSummary?.clinicianName ? (
+                            <div className={styles.providerProfile}>
+                              {selectedOrderSummary.clinicianAvatarUrl ? (
+                                <img
+                                  src={selectedOrderSummary.clinicianAvatarUrl}
+                                  alt=""
+                                  className={styles.providerAvatar}
+                                />
+                              ) : (
+                                <span className={styles.providerAvatar}>
+                                  {providerInitials(selectedOrderSummary)}
+                                </span>
+                              )}
+                              <div>
+                                <strong>{selectedOrderSummary.clinicianName}</strong>
+                                {selectedOrderSummary.clinicianTitle ? (
+                                  <small>{selectedOrderSummary.clinicianTitle}</small>
+                                ) : null}
+                              </div>
+                            </div>
+                          ) : (
+                            <p className={styles.treatmentDetailSubtext}>
+                              Your request is with the provider team.
+                            </p>
+                          )}
+                        </article>
+
+                        <article className={styles.treatmentDetailCard}>
+                          <span className={styles.treatmentDetailLabel}>Pharmacy</span>
+                          {selectedOrderSummary?.pharmacyName ? (
+                            <>
+                              <strong>{selectedOrderSummary.pharmacyName}</strong>
+                              {selectedOrderSummary.pharmacyAddress ? (
+                                <p className={styles.treatmentDetailSubtext}>
+                                  {selectedOrderSummary.pharmacyAddress}
+                                </p>
+                              ) : null}
+                              {selectedOrderSummary.pharmacyPhone ? (
+                                <p className={styles.treatmentDetailSubtext}>
+                                  {selectedOrderSummary.pharmacyPhone}
+                                </p>
+                              ) : null}
+                            </>
+                          ) : (
+                            <p className={styles.treatmentDetailSubtext}>
+                              Pharmacy details will appear after provider review.
+                            </p>
+                          )}
+                        </article>
+
+                        <article className={styles.treatmentDetailCard}>
+                          <span className={styles.treatmentDetailLabel}>Medication</span>
+                          <strong>
+                            {selectedOrderSummary?.serviceName ?? treatmentName(selectedBooking)}
+                          </strong>
+                          <p className={styles.treatmentDetailSubtext}>
+                            {prescriptionLabel(selectedOrderSummary?.prescriptionCount ?? null)}
+                          </p>
+                        </article>
+
+                        <article className={styles.treatmentDetailCard}>
+                          <span className={styles.treatmentDetailLabel}>Next step</span>
+                          {selectedOrderState?.error ? (
+                            <p className={styles.detailError}>{selectedOrderState.error}</p>
+                          ) : (
+                            <>
+                              {readableProviderStatus(selectedOrderSummary?.status ?? null) ? (
+                                <strong>
+                                  {readableProviderStatus(selectedOrderSummary?.status ?? null)}
+                                </strong>
+                              ) : null}
+                              <p className={styles.treatmentDetailSubtext}>
+                                {selectedBookingStatus?.subtitle ??
+                                  "Watch this page for provider updates."}
+                              </p>
+                            </>
+                          )}
+                        </article>
                       </div>
                     ) : null}
-                  </dl>
-                </section>
-
-                {selectedBooking.ola_popup_message ? (
-                  <section className={styles.drawerSection}>
-                    <h3>Provider message</h3>
-                    <p className={styles.detailMuted}>{selectedBooking.ola_popup_message}</p>
-                  </section>
-                ) : null}
-
-                <section className={styles.drawerSection}>
-                  <h3>Provider details</h3>
-                  {!selectedOrderGuid ? (
-                    <p className={styles.detailMuted}>
-                      Provider details will appear after this request reaches the provider
-                      network.
-                    </p>
-                  ) : null}
-                  {selectedOrderState?.loading ? (
-                    <p className={styles.detailMuted}>Loading provider details...</p>
-                  ) : null}
-                  {selectedOrderState?.error ? (
-                    <p className={styles.detailError}>{selectedOrderState.error}</p>
-                  ) : null}
-                  {selectedOrderState?.payload && selectedOrderRows.length === 0 ? (
-                    <p className={styles.detailMuted}>
-                      No additional provider details are available yet.
-                    </p>
-                  ) : null}
-                  {selectedOrderRows.length > 0 ? (
-                    <dl className={`${styles.detailList} ${styles.detailListCompact}`}>
-                      {selectedOrderRows.map((row) => (
-                        <div key={`${row.label}-${row.value}`} className={styles.detailRow}>
-                          <dt>{row.label}</dt>
-                          <dd className={detailValueClass(row)}>{row.value}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  ) : null}
+                  </div>
                 </section>
 
                 <section className={styles.drawerSection}>

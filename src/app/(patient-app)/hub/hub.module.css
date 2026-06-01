@@ -1216,7 +1216,7 @@
   display: grid;
   gap: 14px;
   padding-bottom: 20px;
-  border-bottom: 1px solid rgba(23, 23, 23, 0.1);
+  border-bottom: 0;
 }
 
 .drawerSection:last-child {
@@ -1238,6 +1238,153 @@
   to {
     opacity: 1;
   }
+}
+
+@keyframes hubSkeletonPulse {
+  0%,
+  100% {
+    opacity: 0.48;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+.treatmentDetailSurface {
+  display: grid;
+  gap: 18px;
+}
+
+.treatmentDetailTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--gm-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.treatmentTimeline {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.treatmentTimeline div,
+.treatmentDetailCard {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(23, 23, 23, 0.045);
+}
+
+.treatmentTimeline strong,
+.treatmentDetailCard strong {
+  color: var(--gm-text);
+  font-size: 15px;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.treatmentDetailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.treatmentDetailLabel {
+  color: var(--gm-subtle);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.treatmentDetailSubtext,
+.treatmentProviderNote {
+  margin: 0;
+  color: var(--gm-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.treatmentProviderNote {
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: var(--gm-success-bg);
+  color: var(--gm-success);
+}
+
+.providerProfile {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+}
+
+.providerProfile div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.providerProfile small {
+  color: var(--gm-muted);
+  font-size: 12px;
+}
+
+.providerAvatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #171717;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  object-fit: cover;
+}
+
+.detailSkeletonStack {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.detailSkeletonCircle,
+.detailSkeletonLineShort,
+.detailSkeletonLineMedium,
+.detailSkeletonLineWide {
+  display: block;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #eeeeee 0%, #d8d8d8 48%, #eeeeee 100%);
+  background-size: 220% 100%;
+  animation: hubSkeletonPulse 1.4s ease-in-out infinite;
+}
+
+.detailSkeletonCircle {
+  border-radius: 50%;
+}
+
+.detailSkeletonLineShort {
+  width: 34%;
+  height: 10px;
+}
+
+.detailSkeletonLineMedium {
+  width: 58%;
+  height: 12px;
+}
+
+.detailSkeletonLineWide {
+  width: 82%;
+  height: 12px;
 }
 
 .detailList {
@@ -1477,6 +1624,11 @@
 
   .hubAddressGrid,
   .idUploadGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .treatmentDetailGrid,
+  .treatmentTimeline {
     grid-template-columns: 1fr;
   }
 }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { olaOrderDetailRows, olaResponseMessage } from "./olaOrderDetails";
+import {
+  olaOrderDetailRows,
+  olaOrderPatientSummary,
+  olaResponseMessage,
+} from "./olaOrderDetails";
 
 describe("olaOrderDetailRows", () => {
   it("normalizes common Ola order fields into display rows", () => {
@@ -35,6 +39,47 @@ describe("olaOrderDetailRows", () => {
         { label: "Ola order", value: "order-123", mono: true },
       ]),
     );
+  });
+});
+
+describe("olaOrderPatientSummary", () => {
+  it("extracts patient-friendly order details from an Ola response", () => {
+    expect(
+      olaOrderPatientSummary({
+        result: {
+          status: "approved",
+          created_at: "2026-06-01T14:00:00.000Z",
+          updated_at: "2026-06-01T15:30:00.000Z",
+          pharmacy_name: "Test Pharmacy",
+          pharmacy_phone: "+1234567890",
+          pharmacy_address: "123 Care Street",
+          service: {
+            service_name: "Retatrutide",
+          },
+          provider: {
+            first_name: "Alex",
+            last_name: "Provider",
+            user_avatar: "https://example.com/avatar.png",
+            user_detail: {
+              data: {
+                title: "MD",
+              },
+            },
+          },
+          prescriptions: [{ id: "rx-1" }, { id: "rx-2" }],
+        },
+      }),
+    ).toMatchObject({
+      status: "approved",
+      serviceName: "Retatrutide",
+      clinicianName: "Alex Provider",
+      clinicianTitle: "MD",
+      clinicianAvatarUrl: "https://example.com/avatar.png",
+      pharmacyName: "Test Pharmacy",
+      pharmacyPhone: "+1234567890",
+      pharmacyAddress: "123 Care Street",
+      prescriptionCount: 2,
+    });
   });
 });
 

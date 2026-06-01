@@ -5,6 +5,20 @@ export type OlaOrderDetailRow = {
   cap?: boolean;
 };
 
+export type OlaOrderPatientSummary = {
+  status: string | null;
+  serviceName: string | null;
+  clinicianName: string | null;
+  clinicianTitle: string | null;
+  clinicianAvatarUrl: string | null;
+  pharmacyName: string | null;
+  pharmacyPhone: string | null;
+  pharmacyAddress: string | null;
+  prescriptionCount: number | null;
+  updatedAt: string | null;
+  createdAt: string | null;
+};
+
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
@@ -60,6 +74,34 @@ function providerName(provider: Record<string, unknown> | null): string | null {
   const first = stringValue(provider, ["first_name", "firstName"]);
   const last = stringValue(provider, ["last_name", "lastName"]);
   return [first, last].filter(Boolean).join(" ").trim() || null;
+}
+
+export function olaOrderPatientSummary(payload: unknown): OlaOrderPatientSummary | null {
+  const root = asRecord(payload);
+  const result = asRecord(root?.result) ?? root;
+  if (!result) {
+    return null;
+  }
+
+  const provider = asRecord(result.provider);
+  const providerDetail = asRecord(asRecord(provider?.user_detail)?.data);
+  const service = asRecord(result.service);
+
+  return {
+    status: stringValue(result, ["status", "order_status", "appointment_status"]),
+    serviceName:
+      stringValue(service, ["service_name", "name", "title"]) ??
+      stringValue(result, ["service_name"]),
+    clinicianName: providerName(provider),
+    clinicianTitle: stringValue(providerDetail, ["title"]),
+    clinicianAvatarUrl: stringValue(provider, ["user_avatar", "avatar_url", "avatarUrl"]),
+    pharmacyName: stringValue(result, ["pharmacy_name", "pharmacyName"]),
+    pharmacyPhone: stringValue(result, ["pharmacy_phone", "pharmacyPhone"]),
+    pharmacyAddress: stringValue(result, ["pharmacy_address", "pharmacyAddress"]),
+    prescriptionCount: arrayCount(result, "prescriptions"),
+    updatedAt: formatOlaDate(stringValue(result, ["updated_at", "updatedAt"])),
+    createdAt: formatOlaDate(stringValue(result, ["created_at", "createdAt"])),
+  };
 }
 
 export function olaOrderDetailRows(payload: unknown): OlaOrderDetailRow[] {
