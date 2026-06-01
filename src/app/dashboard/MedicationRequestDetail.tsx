@@ -53,12 +53,19 @@ type DebugEnvelope = {
 type ProviderAttempt = {
   id: string;
   label: string;
-  summary: string;
+  summary: string | null;
   when: string;
   tone: "success" | "error" | "neutral";
   status: string;
   debug: DebugEnvelope | null;
 };
+
+const providerAttemptActionFilters = [
+  "stripe_payment_ola_booking",
+  "stripe_patient_reconcile",
+  "stripe_reconcile",
+  "ola_retry",
+];
 
 function readBackendMessage(res: Response): Promise<string> {
   return res.json()
@@ -344,14 +351,10 @@ function providerAttempts(
   detail: BookingRequestDetailResponse,
   events: AuditEvent[],
 ): ProviderAttempt[] {
-  const attemptActions = [
-    "stripe_payment_ola_booking",
-    "stripe_patient_reconcile",
-    "stripe_reconcile",
-    "ola_retry",
-  ];
   const attempts = events
-    .filter((event) => attemptActions.some((action) => event.action.includes(action)))
+    .filter((event) =>
+      providerAttemptActionFilters.some((action) => event.action.includes(action)),
+    )
     .map((event) => {
       const debug = debugEnvelopeFromMetadata(event.metadata);
       const summary =
@@ -466,7 +469,7 @@ function DebugModal({
               {responseStatus}
             </span>
             <h3 id="debug-modal-title">{attempt.label}</h3>
-            <p>{attempt.summary}</p>
+            <p>{attempt.summary ?? "Provider handoff attempt recorded."}</p>
           </div>
           <button
             type="button"
@@ -860,7 +863,7 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
                     {attempt.status}
                   </span>
                   <strong>{attempt.label}</strong>
-                  <span>{attempt.summary}</span>
+                  {attempt.summary ? <span>{attempt.summary}</span> : null}
                   <time>{attempt.when}</time>
                 </div>
                 {attempt.debug ? (
@@ -883,7 +886,8 @@ export function MedicationRequestDetail({ bookingIntentId }: Props) {
       </section>
 
       <AuditTrailPanel
-        title="Request audit"
+        excludeActionIncludes={providerAttemptActionFilters}
+        title="Other request activity"
         target={{
           patientUserId: request.userId,
           bookingIntentId: request.id,

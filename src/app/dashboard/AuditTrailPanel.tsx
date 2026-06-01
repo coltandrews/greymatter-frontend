@@ -29,9 +29,11 @@ async function readBackendMessage(res: Response): Promise<string> {
 }
 
 export function AuditTrailPanel({
+  excludeActionIncludes = [],
   target,
   title = "Audit trail",
 }: {
+  excludeActionIncludes?: string[];
   target: AuditTarget;
   title?: string;
 }) {
@@ -99,6 +101,10 @@ export function AuditTrailPanel({
   useEffect(() => {
     void loadEvents();
   }, [target.patientUserId, target.bookingIntentId, target.appointmentId]);
+
+  const visibleEvents = events.filter(
+    (event) => !excludeActionIncludes.some((action) => event.action.includes(action)),
+  );
 
   return (
     <section
@@ -181,27 +187,32 @@ export function AuditTrailPanel({
         </p>
       ) : null}
 
-      {!loading && events.length === 0 ? (
+      {!loading && visibleEvents.length === 0 ? (
         <p style={{ margin: 0, fontSize: 12, color: "var(--gm-subtle)" }}>
-          No audit events yet.
+          {events.length > 0 ? "No other request activity yet." : "No audit events yet."}
         </p>
       ) : null}
 
-      {events.length > 0 ? (
+      {visibleEvents.length > 0 ? (
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 8 }}>
-          {events.map((event) => (
-            <li key={event.id} style={{ display: "grid", gap: 3 }}>
-              <p style={{ margin: 0, fontSize: 12, color: "var(--gm-text)", fontWeight: 800 }}>
-                {auditEventLabel(event)}
-              </p>
-              <p style={{ margin: 0, fontSize: 12, color: "var(--gm-muted)", lineHeight: 1.4 }}>
-                {auditEventSummary(event)}
-              </p>
-              <p style={{ margin: 0, fontSize: 11, color: "var(--gm-subtle)" }}>
-                {auditEventWhen(event)}
-              </p>
-            </li>
-          ))}
+          {visibleEvents.map((event) => {
+            const summary = auditEventSummary(event);
+            return (
+              <li key={event.id} style={{ display: "grid", gap: 3 }}>
+                <p style={{ margin: 0, fontSize: 12, color: "var(--gm-text)", fontWeight: 800 }}>
+                  {auditEventLabel(event)}
+                </p>
+                {summary ? (
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--gm-muted)", lineHeight: 1.4 }}>
+                    {summary}
+                  </p>
+                ) : null}
+                <p style={{ margin: 0, fontSize: 11, color: "var(--gm-subtle)" }}>
+                  {auditEventWhen(event)}
+                </p>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
     </section>

@@ -14,14 +14,14 @@ export function auditEventLabel(event: Pick<AuditEvent, "action">): string {
   return actionLabels[event.action] ?? event.action.replaceAll("_", " ");
 }
 
-export function auditEventSummary(event: AuditEvent): string {
+export function auditEventSummary(event: AuditEvent): string | null {
   if (event.note?.trim()) {
     return event.note.trim();
   }
   if (event.action === "staff_note_added") {
     return "Staff note added.";
   }
-  return auditEventLabel(event);
+  return null;
 }
 
 export function auditEventWhen(event: Pick<AuditEvent, "createdAt">): string {

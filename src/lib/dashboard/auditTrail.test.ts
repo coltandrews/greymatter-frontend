@@ -27,6 +27,7 @@ describe("audit trail helpers", () => {
 
   it("falls back for unknown actions and invalid dates", () => {
     expect(auditEventLabel({ action: "custom_action" })).toBe("custom action");
+    expect(auditEventSummary({ ...event, action: "custom_action", note: null })).toBeNull();
     expect(auditEventWhen({ createdAt: "unknown" })).toBe("unknown");
   });
 
