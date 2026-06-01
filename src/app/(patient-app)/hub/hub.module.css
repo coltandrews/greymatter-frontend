@@ -471,6 +471,79 @@
   margin-top: 0;
 }
 
+.checkoutCompleteCard {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  max-width: 720px;
+  padding: 18px;
+  border: 1px solid rgba(23, 23, 23, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.checkoutCompleteIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(23, 23, 23, 0.12);
+  color: #171717;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.checkoutCompletesuccess {
+  background: #171717;
+  color: #ffffff;
+}
+
+.checkoutCompletepending,
+.checkoutCompletereview,
+.checkoutCompleteaction {
+  background: rgba(23, 23, 23, 0.12);
+  color: #171717;
+}
+
+.checkoutCompleteCopy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.checkoutCompleteCopy .kicker {
+  margin-bottom: 0;
+}
+
+.checkoutCompleteCopy h3 {
+  margin: 0;
+  color: var(--gm-text);
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.checkoutCompleteCopy p:not(.kicker) {
+  margin: 0;
+  max-width: 560px;
+  color: var(--gm-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.checkoutCompleteActions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.inlineLinkButton {
+  text-decoration: none;
+}
+
 .flowSection h3 {
   margin: 0;
   color: var(--gm-text);
@@ -1317,6 +1390,20 @@
 }
 
 @media (max-width: 760px) {
+  .checkoutCompleteCard {
+    grid-template-columns: 1fr;
+  }
+
+  .checkoutCompleteActions {
+    grid-column: auto;
+    display: grid;
+  }
+
+  .checkoutCompleteActions .scheduleNewBtn,
+  .checkoutCompleteActions .secondaryButton {
+    width: 100%;
+  }
+
   .questionStepHeader {
     display: grid;
   }

@@ -12,6 +12,7 @@ import {
   createBookingIntent,
   createBookingIntentCheckout,
   deleteBookingIntent,
+  reconcileCheckoutSession,
 } from "@/lib/api/bookingIntents";
 import { fetchVendorOlaOrderDetails } from "@/lib/api/vendorOla";
 import type { IntakeDraftData } from "@/lib/intake/draftData";
@@ -20,6 +21,11 @@ import { intakeAnswerComplete } from "@/lib/intake/intakeQuestions";
 import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
 import { syncProfileDemographics } from "@/lib/intake/syncProfileDemographics";
 import { buildTreatmentBookingIntentPayload } from "@/lib/scheduling/bookingIntentPayload";
+import {
+  checkoutReturnAction,
+  checkoutReturnView,
+  type BookingIntentReturnRow,
+} from "@/lib/scheduling/checkoutReturn";
 import { hubBookingIntentStatusView } from "@/lib/scheduling/hubBookingStatus";
 import {
   olaOrderDetailRows,
@@ -62,6 +68,11 @@ type CheckoutState = {
   checkoutSessionId: string | null;
   clientSecret: string;
 };
+type CheckoutCompletionState = {
+  bookingIntent: HubBookingIntentRow | null;
+  error: string | null;
+  syncing: boolean;
+};
 type OrderDetailState = {
   loading: boolean;
   error: string | null;
@@ -95,6 +106,42 @@ function treatmentName(row: HubBookingIntentRow): string {
   const treatmentKey =
     typeof intake.selected_treatment === "string" ? intake.selected_treatment : null;
   return treatmentByKey(treatmentKey)?.name ?? "Medication request";
+}
+
+function checkoutReturnRowFromHub(
+  row: HubBookingIntentRow | null,
+): BookingIntentReturnRow | null {
+  if (!row) {
+    return null;
+  }
+  return {
+    id: row.id,
+    booking_status: row.booking_status,
+    payment_status: row.payment_status,
+    ola_status: row.ola_status,
+    ola_redirect_url: row.ola_redirect_url,
+    intake_data: row.intake_data,
+    selected_slot: row.selected_slot,
+  };
+}
+
+async function loadBookingIntentByCheckoutSession(
+  checkoutSessionId: string,
+): Promise<HubBookingIntentRow | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("booking_intents")
+    .select(
+      "id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid",
+    )
+    .eq("stripe_checkout_session_id", checkoutSessionId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as HubBookingIntentRow | null;
 }
 
 function patientInitials(name: string, email: string) {
@@ -216,6 +263,44 @@ function IdUploadTile({
   );
 }
 
+function CheckoutCompletionPanel({
+  completion,
+  onViewTreatments,
+}: {
+  completion: CheckoutCompletionState;
+  onViewTreatments: () => void;
+}) {
+  const view = checkoutReturnView(checkoutReturnRowFromHub(completion.bookingIntent));
+  const action = checkoutReturnAction(checkoutReturnRowFromHub(completion.bookingIntent));
+  const title = completion.syncing ? "Finalizing request" : view.title;
+  const lead = completion.syncing
+    ? "Payment is confirmed. We are sending this request for provider review."
+    : view.lead;
+
+  return (
+    <div className={styles.checkoutCompleteCard} role="status">
+      <div className={`${styles.checkoutCompleteIcon} ${styles[`checkoutComplete${view.tone}`]}`}>
+        {completion.syncing ? "..." : view.icon}
+      </div>
+      <div className={styles.checkoutCompleteCopy}>
+        <p className={styles.kicker}>Checkout complete</p>
+        <h3>{title}</h3>
+        <p>{completion.error ?? lead}</p>
+      </div>
+      <div className={styles.checkoutCompleteActions}>
+        <button type="button" className={styles.scheduleNewBtn} onClick={onViewTreatments}>
+          View My Treatments
+        </button>
+        {action ? (
+          <Link href={action.href} className={`${styles.secondaryButton} ${styles.inlineLinkButton}`}>
+            {action.label}
+          </Link>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 async function responseErrorMessage(prefix: string, res: Response): Promise<string> {
   const raw = await res.text();
   if (!raw.trim()) {
@@ -282,6 +367,8 @@ export function PatientHubWorkspace({
   const [idUploads, setIdUploads] = useState<IdUploads>(EMPTY_ID_UPLOADS);
   const [detailCheckout, setDetailCheckout] = useState<CheckoutState | null>(null);
   const [newCheckout, setNewCheckout] = useState<CheckoutState | null>(null);
+  const [checkoutCompletion, setCheckoutCompletion] =
+    useState<CheckoutCompletionState | null>(null);
   const [busy, setBusy] = useState(false);
   const [cancelingBookingId, setCancelingBookingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(serverLoadError);
@@ -442,6 +529,7 @@ export function PatientHubWorkspace({
       if (event.key === "Escape") {
         setSelectedBookingId(null);
         setDetailCheckout(null);
+        setCheckoutCompletion(null);
       }
     }
     document.addEventListener("keydown", onKey);
@@ -602,6 +690,7 @@ export function PatientHubWorkspace({
     setBusy(true);
     setError(null);
     setDetailCheckout(null);
+    setCheckoutCompletion(null);
     try {
       if (!stripePublishableKey) {
         throw new Error("Payment is not configured yet.");
@@ -654,6 +743,7 @@ export function PatientHubWorkspace({
     setBusy(true);
     setError(null);
     setNewCheckout(null);
+    setCheckoutCompletion(null);
     try {
       if (!selectedProduct) {
         throw new Error("Select a treatment.");
@@ -797,15 +887,81 @@ export function PatientHubWorkspace({
       setSelectedBookingId(null);
       setDetailCheckout(null);
     }
+    setCheckoutCompletion(null);
     setError(null);
   }
 
-  function onCheckoutComplete(checkout: CheckoutState | null) {
-    window.location.assign(
-      checkout?.checkoutSessionId
-        ? `/schedule/confirmed?checkout_session_id=${encodeURIComponent(checkout.checkoutSessionId)}`
-        : "/hub",
-    );
+  async function onCheckoutComplete(checkout: CheckoutState | null, source: "new" | "detail") {
+    if (!checkout?.checkoutSessionId) {
+      setCheckoutCompletion({
+        bookingIntent: null,
+        error: "Payment completed, but we could not load the checkout session.",
+        syncing: false,
+      });
+      return;
+    }
+
+    setCheckoutCompletion({ bookingIntent: null, error: null, syncing: true });
+    setDetailCheckout(null);
+    setNewCheckout(null);
+
+    try {
+      const { session } = await currentSession();
+      const response = await reconcileCheckoutSession(
+        session.access_token,
+        checkout.checkoutSessionId,
+      );
+      if (!response.ok && response.status !== 409) {
+        throw new Error(await responseErrorMessage("Payment sync", response));
+      }
+
+      const latest = await loadBookingIntentByCheckoutSession(checkout.checkoutSessionId);
+      if (latest) {
+        setBookingIntents((current) => {
+          const exists = current.some((row) => row.id === latest.id);
+          return exists
+            ? current.map((row) => (row.id === latest.id ? latest : row))
+            : [latest, ...current];
+        });
+        if (source === "detail") {
+          setSelectedBookingId(latest.id);
+        }
+      }
+
+      setCheckoutCompletion({
+        bookingIntent: latest,
+        error: null,
+        syncing: false,
+      });
+    } catch (err) {
+      const latest = await loadBookingIntentByCheckoutSession(checkout.checkoutSessionId).catch(
+        () => null,
+      );
+      if (latest) {
+        setBookingIntents((current) =>
+          current.some((row) => row.id === latest.id)
+            ? current.map((row) => (row.id === latest.id ? latest : row))
+            : [latest, ...current],
+        );
+      }
+      setCheckoutCompletion({
+        bookingIntent: latest,
+        error:
+          err instanceof Error
+            ? err.message
+            : "Payment is confirmed. We are syncing your medication request status.",
+        syncing: false,
+      });
+    }
+  }
+
+  function showTreatmentsAfterCheckout() {
+    setActiveTab("treatments");
+    setNewTreatmentStep("select");
+    setNewCheckout(null);
+    setDetailCheckout(null);
+    setCheckoutCompletion(null);
+    setError(null);
   }
 
   return (
@@ -1256,13 +1412,18 @@ export function PatientHubWorkspace({
 
               {newTreatmentStep === "payment" ? (
                 <div className={styles.stripeCheckoutStep}>
-                  {newCheckout ? (
+                  {checkoutCompletion ? (
+                    <CheckoutCompletionPanel
+                      completion={checkoutCompletion}
+                      onViewTreatments={showTreatmentsAfterCheckout}
+                    />
+                  ) : newCheckout ? (
                     <div className={styles.embeddedCheckoutFrame}>
                       <EmbeddedCheckoutProvider
                         stripe={stripePromise}
                         options={{
                           clientSecret: newCheckout.clientSecret,
-                          onComplete: () => onCheckoutComplete(newCheckout),
+                          onComplete: () => onCheckoutComplete(newCheckout, "new"),
                         }}
                       >
                         <EmbeddedCheckout />
@@ -1305,6 +1466,7 @@ export function PatientHubWorkspace({
               if (event.target === event.currentTarget) {
                 setSelectedBookingId(null);
                 setDetailCheckout(null);
+                setCheckoutCompletion(null);
               }
             }}
           >
@@ -1328,6 +1490,7 @@ export function PatientHubWorkspace({
                   onClick={() => {
                     setSelectedBookingId(null);
                     setDetailCheckout(null);
+                    setCheckoutCompletion(null);
                   }}
                 >
                   x
@@ -1444,12 +1607,19 @@ export function PatientHubWorkspace({
                         stripe={stripePromise}
                         options={{
                           clientSecret: detailCheckout.clientSecret,
-                          onComplete: () => onCheckoutComplete(detailCheckout),
+                          onComplete: () => onCheckoutComplete(detailCheckout, "detail"),
                         }}
                       >
                         <EmbeddedCheckout />
                       </EmbeddedCheckoutProvider>
                     </div>
+                  ) : null}
+
+                  {checkoutCompletion ? (
+                    <CheckoutCompletionPanel
+                      completion={checkoutCompletion}
+                      onViewTreatments={showTreatmentsAfterCheckout}
+                    />
                   ) : null}
                 </section>
               </div>

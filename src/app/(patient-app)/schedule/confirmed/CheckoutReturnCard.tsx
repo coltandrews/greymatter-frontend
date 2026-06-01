@@ -60,9 +60,9 @@ export function CheckoutReturnCard({
   const phoneEnding = phoneLast4(bookingIntent);
   const reviewNote =
     bookingIntent?.booking_status === "needs_review"
-      ? `We are securely sending your information to the provider team for review. You will hear back by SMS${
-          phoneEnding ? ` at the phone number ending in ${phoneEnding}` : ""
-        } when there is an update.`
+      ? `Payment received. Provider review is in progress${
+          phoneEnding ? ` for the phone number ending in ${phoneEnding}` : ""
+        }. You can track this request in My Treatments.`
       : null;
 
   useEffect(() => {
@@ -125,7 +125,6 @@ export function CheckoutReturnCard({
     <div className={styles.card}>
       <header className={styles.flowHeader}>
         <img src="/brand/logo-square.svg" alt="GMMD" className={styles.logo} />
-        <div className={styles.progressTrack} />
       </header>
       <div className={`${styles.icon} ${styles[view.tone]}`} aria-hidden>
         {view.icon}
@@ -147,7 +146,7 @@ export function CheckoutReturnCard({
           href="/hub"
           className={`${styles.btn} ${action ? styles.secondaryBtn : ""}`}
         >
-          Continue to portal
+          View My Treatments
         </Link>
         {action ? (
           <Link href={action.href} className={styles.btn}>
