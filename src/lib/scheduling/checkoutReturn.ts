@@ -4,12 +4,13 @@ export type BookingIntentReturnRow = {
   payment_status: string | null;
   ola_status: string | null;
   ola_redirect_url: string | null;
+  failure_reason?: string | null;
   intake_data?: unknown;
   selected_slot: unknown;
 };
 
 export type CheckoutReturnView = {
-  tone: "success" | "pending" | "action" | "review";
+  tone: "success" | "pending" | "action" | "review" | "failed";
   icon: string;
   title: string;
   lead: string;
@@ -37,6 +38,20 @@ export function checkoutReturnView(
   }
 
   const summary = "";
+  const failureReason = bookingIntent.failure_reason?.trim();
+
+  if (bookingIntent.ola_status === "failed") {
+    return {
+      tone: "failed",
+      icon: "!",
+      title: "Provider handoff failed",
+      lead: failureReason
+        ? `Payment is confirmed, but the provider request was not accepted: ${failureReason}.`
+        : "Payment is confirmed, but the provider request was not accepted.",
+      summary,
+      hint: "This must be corrected before provider review can begin.",
+    };
+  }
 
   if (
     bookingIntent.booking_status === "booked" &&

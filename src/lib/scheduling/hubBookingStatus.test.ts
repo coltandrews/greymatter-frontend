@@ -43,16 +43,19 @@ describe("hubBookingIntentStatusView", () => {
     });
   });
 
-  it("shows review when paid booking needs manual follow-up", () => {
+  it("shows provider handoff failure when Ola rejects a paid booking", () => {
     expect(
       hubBookingIntentStatusView({
         booking_status: "needs_review",
         payment_status: "paid",
         ola_status: "failed",
+        failure_reason: "No provider found for given service and state",
       }),
     ).toMatchObject({
-      label: "Provider review",
-      tone: "review",
+      label: "Provider handoff failed",
+      subtitle:
+        "Payment received, but provider handoff failed: No provider found for given service and state.",
+      tone: "failed",
     });
   });
 

@@ -502,7 +502,8 @@
 
 .checkoutCompletepending,
 .checkoutCompletereview,
-.checkoutCompleteaction {
+.checkoutCompleteaction,
+.checkoutCompletefailed {
   background: rgba(23, 23, 23, 0.12);
   color: #171717;
 }
@@ -1096,6 +1097,12 @@
   color: #242424;
   background: rgba(23, 23, 23, 0.14);
   border-color: rgba(23, 23, 23, 0.3);
+}
+
+.statusPillfailed {
+  color: #171717;
+  background: rgba(23, 23, 23, 0.16);
+  border-color: rgba(23, 23, 23, 0.36);
 }
 
 .statusPillcancelled {

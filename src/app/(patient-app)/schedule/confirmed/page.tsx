@@ -17,7 +17,7 @@ export default async function ScheduleConfirmedPage({ searchParams }: Props) {
     const supabase = await createClient();
     const { data } = await supabase
       .from("booking_intents")
-      .select("id, booking_status, payment_status, ola_status, ola_redirect_url, intake_data, selected_slot")
+      .select("id, booking_status, payment_status, ola_status, ola_redirect_url, failure_reason, intake_data, selected_slot")
       .eq("stripe_checkout_session_id", checkoutSessionId)
       .maybeSingle();
     bookingIntent = data as BookingIntentReturnRow | null;

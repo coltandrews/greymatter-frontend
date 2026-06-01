@@ -64,6 +64,11 @@
   color: #242424;
 }
 
+.failed {
+  background: rgba(23, 23, 23, 0.16);
+  color: #171717;
+}
+
 .title {
   margin: 0;
   font-size: clamp(1.65rem, 4vw, 2.3rem);

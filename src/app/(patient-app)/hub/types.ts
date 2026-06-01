@@ -23,4 +23,5 @@ export type HubBookingIntentRow = {
   ola_redirect_url: string | null;
   ola_popup_message: string | null;
   ola_order_guid: string | null;
+  failure_reason: string | null;
 };

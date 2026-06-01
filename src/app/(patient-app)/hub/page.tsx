@@ -71,7 +71,7 @@ export default async function HubPage() {
     supabase
       .from("booking_intents")
       .select(
-        "id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid",
+        "id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid, failure_reason",
       )
       .eq("user_id", user.id)
       .neq("booking_status", "draft")
@@ -138,6 +138,7 @@ export default async function HubPage() {
     ola_redirect_url: r.ola_redirect_url,
     ola_popup_message: r.ola_popup_message,
     ola_order_guid: r.ola_order_guid,
+    failure_reason: r.failure_reason,
   }));
   const products =
     (productRows ?? [])

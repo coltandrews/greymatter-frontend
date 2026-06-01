@@ -21,7 +21,7 @@ async function loadBookingIntentByCheckoutSession(
   const supabase = createClient();
   const { data, error } = await supabase
     .from("booking_intents")
-    .select("id, booking_status, payment_status, ola_status, ola_redirect_url, intake_data, selected_slot")
+    .select("id, booking_status, payment_status, ola_status, ola_redirect_url, failure_reason, intake_data, selected_slot")
     .eq("stripe_checkout_session_id", checkoutSessionId)
     .maybeSingle();
 
@@ -59,7 +59,7 @@ export function CheckoutReturnCard({
   const polling = Boolean(checkoutSessionId) && shouldPollCheckoutReturn(bookingIntent);
   const phoneEnding = phoneLast4(bookingIntent);
   const reviewNote =
-    bookingIntent?.booking_status === "needs_review"
+    bookingIntent?.booking_status === "needs_review" && bookingIntent.ola_status !== "failed"
       ? `Payment received. Provider review is in progress${
           phoneEnding ? ` for the phone number ending in ${phoneEnding}` : ""
         }. You can track this request in My Treatments.`
@@ -86,7 +86,7 @@ export function CheckoutReturnCard({
           session.access_token,
           checkoutSessionId,
         );
-        if (!response.ok && response.status !== 409) {
+        if (!response.ok && response.status !== 409 && response.status !== 502) {
           throw new Error("Could not sync payment status.");
         }
 

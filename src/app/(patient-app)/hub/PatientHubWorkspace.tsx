@@ -120,6 +120,7 @@ function checkoutReturnRowFromHub(
     payment_status: row.payment_status,
     ola_status: row.ola_status,
     ola_redirect_url: row.ola_redirect_url,
+    failure_reason: row.failure_reason,
     intake_data: row.intake_data,
     selected_slot: row.selected_slot,
   };
@@ -132,7 +133,7 @@ async function loadBookingIntentByCheckoutSession(
   const { data, error } = await supabase
     .from("booking_intents")
     .select(
-      "id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid",
+      "id, booking_status, payment_status, ola_status, selected_slot, intake_data, stripe_checkout_session_id, created_at, updated_at, ola_redirect_url, ola_popup_message, ola_order_guid, failure_reason",
     )
     .eq("stripe_checkout_session_id", checkoutSessionId)
     .maybeSingle();
@@ -911,7 +912,7 @@ export function PatientHubWorkspace({
         session.access_token,
         checkout.checkoutSessionId,
       );
-      if (!response.ok && response.status !== 409) {
+      if (!response.ok && response.status !== 409 && response.status !== 502) {
         throw new Error(await responseErrorMessage("Payment sync", response));
       }
 

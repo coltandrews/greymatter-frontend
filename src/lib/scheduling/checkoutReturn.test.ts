@@ -65,21 +65,23 @@ describe("checkoutReturnView", () => {
     });
   });
 
-  it("shows review copy when payment succeeded but booking needs manual follow-up", () => {
+  it("shows provider handoff failure copy when Ola rejects the request", () => {
     expect(
       checkoutReturnView({
         booking_status: "needs_review",
         payment_status: "paid",
         ola_status: "failed",
+        failure_reason: "No provider found for given service and state",
         id: "booking-1",
         ola_redirect_url: null,
         selected_slot: null,
       }),
     ).toMatchObject({
-      tone: "review",
-      title: "Provider review",
-      lead: "The provider network is reviewing your request.",
-      hint: "If the provider determines you are not eligible, your payment will be refunded.",
+      tone: "failed",
+      title: "Provider handoff failed",
+      lead:
+        "Payment is confirmed, but the provider request was not accepted: No provider found for given service and state.",
+      hint: "This must be corrected before provider review can begin.",
     });
   });
 

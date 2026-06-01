@@ -2,17 +2,30 @@ export type HubBookingIntentStatusInput = {
   booking_status: string | null;
   payment_status: string | null;
   ola_status: string | null;
+  failure_reason?: string | null;
 };
 
 export type HubBookingIntentStatusView = {
   label: string;
   subtitle: string;
-  tone: "confirmed" | "pending" | "action" | "review" | "cancelled";
+  tone: "confirmed" | "pending" | "action" | "review" | "failed" | "cancelled";
 };
 
 export function hubBookingIntentStatusView(
   input: HubBookingIntentStatusInput,
 ): HubBookingIntentStatusView {
+  const failureReason = input.failure_reason?.trim();
+
+  if (input.ola_status === "failed") {
+    return {
+      label: "Provider handoff failed",
+      subtitle: failureReason
+        ? `Payment received, but provider handoff failed: ${failureReason}.`
+        : "Payment received, but provider handoff failed.",
+      tone: "failed",
+    };
+  }
+
   if (
     input.booking_status === "booked" &&
     input.payment_status === "paid" &&
