@@ -665,16 +665,6 @@ export function PatientHubWorkspace({
           />
         </div>
 
-        <div className={styles.sidebarUser}>
-          <div className={styles.sidebarAvatar} aria-hidden="true">
-            {patientInitials(welcomeName, email)}
-          </div>
-          <div className={styles.sidebarUserText}>
-            <p>{welcomeName}</p>
-            <span title={email}>{email}</span>
-          </div>
-        </div>
-
         <nav className={styles.sidebarNav} aria-label="Patient hub sections">
           {[
             ["treatments", "My Treatments"],
@@ -699,6 +689,15 @@ export function PatientHubWorkspace({
         </nav>
 
         <div className={styles.sidebarFooter}>
+          <div className={styles.sidebarUser}>
+            <div className={styles.sidebarAvatar} aria-hidden="true">
+              {patientInitials(welcomeName, email)}
+            </div>
+            <div className={styles.sidebarUserText}>
+              <p>{welcomeName}</p>
+              <span title={email}>{email}</span>
+            </div>
+          </div>
           <SignOutButton noMargin />
         </div>
       </aside>
