@@ -1,4 +1,5 @@
 import { treatmentByKey } from "@/lib/treatments";
+import { canRetryProviderHandoff } from "@/lib/scheduling/bookingLifecycle";
 
 export type StaffRecoveryBooking = {
   id: string;
@@ -69,7 +70,12 @@ export function recoveryBookingTime(row: StaffRecoveryBooking): string {
 }
 
 export function canRetryOlaBooking(row: StaffRecoveryBooking): boolean {
-  return row.payment_status === "paid" && row.booking_status === "needs_review";
+  return canRetryProviderHandoff({
+    bookingStatus: row.booking_status,
+    paymentStatus: row.payment_status,
+    olaStatus: row.ola_status,
+    failureReason: row.failure_reason,
+  });
 }
 
 export function recoveryPharmacySummary(row: StaffRecoveryBooking): string {

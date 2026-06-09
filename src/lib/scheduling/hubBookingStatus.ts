@@ -1,4 +1,5 @@
 import { patientProviderIssueMessage } from "./checkoutReturn";
+import { bookingLifecycleState } from "./bookingLifecycle";
 
 export type HubBookingIntentStatusInput = {
   booking_status: string | null;
@@ -16,9 +17,15 @@ export type HubBookingIntentStatusView = {
 export function hubBookingIntentStatusView(
   input: HubBookingIntentStatusInput,
 ): HubBookingIntentStatusView {
+  const lifecycle = bookingLifecycleState({
+    bookingStatus: input.booking_status,
+    paymentStatus: input.payment_status,
+    olaStatus: input.ola_status,
+    failureReason: input.failure_reason,
+  });
   const failureReason = input.failure_reason?.trim();
 
-  if (input.ola_status === "failed") {
+  if (lifecycle.stage === "provider_handoff_failed") {
     const issue = patientProviderIssueMessage(failureReason);
     return {
       label: "Needs attention",
@@ -27,11 +34,7 @@ export function hubBookingIntentStatusView(
     };
   }
 
-  if (
-    input.booking_status === "booked" &&
-    input.payment_status === "paid" &&
-    input.ola_status === "booked"
-  ) {
+  if (lifecycle.stage === "provider_confirmed") {
     return {
       label: "Confirmed",
       subtitle: "Provider review received. Watch for medication and shipment updates.",
@@ -39,7 +42,7 @@ export function hubBookingIntentStatusView(
     };
   }
 
-  if (input.booking_status === "action_required") {
+  if (lifecycle.stage === "provider_next_steps") {
     return {
       label: "Next steps",
       subtitle: "Provider next steps are ready. If you are not eligible, your payment will be refunded.",
@@ -47,7 +50,7 @@ export function hubBookingIntentStatusView(
     };
   }
 
-  if (input.booking_status === "needs_review") {
+  if (lifecycle.stage === "provider_review") {
     return {
       label: "Provider review",
       subtitle: "Payment received. The provider network is reviewing your request. If you are not eligible, your payment will be refunded.",
@@ -55,7 +58,7 @@ export function hubBookingIntentStatusView(
     };
   }
 
-  if (input.booking_status === "cancelled") {
+  if (lifecycle.stage === "cancelled") {
     return {
       label: "Cancelled",
       subtitle: "This medication request was cancelled.",
@@ -63,7 +66,7 @@ export function hubBookingIntentStatusView(
     };
   }
 
-  if (input.payment_status === "paid") {
+  if (lifecycle.stage === "provider_handoff") {
     return {
       label: "Processing",
       subtitle: "Payment received. Provider review is in progress. If you are not eligible, your payment will be refunded.",

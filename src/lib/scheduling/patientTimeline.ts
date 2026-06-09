@@ -1,3 +1,5 @@
+import { bookingLifecycleState } from "./bookingLifecycle";
+
 export type PatientTimelineInput = {
   booking_status: string | null;
   payment_status: string | null;
@@ -15,13 +17,18 @@ export type PatientTimelineStep = {
 export function patientBookingTimeline(
   input: PatientTimelineInput,
 ): PatientTimelineStep[] {
-  const paymentComplete = input.payment_status === "paid";
-  const needsReview = input.booking_status === "needs_review";
-  const providerSendFailed = input.ola_status === "failed";
-  const providerBooked =
-    input.ola_status === "booked" &&
-    (input.booking_status === "booked" || input.booking_status === "action_required");
-  const hasNextSteps = input.has_next_steps || input.booking_status === "action_required";
+  const lifecycle = bookingLifecycleState({
+    bookingStatus: input.booking_status,
+    paymentStatus: input.payment_status,
+    olaStatus: input.ola_status,
+    hasNextSteps: input.has_next_steps,
+  });
+  const paymentComplete = lifecycle.paymentComplete;
+  const paymentFailed = lifecycle.stage === "payment_failed";
+  const needsReview = lifecycle.stage === "provider_review";
+  const providerSendFailed = lifecycle.stage === "provider_handoff_failed";
+  const providerBooked = lifecycle.providerComplete;
+  const hasNextSteps = lifecycle.stage === "provider_next_steps";
   const providerDescription = providerSendFailed
     ? "This request needs attention before provider review can begin"
     : providerBooked
@@ -45,8 +52,10 @@ export function patientBookingTimeline(
       label: "Payment",
       description: paymentComplete
         ? "Payment received"
-        : "Checkout is not complete. Medication request is not submitted yet.",
-      state: paymentComplete ? "complete" : "current",
+        : paymentFailed
+          ? "Payment did not complete. Medication request is not submitted yet."
+          : "Checkout is not complete. Medication request is not submitted yet.",
+      state: paymentComplete ? "complete" : paymentFailed ? "attention" : "current",
     },
     {
       key: "provider",

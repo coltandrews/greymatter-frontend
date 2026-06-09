@@ -1,4 +1,5 @@
 import { treatmentByKey } from "@/lib/treatments";
+import { bookingLifecycleState } from "@/lib/scheduling/bookingLifecycle";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -116,12 +117,9 @@ function documentSentToOla(document: MedicationRequestDocument): boolean {
 export function medicationRequestStatusView(
   input: MedicationRequestStatusInput,
 ): MedicationRequestStatusView {
-  const bookingStatus = input.bookingStatus;
-  const paymentStatus = input.paymentStatus;
-  const olaStatus = input.olaStatus;
-  const failureReason = input.failureReason?.trim();
+  const lifecycle = bookingLifecycleState(input);
 
-  if (bookingStatus === "cancelled") {
+  if (lifecycle.stage === "cancelled") {
     return {
       key: "cancelled",
       label: "Cancelled",
@@ -133,7 +131,7 @@ export function medicationRequestStatusView(
     };
   }
 
-  if (paymentStatus === "failed") {
+  if (lifecycle.stage === "payment_failed") {
     return {
       key: "payment_failed",
       label: "Payment failed",
@@ -145,14 +143,10 @@ export function medicationRequestStatusView(
     };
   }
 
-  if (
-    paymentStatus !== "paid" ||
-    bookingStatus === "draft" ||
-    bookingStatus === "payment_pending"
-  ) {
+  if (lifecycle.stage === "draft" || lifecycle.stage === "payment_pending") {
     return {
-      key: bookingStatus === "draft" ? "draft" : "payment_pending",
-      label: bookingStatus === "draft" ? "Draft" : "Payment pending",
+      key: lifecycle.stage === "draft" ? "draft" : "payment_pending",
+      label: lifecycle.stage === "draft" ? "Draft" : "Payment pending",
       description: "Checkout is not complete. This medication request is not submitted yet.",
       tone: "pending",
       submitted: false,
@@ -161,7 +155,19 @@ export function medicationRequestStatusView(
     };
   }
 
-  if (bookingStatus === "action_required" || input.hasNextSteps) {
+  if (lifecycle.stage === "provider_handoff_failed") {
+    return {
+      key: "needs_attention",
+      label: "Exception",
+      description: "Provider network submission failed or needs staff follow-up.",
+      tone: "failed",
+      submitted: true,
+      terminal: false,
+      sortRank: 0,
+    };
+  }
+
+  if (lifecycle.stage === "provider_next_steps") {
     return {
       key: "next_steps",
       label: "Next steps",
@@ -173,7 +179,7 @@ export function medicationRequestStatusView(
     };
   }
 
-  if (bookingStatus === "booked" && olaStatus === "booked") {
+  if (lifecycle.stage === "provider_confirmed") {
     return {
       key: "confirmed",
       label: "Confirmed",
@@ -185,7 +191,7 @@ export function medicationRequestStatusView(
     };
   }
 
-  if (bookingStatus === "needs_review") {
+  if (lifecycle.stage === "provider_review") {
     return {
       key: "under_review",
       label: "Provider review",
@@ -194,18 +200,6 @@ export function medicationRequestStatusView(
       submitted: true,
       terminal: false,
       sortRank: 40,
-    };
-  }
-
-  if (olaStatus === "failed" || hasText(failureReason)) {
-    return {
-      key: "needs_attention",
-      label: "Exception",
-      description: "Provider network submission failed or needs staff follow-up.",
-      tone: "failed",
-      submitted: true,
-      terminal: false,
-      sortRank: 0,
     };
   }
 

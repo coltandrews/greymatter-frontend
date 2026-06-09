@@ -1,3 +1,8 @@
+import {
+  bookingLifecycleState,
+  shouldPollBookingLifecycle,
+} from "./bookingLifecycle";
+
 export type BookingIntentReturnRow = {
   id: string | null;
   booking_status: string | null;
@@ -72,10 +77,16 @@ export function checkoutReturnView(
     };
   }
 
+  const lifecycle = bookingLifecycleState({
+    bookingStatus: bookingIntent.booking_status,
+    paymentStatus: bookingIntent.payment_status,
+    olaStatus: bookingIntent.ola_status,
+    failureReason: bookingIntent.failure_reason,
+  });
   const summary = "";
   const failureReason = bookingIntent.failure_reason?.trim();
 
-  if (bookingIntent.ola_status === "failed") {
+  if (lifecycle.stage === "provider_handoff_failed") {
     const issue = patientProviderIssueMessage(failureReason);
     return {
       tone: "failed",
@@ -87,11 +98,7 @@ export function checkoutReturnView(
     };
   }
 
-  if (
-    bookingIntent.booking_status === "booked" &&
-    bookingIntent.payment_status === "paid" &&
-    bookingIntent.ola_status === "booked"
-  ) {
+  if (lifecycle.stage === "provider_confirmed") {
     return {
       tone: "success",
       icon: "✓",
@@ -102,7 +109,7 @@ export function checkoutReturnView(
     };
   }
 
-  if (bookingIntent.booking_status === "action_required") {
+  if (lifecycle.stage === "provider_next_steps") {
     return {
       tone: "action",
       icon: "!",
@@ -113,7 +120,7 @@ export function checkoutReturnView(
     };
   }
 
-  if (bookingIntent.booking_status === "needs_review") {
+  if (lifecycle.stage === "provider_review") {
     return {
       tone: "review",
       icon: "...",
@@ -137,8 +144,17 @@ export function checkoutReturnView(
 export function checkoutReturnAction(
   bookingIntent: BookingIntentReturnRow | null,
 ): CheckoutReturnAction {
+  const lifecycle = bookingIntent
+    ? bookingLifecycleState({
+        bookingStatus: bookingIntent.booking_status,
+        paymentStatus: bookingIntent.payment_status,
+        olaStatus: bookingIntent.ola_status,
+        failureReason: bookingIntent.failure_reason,
+      })
+    : null;
   if (
-    bookingIntent?.booking_status !== "action_required" ||
+    lifecycle?.stage !== "provider_next_steps" ||
+    !bookingIntent ||
     !bookingIntent.id ||
     !bookingIntent.ola_redirect_url
   ) {
@@ -157,11 +173,10 @@ export function shouldPollCheckoutReturn(
   if (!bookingIntent) {
     return false;
   }
-  return !(
-    (bookingIntent.booking_status === "booked" &&
-      bookingIntent.payment_status === "paid" &&
-      bookingIntent.ola_status === "booked") ||
-    bookingIntent.booking_status === "action_required" ||
-    bookingIntent.booking_status === "needs_review"
-  );
+  return shouldPollBookingLifecycle({
+    bookingStatus: bookingIntent.booking_status,
+    paymentStatus: bookingIntent.payment_status,
+    olaStatus: bookingIntent.ola_status,
+    failureReason: bookingIntent.failure_reason,
+  });
 }
