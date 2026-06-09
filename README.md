@@ -28,9 +28,9 @@ Confirmation and next-step copy should stay conservative until Ola confirms the 
 - `NEXT_PUBLIC_SUPABASE_URL` — project URL from Supabase **Settings → API**
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — **publishable** key (safe in the browser with RLS)
 
-Current patient entry is `/` for pre-account eligibility. Eligible patients continue to account creation from there; `/login` redirects to sign-in. Email confirmation uses `/auth/callback`. After login, `/post-login` sends **patient** → `/intake`, **staff/admin** → `/dashboard`.
+Current patient entry is `/` for pre-account eligibility. Eligible patients continue to account creation from there; `/login` redirects to sign-in. Email confirmation uses `/auth/callback`. After login, `/post-login` sends **staff/admin** → `/dashboard`, patients with incomplete member profiles → `/onboarding`, and patients with complete profiles → `/hub`.
 
-Pre-auth eligibility is stored locally in the browser and attached to the Supabase user on the first authenticated `/intake` load.
+Legacy `/intake` requests redirect signed-in patients to `/hub` and staff/admin users to `/dashboard`.
 
 `GET /api/me` returns the signed-in user from the Supabase cookie session (same origin).
 

@@ -1,8 +1,5 @@
-import {
-  memberProfileComplete,
-  type IntakeDraftData,
-} from "@/lib/intake/draftData";
-import { mergeIntakeAndProfileDemographics } from "@/lib/intake/mergeDemographics";
+import type { IntakeDraftData } from "@/lib/intake/draftData";
+import { postLoginDestination } from "@/lib/auth/postLoginDestination";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -29,20 +26,9 @@ export default async function PostLoginPage() {
       .maybeSingle(),
   ]);
 
-  const role = profile?.role ?? "patient";
-
-  if (role === "staff" || role === "admin") {
-    redirect("/hub");
-  }
-
-  const demographics = mergeIntakeAndProfileDemographics(
-    draftRow?.data as IntakeDraftData | undefined,
-    profile?.demographics as IntakeDraftData | undefined,
-  );
-
-  if (!memberProfileComplete(demographics)) {
-    redirect("/onboarding");
-  }
-
-  redirect("/hub");
+  redirect(postLoginDestination({
+    role: profile?.role,
+    draftData: draftRow?.data as IntakeDraftData | undefined,
+    profileDemographics: profile?.demographics as IntakeDraftData | undefined,
+  }));
 }
