@@ -1,12 +1,22 @@
+# Framework and dependencies
 .next
 node_modules
+
+# Local environment
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Build and test output
 coverage
 dist
 playwright-report
 test-results
 *.tsbuildinfo
+
+# Local platform/editor artifacts
+.DS_Store
+Thumbs.db
+.vercel

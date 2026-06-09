@@ -1,6 +1,6 @@
 # Greymatter Frontend
 
-Minimal Next.js frontend scaffold for the Greymatter app.
+Next.js frontend for Greymatter's patient portal and staff dashboard.
 
 ## Target MVP flow
 
