@@ -17,17 +17,28 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe("frontend Ola schedule safety", () => {
-  it("does not expose direct schedule-request calls from browser code", () => {
+  it("does not expose direct Ola credentials or vendor API calls from browser code", () => {
     const forbidden = [
+      "OLA_API_BASE_URL",
+      "OLA_AUTH_TOKEN",
+      "OLA_SECRET_TOKEN",
+      "X-Access-Token",
+      "dev-api.ola-digital-int.com",
+      "/auth/tennant/login",
+      "/api-v2/telehealth/service/new-schedule-request",
       "/api/vendor/ola/" + "schedule-request",
       "createVendorOla" + "ScheduleRequest",
     ];
+    const publicOlaEnvPattern = /NEXT_PUBLIC_[A-Z0-9_]*OLA/;
 
     for (const file of sourceFiles(path.resolve(process.cwd(), "src"))) {
       const source = readFileSync(file, "utf8");
       for (const fragment of forbidden) {
         expect(source, `${file} must not contain ${fragment}`).not.toContain(fragment);
       }
+      expect(source, `${file} must not expose Ola values through NEXT_PUBLIC_*`).not.toMatch(
+        publicOlaEnvPattern,
+      );
     }
   });
 });
