@@ -1,10 +1,22 @@
 .page {
+  --auth-ink: #0b2341;
+  --auth-text: #10233f;
+  --auth-muted: #4d6684;
+  --auth-blue: #1769aa;
+  --auth-blue-deep: #0b4f8a;
+  --auth-blue-dark: #082c54;
+  --auth-blue-soft: #e8f3ff;
+  --auth-panel: #f5faff;
+  --auth-border: rgba(23, 105, 170, 0.18);
+  --auth-border-strong: rgba(23, 105, 170, 0.42);
+  --auth-shadow: rgba(8, 44, 84, 0.14);
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: 34px;
-  background: #dcdcdc;
-  color: var(--gm-text);
+  background:
+    linear-gradient(135deg, #e5f2ff 0%, #cfe4f8 45%, #f8fbff 100%);
+  color: var(--auth-text);
 }
 
 .shell {
@@ -14,7 +26,9 @@
   grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr);
   overflow: hidden;
   border-radius: 22px;
-  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 70px var(--auth-shadow);
 }
 
 .graphicPanel {
@@ -27,9 +41,10 @@
   padding: 34px;
   overflow: hidden;
   border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.78);
   background:
-    radial-gradient(circle at 58% 44%, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px) 0 0 / 8px 8px,
-    linear-gradient(180deg, #f7f7f7 0%, #eeeeee 100%);
+    radial-gradient(circle at 58% 44%, rgba(23, 105, 170, 0.34) 0 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(145deg, #fbfdff 0%, #e7f3ff 48%, #c5def6 100%);
 }
 
 .graphicPanel::before,
@@ -40,7 +55,7 @@
   right: -12%;
   height: 72px;
   border-radius: 999px;
-  background: rgba(23, 23, 23, 0.88);
+  background: linear-gradient(90deg, #082c54 0%, #1769aa 52%, #54b3e8 100%);
   filter: blur(0.2px);
 }
 
@@ -52,7 +67,7 @@
 .graphicPanel::after {
   top: 50%;
   transform: rotate(2deg);
-  opacity: 0.08;
+  opacity: 0.16;
 }
 
 .graphicHeader,
@@ -68,7 +83,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  color: #171717;
+  color: var(--auth-ink);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -98,19 +113,21 @@
   align-content: end;
   border: 1px solid rgba(23, 23, 23, 0.12);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 14px 38px rgba(23, 23, 23, 0.08);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 14px 38px rgba(8, 44, 84, 0.12);
+  border-color: var(--auth-border);
 }
 
 .productNodeLarge {
   grid-row: span 2;
   min-height: 238px;
-  background: rgba(255, 255, 255, 0.84);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(232, 243, 255, 0.88) 100%);
 }
 
 .productNode span,
 .flowCard span {
-  color: #555555;
+  color: var(--auth-muted);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -118,7 +135,7 @@
 }
 
 .productNode strong {
-  color: #171717;
+  color: var(--auth-ink);
   font-size: 18px;
   line-height: 1.05;
 }
@@ -134,8 +151,9 @@
   max-width: 520px;
   padding: 14px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 12px 34px rgba(23, 23, 23, 0.08);
+  border: 1px solid var(--auth-border);
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 12px 34px rgba(8, 44, 84, 0.12);
 }
 
 .flowCard div {
@@ -145,7 +163,7 @@
 }
 
 .flowCard div + div {
-  border-left: 1px solid rgba(23, 23, 23, 0.12);
+  border-left: 1px solid var(--auth-border);
 }
 
 .flowCard strong {
@@ -156,7 +174,7 @@
 .graphicPanel h2 {
   max-width: 420px;
   margin: 0;
-  color: #171717;
+  color: var(--auth-ink);
   font-size: 2rem;
   line-height: 1.02;
   font-weight: 700;
@@ -177,7 +195,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #555555;
+  color: var(--auth-muted);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -196,7 +214,7 @@
 
 .kicker {
   margin: 0 0 10px;
-  color: #555555;
+  color: var(--auth-blue-deep);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -205,7 +223,7 @@
 
 .formShell h1 {
   margin: 0;
-  color: #171717;
+  color: var(--auth-ink);
   font-size: 2rem;
   line-height: 1;
   font-weight: 700;
@@ -214,7 +232,7 @@
 
 .lead {
   margin: 10px 0 24px;
-  color: #242424;
+  color: var(--auth-text);
   font-size: 14px;
   line-height: 1.45;
 }
@@ -227,7 +245,7 @@
 .field {
   display: grid;
   gap: 7px;
-  color: #171717;
+  color: var(--auth-ink);
   font-size: 13px;
   font-weight: 700;
 }
@@ -236,17 +254,17 @@
   width: 100%;
   min-height: 48px;
   padding: 0 14px;
-  border: 1px solid rgba(23, 23, 23, 0.18);
+  border: 1px solid var(--auth-border);
   border-radius: 9px;
   background: #ffffff;
-  color: #171717;
+  color: var(--auth-ink);
   font-size: 15px;
   outline: none;
 }
 
 .input:focus {
-  border-color: rgba(23, 23, 23, 0.72);
-  box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.08);
+  border-color: var(--auth-blue);
+  box-shadow: 0 0 0 3px rgba(23, 105, 170, 0.14);
 }
 
 .termsRow {
@@ -254,14 +272,14 @@
   align-items: flex-start;
   gap: 10px;
   margin-top: 2px;
-  color: #242424;
+  color: var(--auth-text);
   font-size: 12px;
   line-height: 1.45;
 }
 
 .termsRow input {
   margin-top: 2px;
-  accent-color: #171717;
+  accent-color: var(--auth-blue);
 }
 
 .inlineLink,
@@ -269,7 +287,7 @@
   padding: 0;
   border: 0;
   background: transparent;
-  color: #171717;
+  color: var(--auth-blue-deep);
   font: inherit;
   font-weight: 800;
   text-decoration: underline;
@@ -283,7 +301,7 @@
 
 .messageSlot p {
   margin: 0;
-  color: #171717;
+  color: var(--auth-ink);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -296,9 +314,9 @@
   width: 100%;
   min-height: 52px;
   padding: 0 18px;
-  border: 1px solid #171717;
+  border: 1px solid var(--auth-blue-dark);
   border-radius: 9px;
-  background: #000000;
+  background: linear-gradient(180deg, var(--auth-blue) 0%, var(--auth-blue-deep) 100%);
   color: #ffffff;
   font-size: 14px;
   font-weight: 800;
@@ -306,9 +324,9 @@
 }
 
 .primaryButton:disabled {
-  border-color: #efefef;
-  background: #efefef;
-  color: #6f6f6f;
+  border-color: #d9e9f7;
+  background: #d9e9f7;
+  color: #6c7f94;
   cursor: not-allowed;
 }
 
@@ -323,7 +341,7 @@
 
 .switchText {
   margin: 22px 0 0;
-  color: #555555;
+  color: var(--auth-muted);
   font-size: 13px;
   text-align: center;
 }
@@ -335,7 +353,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.42);
+  background: rgba(8, 44, 84, 0.46);
 }
 
 .modal {
@@ -345,7 +363,7 @@
   grid-template-rows: auto minmax(0, 1fr);
   border-radius: 16px;
   background: #ffffff;
-  color: #171717;
+  color: var(--auth-ink);
   overflow: hidden;
 }
 
@@ -355,7 +373,7 @@
   justify-content: space-between;
   gap: 18px;
   padding: 24px 24px 18px;
-  border-bottom: 1px solid rgba(23, 23, 23, 0.12);
+  border-bottom: 1px solid var(--auth-border);
 }
 
 .modalHeader h2 {
@@ -367,7 +385,7 @@
 .modalHeader button {
   border: 0;
   background: transparent;
-  color: #171717;
+  color: var(--auth-blue-deep);
   font-size: 13px;
   font-weight: 800;
   cursor: pointer;
@@ -382,7 +400,7 @@
 
 .modalBody p {
   margin: 0;
-  color: #242424;
+  color: var(--auth-text);
   font-size: 14px;
   line-height: 1.55;
 }
@@ -390,7 +408,7 @@
 @media (max-width: 860px) {
   .page {
     padding: 0;
-    background: #ffffff;
+    background: var(--auth-panel);
   }
 
   .shell {
