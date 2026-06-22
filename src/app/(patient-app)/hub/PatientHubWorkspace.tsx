@@ -1512,9 +1512,11 @@ export function PatientHubWorkspace({
                     type="button"
                     className={styles.scheduleNewBtn}
                     disabled={busy || !allQuestionsComplete || !shippingStepComplete}
+                    aria-busy={busy}
                     onClick={createNewTreatmentCheckout}
                   >
-                    {busy ? "Preparing..." : "Continue to checkout"}
+                    {busy ? <span className={styles.buttonSpinner} aria-hidden="true" /> : null}
+                    {busy ? "Preparing checkout" : "Continue to checkout"}
                   </button>
                 </div>
               </div>
@@ -1540,7 +1542,13 @@ export function PatientHubWorkspace({
                       </EmbeddedCheckoutProvider>
                     </div>
                   ) : (
-                    <p className={styles.emptyState}>Preparing checkout...</p>
+                    <div className={styles.checkoutLoadingState} role="status" aria-live="polite">
+                      <span className={styles.checkoutLoadingSpinner} aria-hidden="true" />
+                      <div>
+                        <h3>Preparing checkout</h3>
+                        <p>Connecting securely to Stripe.</p>
+                      </div>
+                    </div>
                   )}
                 </div>
               ) : null}
